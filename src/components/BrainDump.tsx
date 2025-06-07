@@ -243,12 +243,12 @@ const BrainDumpSlice1: React.FC = () => {
               NO TASKS YET - START BRAIN DUMPING!
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-4">
               {rounds.map((round) => (
                 <div 
                   key={round.number}
                   className={`
-                    border-2 rounded-lg p-4 min-h-[200px]
+                    border-2 rounded-lg p-4 
                     ${round.totalTime > 0 
                       ? round.totalTime <= 25
                         ? 'border-neonYel bg-neonYel/10' 
@@ -257,47 +257,57 @@ const BrainDumpSlice1: React.FC = () => {
                     }
                   `}
                 >
-                  {/* Round Header */}
-                  <div className="text-center mb-3">
-                    <div className={`
-                      font-arcade text-sm px-2 py-1 rounded
-                      ${round.totalTime > 0 
-                        ? round.totalTime <= 25
-                          ? 'bg-neonYel text-black' 
-                          : 'bg-neonRed text-white'
-                        : 'bg-white/20 text-white/60'
-                      }
-                    `}>
-                      ROUND {round.number}
+                  {/* Round Header - Horizontal Layout */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <div className={`
+                        font-arcade text-sm px-4 py-2 rounded
+                        ${round.totalTime > 0 
+                          ? round.totalTime <= 25
+                            ? 'bg-neonYel text-black' 
+                            : 'bg-neonRed text-white'
+                          : 'bg-white/20 text-white/60'
+                        }
+                      `}>
+                        ROUND {round.number}
+                      </div>
+                      <div className={`
+                        text-sm font-arcade
+                        ${round.totalTime > 25 ? 'text-neonRed' : 'text-white/80'}
+                      `}>
+                        {round.totalTime}min / 25min
+                      </div>
                     </div>
-                    <div className={`
-                      text-xs mt-1
-                      ${round.totalTime > 25 ? 'text-neonRed' : 'text-white/80'}
-                    `}>
-                      {round.totalTime}min / 25min
-                    </div>
+                    
+                    {round.totalTime > 25 && (
+                      <div className="text-neonRed text-xs font-arcade">
+                        OVER TIME!
+                      </div>
+                    )}
                   </div>
 
-                  {/* Round Tasks */}
-                  <div className="space-y-2">
+                  {/* Round Tasks - Horizontal Layout */}
+                  <div className="flex flex-wrap gap-3">
                     {round.tasks.length === 0 ? (
-                      <div className="text-white/40 text-xs text-center py-4">
-                        Empty round
+                      <div className="text-white/40 text-sm italic w-full text-center py-2">
+                        No tasks assigned to this round yet
                       </div>
                     ) : (
                       round.tasks.map((task, taskIndex) => (
                         <div
                           key={task.id}
-                          className="bg-black/50 rounded p-2 border border-white/20"
+                          className="bg-black/50 rounded-lg px-3 py-2 border border-white/20 flex items-center gap-3 min-w-0"
                         >
-                          <div className="text-white font-arcade text-xs mb-1">
+                          <div className="text-white font-arcade text-sm truncate">
                             {task.title}
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-neonYel text-xs">{task.estimatedMinutes}min</span>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-neonYel text-xs font-arcade">
+                              {task.estimatedMinutes}min
+                            </span>
                             <button
                               onClick={() => removeTask(task.id)}
-                              className="text-neonRed hover:text-red-300 text-xs opacity-60 hover:opacity-100"
+                              className="text-neonRed hover:text-red-300 text-sm opacity-60 hover:opacity-100 transition-opacity"
                             >
                               ✕
                             </button>
@@ -306,13 +316,6 @@ const BrainDumpSlice1: React.FC = () => {
                       ))
                     )}
                   </div>
-
-                  {/* Round Status */}
-                  {round.totalTime > 25 && (
-                    <div className="mt-2 text-neonRed text-xs text-center font-arcade">
-                      OVER TIME!
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -376,13 +379,24 @@ const BrainDumpSlice1: React.FC = () => {
             </div>
           </div>
           
-          {totalMinutes < 100 && (
+          {totalMinutes < 75 && (
             <div className="mt-4 text-center">
               <div className="text-neonRed font-arcade text-sm">
-                NEED {100 - totalMinutes} MORE MINUTES FOR FULL TOURNAMENT
+                NEED {75 - totalMinutes} MORE MINUTES TO START
               </div>
               <div className="text-white/60 text-xs mt-1">
-                Target: 4 rounds × 25 minutes = 100 minutes total
+                Minimum: 3 rounds (75 min) • Ideal: 4 rounds (100 min)
+              </div>
+            </div>
+          )}
+          
+          {totalMinutes >= 75 && totalMinutes < 100 && (
+            <div className="mt-4 text-center">
+              <div className="text-neonYel font-arcade text-sm">
+                TOURNAMENT READY! {100 - totalMinutes} MORE FOR FULL EXPERIENCE
+              </div>
+              <div className="text-white/60 text-xs mt-1">
+                You can start now, or add more tasks for 4 complete rounds
               </div>
             </div>
           )}
