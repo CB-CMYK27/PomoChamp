@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AttractScreen from './AttractScreen';
 import ModeSelect from './ModeSelect';
+import BrainDump from './components/BrainDump';
 
 export default function AppRouter() {
   return (
@@ -12,6 +13,7 @@ export default function AppRouter() {
           element={<AttractScreen onStart={() => (window.location.href = '/mode')} />}
         />
         <Route path="/mode" element={<ModeSelect />} />
+        <Route path="/brain-dump" element={<BrainDump />} />
       </Routes>
     </BrowserRouter>
   );
