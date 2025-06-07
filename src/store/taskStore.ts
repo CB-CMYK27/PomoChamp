@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Task } from '../types';
 import { fetchTasks, addTask, updateTask, deleteTask } from '../services/supabase';
+import { supabase } from '../services/supabase';
 
 interface TaskStore {
   tasks: Task[];
@@ -12,9 +13,6 @@ interface TaskStore {
   deleteTask: (id: string) => Promise<void>;
   getCompletedCount: () => number;
 }
-
-// Temporary user ID using valid UUID format until auth is implemented
-const TEMP_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
@@ -37,10 +35,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   addTask: async (title: string) => {
     set({ isLoading: true, error: null });
     try {
+      // Get the current user (anonymous or authenticated)
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const newTask = await addTask({
         title,
         completed: false,
-        user_id: TEMP_USER_ID
+        user_id: user?.id || null  // Use actual user ID or null
       });
       
       if (newTask) {
