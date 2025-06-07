@@ -1,69 +1,88 @@
-// src/components/BrainDump.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTaskStore } from '../store/taskStore';
-import RoundCard from './RoundCard';
-import SplitLargeTaskModal from './SplitLargeTaskModal';
-
-export interface Round {
-  id: string;
-  tasks: { id: string; title: string; estimatedMinutes: number }[];
-  totalMinutes: number;
-}
+import { Plus, Trash2, Check } from 'lucide-react';
 
 const BrainDump: React.FC = () => {
-  // up to 4 rounds auto‑batched by your store
-  const rounds = useTaskStore(s => s.rounds as Round[]);
+  const { tasks, fetchTasks, addTask, toggleTask, deleteTask } = useTaskStore();
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // local state for opening split‑modal
-  const [showSplit, setShowSplit] = useState(false);
+  useEffect(() => {
+    const loadTasks = async () => {
+      await fetchTasks();
+      setIsLoading(false);
+    };
+    
+    loadTasks();
+  }, [fetchTasks]);
+
+  const handleAddTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTaskTitle.trim()) {
+      await addTask(newTaskTitle.trim());
+      setNewTaskTitle('');
+    }
+  };
 
   return (
-    <div className="p-4 grid md:grid-cols-4 gap-4">
-      {rounds.map(r => (
-        <section
-          key={r.id}
-          className="bg-crtBlue/40 p-3 rounded-lg flex flex-col"
-        >
-          {/* header + status */}
-          <div className="flex justify-between items-center">
-            <RoundCard usedMinutes={r.totalMinutes} />
-            <span
-              className={
-                'font-arcade text-lg ' +
-                (r.totalMinutes < 25 ? 'text-red-500' : 'text-green-500')
-              }
-            >
-              {r.totalMinutes}/25
-            </span>
-          </div>
-
-          {/* task list */}
-          <ul className="mt-3 space-y-1 flex-1">
-            {r.tasks.map(t => (
-              <li
-                key={t.id}
-                className="flex justify-between bg-crtBlue/60 px-2 py-1 rounded-sm text-sm text-white font-arcade"
-              >
-                <span>• {t.title}</span>
-                <span>({t.estimatedMinutes} min)</span>
-              </li>
-            ))}
-          </ul>
-
-          {/* split action when needed */}
-          {r.totalMinutes === 0 && (
+    <div className="min-h-screen bg-gradient-to-b from-crtBlue to-gray-900 p-4">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="font-arcade text-xl md:text-2xl text-neonYel mb-6">
+          BRAIN-DUMP GYM
+        </h1>
+        
+        <div className="bg-black/30 rounded-lg p-4 border border-crtBlue mb-4">
+          <form onSubmit={handleAddTask} className="flex gap-3">
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="What needs to get done?"
+              className="flex-1 bg-black/50 border border-crtBlue rounded px-3 py-2 text-white font-arcade text-sm focus:border-neonYel focus:outline-none"
+            />
             <button
-              onClick={() => setShowSplit(true)}
-              className="mt-3 px-2 py-1 bg-neonYel text-black font-bold rounded"
+              type="submit"
+              disabled={!newTaskTitle.trim()}
+              className="bg-neonYel text-black px-4 py-2 rounded font-arcade text-sm hover:bg-neonYel/80 disabled:opacity-50"
             >
-              Split Large Task
+              ADD
             </button>
-          )}
-        </section>
-      ))}
+          </form>
+        </div>
 
-      {/* modal */}
-      {showSplit && <SplitLargeTaskModal onClose={() => setShowSplit(false)} />}
+        <div className="bg-black/30 rounded-lg border border-crtBlue p-4">
+          <h2 className="font-arcade text-sm text-neonYel mb-4">TASKS</h2>
+          {isLoading ? (
+            <div className="text-white/60 text-center py-4">Loading...</div>
+          ) : tasks.length === 0 ? (
+            <div className="text-white/60 text-center py-4">No tasks yet</div>
+          ) : (
+            <div className="space-y-2">
+              {tasks.map((task) => (
+                <div key={task.id} className="flex items-center justify-between bg-black/40 rounded px-3 py-2">
+                  <span className={`text-white ${task.completed ? 'line-through opacity-60' : ''}`}>
+                    {task.title}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => toggleTask(task.id)}
+                      className="text-neonYel hover:text-white"
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button
+                      onClick={() => deleteTask(task.id)}
+                      className="text-neonRed hover:text-red-300"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
