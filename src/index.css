@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* optional CRT bezel backdrop so you see an instant change */
+html, body {
+  background: #0d0d0f; /* bezel color */
+}
