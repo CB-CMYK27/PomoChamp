@@ -8,18 +8,18 @@ export default {
 
   theme: {
     extend: {
-      /* -------------  Arcade Theme  ------------- */
+      /* ----------  Arcade Theme Tokens  ---------- */
       fontFamily: {
         arcade: ['"Press Start 2P"', 'monospace'],
       },
       colors: {
-        bezel:   '#0d0d0f',  // dark cabinet background
-        neonRed: '#ff2e2e',
-        neonYel: '#ffe14b',
-        crtBlue: '#112773',
+        bezel:   '#0d0d0f',   // dark cabinet background
+        neonRed: '#ff2e2e',   // error / punch
+        neonYel: '#ffe14b',   // accent / success
+        crtBlue: '#112773',   // primary UI blue
       },
       boxShadow: {
-        neon: '0 0 8px rgba(255,255,255,0.8)', // glow on hover
+        neon: '0 0 8px rgba(255,255,255,0.8)', // subtle glow
       },
       /* ------------------------------------------ */
     },
