@@ -1,111 +1,96 @@
-import React, { useState } from 'react';
-import { useGameStore } from '../store/taskStore';
+// src/components/SplitLargeTaskModal.tsx
+import React, { useState } from 'react'
+import { Modal } from './UI' // swap in your modal component
 
-const MAX_TOURNAMENT_MINUTES = 100;   // 4 × 25
+interface Props {
+  onClose(): void
+}
 
-const SplitLargeTaskModal: React.FC<{onClose:()=>void}> = ({ onClose }) => {
-  const addTasks = useGameStore(s => s.addSplitTasks);
+export default function SplitLargeTaskModal({ onClose }: Props) {
+  const [totalMinutes, setTotalMinutes] = useState(60)
+  const [steps, setSteps] = useState<string[]>([''])
 
-  const [title,  setTitle]  = useState('');
-  const [total,  setTotal]  = useState(60);   // minutes
-  const [steps,  setSteps]  = useState<string[]>(['']);
+  function addStep() {
+    setSteps(prev => [...prev, ''])
+  }
 
-  // ---------- helpers ----------
-  const addStep = () => setSteps([...steps, '']);
+  function updateStep(idx: number, val: string) {
+    const copy = [...steps]
+    copy[idx] = val
+    setSteps(copy)
+  }
 
-  const handleStepChange = (i:number,val:string) => {
-    const copy = [...steps];
-    copy[i] = val;
-    setSteps(copy);
-  };
-
-  const handleSubmit = () => {
-    if (total > MAX_TOURNAMENT_MINUTES) {
+  function handleCreate() {
+    // 1) Enforce max 4×25 = 100min
+    if (totalMinutes > 100) {
       alert(
-        `Whoa! ${total} minutes is more than one 4-round tournament can handle.\n\n` +
-        'Trim the scope to a max of 100 min you want to tackle TODAY, ' +
-        'and leave the rest for tomorrow’s tournament!'
-      );
-      return;
+        "Whoa! That's too big for one tournament (4 rounds max = 100 minutes).\n" +
+        "What's the most important part you can realistically finish in 100 minutes?"
+      )
+      return
     }
 
-    // build task array = equal split OR use manual steps
-    const perStep = Math.ceil(total / steps.length);
-    const tasks   = steps.map((s,i)=>({
-      title : s || `Step ${i+1}`,
-      estimated: perStep
-    }));
+    // 2) Build sub-tasks capped at 25min each
+    const perRound = Math.ceil(totalMinutes / steps.length)
+    if (perRound > 25) {
+      alert(
+        `Your steps still exceed 25 min per round (you’d need ${perRound} min). ` +
+        `Try adding more steps or reducing total time.`
+      )
+      return
+    }
 
-    addTasks(tasks);
-    onClose();
-  };
+    // 3) TODO: dispatch these new tasks into your store
+    // e.g.: useTaskStore.getState().addSplitTasks(steps, totalMinutes)
 
-  // ---------- UI ----------
+    onClose()
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="w-full max-w-md bg-crtBlue p-6 rounded-lg space-y-4">
-        <h2 className="text-neonYel font-arcade text-xl text-center">
-          SPLIT LARGE TASK
-        </h2>
-
-        {/* main task */}
-        <label className="block font-arcade text-white text-xs mb-1">
-          MAIN TASK NAME:
-        </label>
-        <input
-          value={title}
-          onChange={e=>setTitle(e.target.value)}
-          className="w-full bg-bezel text-white px-2 py-1 border border-neonYel outline-none"
-        />
-
-        {/* total time */}
-        <label className="block font-arcade text-white text-xs mt-3 mb-1">
-          ESTIMATED TOTAL TIME (min):
-        </label>
+    <Modal title="Split Large Task" onClose={onClose}>
+      <div className="space-y-4 p-4">
+        <label className="block font-arcade">Total time (minutes)</label>
         <input
           type="number"
-          min={5}
-          max={300}
-          step={5}
-          value={total}
-          onChange={e=>setTotal(Number(e.target.value))}
-          className="w-full bg-bezel text-white px-2 py-1 border border-neonYel outline-none"
+          value={totalMinutes}
+          onChange={e => setTotalMinutes(Number(e.target.value))}
+          className="w-full p-2 border rounded"
         />
 
-        {/* steps */}
-        <label className="block font-arcade text-white text-xs mt-3 mb-1">
-          BREAK INTO STEPS (25 min max each):
-        </label>
-        {steps.map((st,idx)=>(
+        <label className="block font-arcade">Break into steps (≤ 25 min each)</label>
+        {steps.map((step, i) => (
           <input
-            key={idx}
-            value={st}
-            placeholder={`Step ${idx+1}`}
-            onChange={e=>handleStepChange(idx,e.target.value)}
-            className="w-full bg-crtBlue/60 mb-1 text-white px-2 py-1 outline-none"
+            key={i}
+            type="text"
+            value={step}
+            onChange={e => updateStep(i, e.target.value)}
+            placeholder="Step description"
+            className="w-full p-2 border rounded mb-1"
           />
         ))}
+
         <button
           onClick={addStep}
-          className="w-full bg-crtBlue/40 text-neonYel font-arcade py-1 hover:bg-crtBlue/60"
+          className="underline font-arcade"
         >
-          + ADD ANOTHER STEP
+          + Add another step
         </button>
 
-        {/* actions */}
-        <div className="flex justify-between pt-4">
+        <div className="flex justify-end space-x-2 pt-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-600 font-arcade text-white hover:bg-gray-700"
-          >CANCEL</button>
+            className="px-4 py-2 bg-gray-700 text-white rounded"
+          >
+            Cancel
+          </button>
           <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-neonYel text-bezel font-arcade hover:shadow-neon"
-          >CREATE TASKS</button>
+            onClick={handleCreate}
+            className="px-4 py-2 bg-neonYel text-black font-bold rounded"
+          >
+            Create Tasks
+          </button>
         </div>
       </div>
-    </div>
-  );
-};
-
-export default SplitLargeTaskModal;
+    </Modal>
+  )
+}
