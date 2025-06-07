@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Swords, Trophy } from 'lucide-react';
 
 /* ----------  Helper Components  ---------- */
@@ -19,7 +20,18 @@ const NeonCTA = ({ label }: { label: string }) => (
   </div>
 );
 
-export default function App() {
+export default function ModeSelect() {
+  const navigate = useNavigate();
+
+  const handleQuickBattle = () => {
+    // For now, we'll just show an alert since Quick Battle isn't implemented yet
+    alert('Quick Battle coming soon! Try Tournament mode for now.');
+  };
+
+  const handleTournament = () => {
+    navigate('/brain-dump');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-7xl">
@@ -35,7 +47,7 @@ export default function App() {
           {/* Quick Battle */}
           <button
             className="group relative rounded-lg p-8 bg-white border-4 border-crtBlue hover:scale-105 hover:shadow-neon transition-transform duration-300"
-            onClick={() => console.log('Quick Battle selected')}
+            onClick={handleQuickBattle}
           >
             <CornerAccent />
             <div className="flex flex-col items-center space-y-6">
@@ -51,7 +63,7 @@ export default function App() {
           {/* Tournament */}
           <button
             className="group relative rounded-lg p-8 bg-white border-4 border-crtBlue hover:scale-105 hover:shadow-neon transition-transform duration-300"
-            onClick={() => console.log('Tournament Mode selected')}
+            onClick={handleTournament}
           >
             <CornerAccent />
             <div className="flex flex-col items-center space-y-6">
