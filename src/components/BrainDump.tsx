@@ -5,6 +5,7 @@ import { Plus, Trash2, Check } from 'lucide-react';
 const BrainDump: React.FC = () => {
   const { tasks, fetchTasks, addTask, toggleTask, deleteTask } = useTaskStore();
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskMinutes, setNewTaskMinutes] = useState(25);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -19,8 +20,9 @@ const BrainDump: React.FC = () => {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newTaskTitle.trim()) {
-      await addTask(newTaskTitle.trim());
+      await addTask(newTaskTitle.trim(), newTaskMinutes);
       setNewTaskTitle('');
+      setNewTaskMinutes(25);
     }
   };
 
@@ -40,11 +42,23 @@ const BrainDump: React.FC = () => {
               placeholder="What needs to get done?"
               className="flex-1 bg-black/50 border border-crtBlue rounded px-3 py-2 text-white font-arcade text-sm focus:border-neonYel focus:outline-none"
             />
+            <select
+              value={newTaskMinutes}
+              onChange={(e) => setNewTaskMinutes(Number(e.target.value))}
+              className="bg-black/50 border border-crtBlue rounded px-3 py-2 text-white font-arcade text-sm focus:border-neonYel focus:outline-none"
+            >
+              <option value={5}>5min</option>
+              <option value={10}>10min</option>
+              <option value={15}>15min</option>
+              <option value={20}>20min</option>
+              <option value={25}>25min</option>
+            </select>
             <button
               type="submit"
               disabled={!newTaskTitle.trim()}
-              className="bg-neonYel text-black px-4 py-2 rounded font-arcade text-sm hover:bg-neonYel/80 disabled:opacity-50"
+              className="bg-neonYel text-black px-4 py-2 rounded font-arcade text-sm hover:bg-neonYel/80 disabled:opacity-50 flex items-center gap-2"
             >
+              <Plus size={14} />
               ADD
             </button>
           </form>
@@ -61,7 +75,7 @@ const BrainDump: React.FC = () => {
               {tasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between bg-black/40 rounded px-3 py-2">
                   <span className={`text-white ${task.completed ? 'line-through opacity-60' : ''}`}>
-                    {task.title}
+                    {task.title} ({task.estimated_minutes || '?'}min)
                   </span>
                   <div className="flex gap-2">
                     <button
