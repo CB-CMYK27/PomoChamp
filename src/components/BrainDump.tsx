@@ -71,7 +71,7 @@ const BrainDumpSlice1: React.FC = () => {
   const timeStyle = timeRemaining <= 60 ? 'text-neonRed animate-pulse' : 'text-neonYel';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-arcadeBlue to-arcadePurple p-4">
+    <div className="min-h-screen bg-gradient-to-b from-crtBlue to-gray-900 p-4">
       <div className="max-w-4xl mx-auto">
         
         {/* Header with Timer */}
@@ -96,7 +96,7 @@ const BrainDumpSlice1: React.FC = () => {
         </div>
 
         {/* Task Input */}
-        <div className="bg-black/30 rounded-lg p-6 border border-neonBlue mb-6">
+        <div className="bg-black/30 rounded-lg p-6 border border-crtBlue mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <input
@@ -105,7 +105,7 @@ const BrainDumpSlice1: React.FC = () => {
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="What needs to get done?"
-                className="w-full bg-black/50 border-2 border-neonBlue rounded px-4 py-3 text-white font-arcade text-sm focus:border-neonYel focus:outline-none"
+                className="w-full bg-black/50 border-2 border-crtBlue rounded px-4 py-3 text-white font-arcade text-sm focus:border-neonYel focus:outline-none"
                 maxLength={100}
               />
             </div>
@@ -115,7 +115,7 @@ const BrainDumpSlice1: React.FC = () => {
               <select
                 value={newTaskMinutes}
                 onChange={(e) => setNewTaskMinutes(Number(e.target.value))}
-                className="bg-black/50 border-2 border-neonBlue rounded px-3 py-3 text-white font-arcade text-sm focus:border-neonYel focus:outline-none"
+                className="bg-black/50 border-2 border-crtBlue rounded px-3 py-3 text-white font-arcade text-sm focus:border-neonYel focus:outline-none"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -141,7 +141,7 @@ const BrainDumpSlice1: React.FC = () => {
         </div>
 
         {/* Tasks List */}
-        <div className="bg-black/30 rounded-lg p-6 border border-neonBlue mb-6">
+        <div className="bg-black/30 rounded-lg p-6 border border-crtBlue mb-6">
           <h2 className="font-arcade text-lg text-neonYel mb-4 flex items-center gap-2">
             <Target size={20} />
             BATTLE PLAN ({tasks.length} tasks)
@@ -156,7 +156,7 @@ const BrainDumpSlice1: React.FC = () => {
               {tasks.map((task, index) => (
                 <div
                   key={task.id}
-                  className="bg-black/50 rounded border border-neonBlue/50 p-3 flex items-center justify-between group hover:border-neonYel transition-colors"
+                  className="bg-black/50 rounded border border-crtBlue/50 p-3 flex items-center justify-between group hover:border-neonYel transition-colors"
                 >
                   <div className="flex-1">
                     <span className="text-white font-arcade text-sm">
@@ -181,7 +181,7 @@ const BrainDumpSlice1: React.FC = () => {
         </div>
 
         {/* Tournament Status */}
-        <div className="bg-black/30 rounded-lg p-6 border border-neonBlue mb-6">
+        <div className="bg-black/30 rounded-lg p-6 border border-crtBlue mb-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <div className="text-center">
@@ -189,7 +189,7 @@ const BrainDumpSlice1: React.FC = () => {
                 <div className="text-white/80 text-xs">TOTAL MINS</div>
               </div>
               <div className="text-center">
-                <div className="text-neonBlue font-arcade text-2xl">{estimatedRounds}</div>
+                <div className="text-crtBlue font-arcade text-2xl">{estimatedRounds}</div>
                 <div className="text-white/80 text-xs">EST ROUNDS</div>
               </div>
             </div>
