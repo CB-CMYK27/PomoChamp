@@ -1,21 +1,21 @@
 // src/components/BrainDump.tsx
-import React, { useState } from 'react'
-import { useTaskStore } from '../store/taskStore'      // or wherever your hook lives
-import RoundCard from './RoundCard'
-import SplitLargeTaskModal from './SplitLargeTaskModal' // new file you’ll create
+import React, { useState } from 'react';
+import { useTaskStore } from '../store/taskStore';
+import RoundCard from './RoundCard';
+import SplitLargeTaskModal from './SplitLargeTaskModal';
 
 export interface Round {
-  id: string
-  tasks: { id: string; title: string; estimated: number }[]
-  totalMinutes: number
+  id: string;
+  tasks: { id: string; title: string; estimatedMinutes: number }[];
+  totalMinutes: number;
 }
 
 const BrainDump: React.FC = () => {
-  // get your rounds array from store (auto-batched into up to 4 × 25min)
-  const rounds = useTaskStore(s => s.rounds as Round[])
+  // up to 4 rounds auto‑batched by your store
+  const rounds = useTaskStore(s => s.rounds as Round[]);
 
-  // local state to pop open our “split large task” modal
-  const [showSplit, setShowSplit] = useState(false)
+  // local state for opening split‑modal
+  const [showSplit, setShowSplit] = useState(false);
 
   return (
     <div className="p-4 grid md:grid-cols-4 gap-4">
@@ -24,7 +24,7 @@ const BrainDump: React.FC = () => {
           key={r.id}
           className="bg-crtBlue/40 p-3 rounded-lg flex flex-col"
         >
-          {/* header + status badge */}
+          {/* header + status */}
           <div className="flex justify-between items-center">
             <RoundCard usedMinutes={r.totalMinutes} />
             <span
@@ -37,7 +37,7 @@ const BrainDump: React.FC = () => {
             </span>
           </div>
 
-          {/* per‐task list */}
+          {/* task list */}
           <ul className="mt-3 space-y-1 flex-1">
             {r.tasks.map(t => (
               <li
@@ -45,12 +45,12 @@ const BrainDump: React.FC = () => {
                 className="flex justify-between bg-crtBlue/60 px-2 py-1 rounded-sm text-sm text-white font-arcade"
               >
                 <span>• {t.title}</span>
-                <span>({t.estimated} min)</span>
+                <span>({t.estimatedMinutes} min)</span>
               </li>
             ))}
           </ul>
 
-          {/* if any round is empty (or you want an explicit “split” action) */}
+          {/* split action when needed */}
           {r.totalMinutes === 0 && (
             <button
               onClick={() => setShowSplit(true)}
@@ -62,10 +62,10 @@ const BrainDump: React.FC = () => {
         </section>
       ))}
 
-      {/* Split-Large-Task Modal */}
+      {/* modal */}
       {showSplit && <SplitLargeTaskModal onClose={() => setShowSplit(false)} />}
     </div>
-  )
-}
+  );
+};
 
-export default BrainDump
+export default BrainDump;
