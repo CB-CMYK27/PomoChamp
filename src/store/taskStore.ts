@@ -8,7 +8,7 @@ interface TaskStore {
   isLoading: boolean;
   error: string | null;
   fetchTasks: () => Promise<void>;
-  addTask: (title: string) => Promise<void>;
+  addTask: (title: string, estimatedMinutes?: number) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   getCompletedCount: () => number;
@@ -32,16 +32,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     }
   },
   
-  addTask: async (title: string) => {
+  addTask: async (title: string, estimatedMinutes: number = 25) => {
     set({ isLoading: true, error: null });
     try {
-      // Get the current user (anonymous or authenticated)
       const { data: { user } } = await supabase.auth.getUser();
       
       const newTask = await addTask({
         title,
         completed: false,
-        user_id: user?.id || null  // Use actual user ID or null
+        user_id: user?.id || null,
+        estimated_minutes: estimatedMinutes  // Add this required field
       });
       
       if (newTask) {
