@@ -250,7 +250,16 @@ const BrainDump: React.FC = () => {
       const newRounds = prev.map(round => {
         if (round.number === sourceRoundNumber) {
           // Remove task from source round
+          console.log(`Removing task from Round ${round.number}:`, { 
+            beforeTasks: round.tasks.length, 
+            taskIds: round.tasks.map(t => t.id),
+            removingId: taskId 
+          });
           const newTasks = round.tasks.filter(task => task.id !== taskId);
+          console.log(`After removal:`, { 
+            afterTasks: newTasks.length,
+            remainingIds: newTasks.map(t => t.id)
+          });
           return {
             ...round,
             tasks: newTasks,
@@ -258,7 +267,14 @@ const BrainDump: React.FC = () => {
           };
         } else if (round.number === targetRoundNumber) {
           // Add task to target round
+          console.log(`Adding task to Round ${round.number}:`, {
+            beforeTasks: round.tasks.length,
+            addingTask: taskToMove!.title
+          });
           const newTasks = [...round.tasks, taskToMove!];
+          console.log(`After addition:`, { 
+            afterTasks: newTasks.length 
+          });
           return {
             ...round,
             tasks: newTasks,
