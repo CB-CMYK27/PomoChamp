@@ -48,32 +48,37 @@ export default function FighterSelect() {
 
       {/* Full-body splash, name & quip */}
 {(hoveredId || selectedId) && (
-  <div className="mt-6 flex flex-col items-center w-full">   {/* centered */}
+  <div className="mt-6 flex flex-col items-center justify-center">
     {(() => {
       const fighter = fighters.find(
         (f) => f.id === (hoveredId || selectedId)
       );
       if (!fighter) return null;
 
+      // track per-fighter load failures so we don’t keep flickering
+      const [imgOk, setImgOk] = useState(true);
+
       return (
         <>
-          {/* Show full.png if it loads; hide on 404 */}
-          {!imgError && (
+          {/* Either the full.png or a fixed-height blank box so layout never shifts */}
+          {imgOk ? (
             <img
               src={fighter.full}
               alt={fighter.name}
               className="w-48 h-48 object-contain mb-2"
-              onError={() => setImgError(true)}
+              onError={() => setImgOk(false)}
             />
+          ) : (
+            <div className="w-48 h-48 mb-2" />   {/* blank placeholder */}
           )}
 
-          {/* Fighter name — one line, bold */}
-          <p className="text-2xl font-bold text-yellow-400 whitespace-nowrap mb-1">
+          {/* Centered name */}
+          <p className="text-2xl font-bold text-yellow-400 text-center mb-1">
             {fighter.name}
           </p>
 
-          {/* Quip — one line, centered */}
-          <p className="text-xl text-center max-w-xs whitespace-nowrap">
+          {/* Centered one-line quip */}
+          <p className="text-xl text-center whitespace-nowrap">
             {fighter.quip}
           </p>
         </>
@@ -81,6 +86,7 @@ export default function FighterSelect() {
     })()}
   </div>
 )}
+
 
 
       {/* Confirm button */}
