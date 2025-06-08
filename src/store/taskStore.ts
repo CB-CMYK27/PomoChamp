@@ -33,30 +33,32 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
   
   addTask: async (title: string, estimatedMinutes: number = 25) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const newTask = await addTask({
-        title,
-        completed: false,
-        user_id: user?.id || null,
-        estimated_minutes: estimatedMinutes  // Add this required field
-      });
-      
-      if (newTask) {
-        set((state) => ({ 
-          tasks: [newTask, ...state.tasks],
-          isLoading: false 
-        }));
-      }
-    } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to add task', 
+  set({ isLoading: true, error: null });
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const newTask = await addTask({
+      title,
+      completed: false,
+      user_id: user?.id || null,
+      estimated_minutes: estimatedMinutes,
+      round_number: 1,  // 🔧 ADD THIS - default to round 1
+      session_id: null  // 🔧 ADD THIS - no session for simple tasks yet
+    });
+    
+    if (newTask) {
+      set((state) => ({ 
+        tasks: [newTask, ...state.tasks],
         isLoading: false 
-      });
+      }));
     }
-  },
+  } catch (error) {
+    set({ 
+      error: error instanceof Error ? error.message : 'Failed to add task', 
+      isLoading: false 
+    });
+  }
+},
   
   toggleTask: async (id: string) => {
     const task = get().tasks.find(t => t.id === id);
