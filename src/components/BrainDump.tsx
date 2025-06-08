@@ -59,26 +59,38 @@ const DraggableTask: React.FC<{ task: Task; onDelete: (id: string) => void }> = 
     pointerEvents: isDragging ? 'none' : 'auto', // Prevent interfering with drop detection
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    console.log('Delete clicked for task:', task.id);
+    onDelete(task.id);
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="bg-black/40 rounded px-2 py-1 flex items-center gap-2 group border border-white/20 cursor-grab active:cursor-grabbing relative z-10"
+      className="bg-black/40 rounded px-2 py-1 flex items-center gap-2 group border border-white/20 relative"
     >
-      <span className="text-white text-sm font-mono truncate max-w-[200px]">
-        {task.title}
-      </span>
-      <span className="text-yellow-400 text-xs font-bold">
-        {task.estimated_minutes}m
-      </span>
+      {/* Draggable area (excludes delete button) */}
+      <div 
+        {...attributes}
+        {...listeners}
+        className="flex items-center gap-2 flex-1 cursor-grab active:cursor-grabbing"
+      >
+        <span className="text-white text-sm font-mono truncate max-w-[200px]">
+          {task.title}
+        </span>
+        <span className="text-yellow-400 text-xs font-bold">
+          {task.estimated_minutes}m
+        </span>
+      </div>
+      
+      {/* Delete button (separate from drag area) */}
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(task.id);
-        }}
-        className="text-red-400 hover:text-red-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={handleDelete}
+        className="text-red-400 hover:text-red-300 text-xs opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 px-1 py-1 rounded hover:bg-red-500/20"
+        title="Delete task"
       >
         ✕
       </button>
