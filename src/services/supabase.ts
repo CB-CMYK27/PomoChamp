@@ -22,7 +22,14 @@ export async function fetchTasks() {
   return data || [];
 }
 
-export async function addTask(task: { title: string; completed: boolean; user_id: string }) {
+export async function addTask(task: { 
+  title: string; 
+  completed: boolean; 
+  user_id: string | null;
+  estimated_minutes: number;
+  round_number: number;
+  session_id: string | null;
+}) {
   const { data, error } = await supabase
     .from('tasks')
     .insert([task])
@@ -108,7 +115,7 @@ export async function updateLeaderboard(entry: { user_id: string; username: stri
       .insert([entry]);
       
     if (error) {
-      console.error('Error adding to leaderboard:', error);
+        console.error('Error adding to leaderboard:', error);
+      }
     }
-  }
 }
