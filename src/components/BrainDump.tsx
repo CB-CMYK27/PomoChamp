@@ -246,7 +246,7 @@ const BrainDump: React.FC = () => {
         // Still allow the move but user will see red warning
       }
       
-      // Create new rounds array with task moved
+      // Create completely new rounds array in one atomic operation
       const newRounds = prev.map(round => {
         if (round.number === sourceRoundNumber) {
           // Remove task from source round
@@ -281,7 +281,7 @@ const BrainDump: React.FC = () => {
             totalTime: newTasks.reduce((sum, task) => sum + task.estimated_minutes, 0)
           };
         }
-        return round;
+        return { ...round }; // Return new object reference for unchanged rounds
       });
 
       console.log('New rounds after move:', newRounds.map(r => ({ round: r.number, tasks: r.tasks.length, time: r.totalTime })));
