@@ -146,7 +146,6 @@ const DroppableRound: React.FC<{
 };
 
 const BrainDump: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskMinutes, setNewTaskMinutes] = useState(25);
   const [isLoading, setIsLoading] = useState(false);
@@ -175,20 +174,42 @@ const BrainDump: React.FC = () => {
     
     // Move task to target round
     setRounds(prev => {
-      const newRounds = prev.map(round => ({
-        ...round,
-        tasks: round.tasks.filter(task => task.id !== taskId),
-        totalTime: round.tasks.filter(task => task.id !== taskId).reduce((sum, task) => sum + task.estimated_minutes, 0)
-      }));
-
-      const taskToMove = prev.flatMap(round => round.tasks).find(task => task.id === taskId);
-      if (taskToMove) {
-        const targetRound = newRounds.find(round => round.number === targetRoundNumber);
-        if (targetRound) {
-          targetRound.tasks.push(taskToMove);
-          targetRound.totalTime += taskToMove.estimated_minutes;
+      // Find the task in any round
+      let taskToMove: Task | null = null;
+      let sourceRoundNumber: number | null = null;
+      
+      for (const round of prev) {
+        const foundTask = round.tasks.find(task => task.id === taskId);
+        if (foundTask) {
+          taskToMove = foundTask;
+          sourceRoundNumber = round.number;
+          break;
         }
       }
+      
+      if (!taskToMove || sourceRoundNumber === targetRoundNumber) return prev;
+      
+      // Create new rounds array with task moved
+      const newRounds = prev.map(round => {
+        if (round.number === sourceRoundNumber) {
+          // Remove task from source round
+          const newTasks = round.tasks.filter(task => task.id !== taskId);
+          return {
+            ...round,
+            tasks: newTasks,
+            totalTime: newTasks.reduce((sum, task) => sum + task.estimated_minutes, 0)
+          };
+        } else if (round.number === targetRoundNumber) {
+          // Add task to target round
+          const newTasks = [...round.tasks, taskToMove];
+          return {
+            ...round,
+            tasks: newTasks,
+            totalTime: newTasks.reduce((sum, task) => sum + task.estimated_minutes, 0)
+          };
+        }
+        return round;
+      });
 
       return newRounds;
     });
@@ -207,33 +228,32 @@ const BrainDump: React.FC = () => {
         user_id: 'demo-user'
       };
       
-      setTasks(prev => [...prev, newTask]);
       setNewTaskTitle('');
       setNewTaskMinutes(25);
 
-      // In manual mode, add to first available round
-      if (manualMode) {
-        setRounds(prev => {
+      // Add task to rounds (auto-organize or manual placement)
+      setRounds(prev => {
+        if (manualMode) {
+          // In manual mode, add to first available round
           const newRounds = [...prev];
           const targetRound = newRounds.find(round => round.totalTime + newTask.estimated_minutes <= 25) || newRounds[0];
           targetRound.tasks.push(newTask);
           targetRound.totalTime += newTask.estimated_minutes;
           return newRounds;
-        });
-      }
+        } else {
+          // Auto-organize all tasks including the new one
+          return organizeTasksIntoRounds([...getAllTasks(prev), newTask]);
+        }
+      });
     }
   };
 
   const deleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(task => task.id !== taskId));
-    // Also remove from rounds if in manual mode
-    if (manualMode) {
-      setRounds(prev => prev.map(round => ({
-        ...round,
-        tasks: round.tasks.filter(task => task.id !== taskId),
-        totalTime: round.tasks.filter(task => task.id !== taskId).reduce((sum, task) => sum + task.estimated_minutes, 0)
-      })));
-    }
+    setRounds(prev => prev.map(round => ({
+      ...round,
+      tasks: round.tasks.filter(task => task.id !== taskId),
+      totalTime: round.tasks.filter(task => task.id !== taskId).reduce((sum, task) => sum + task.estimated_minutes, 0)
+    })));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -242,17 +262,13 @@ const BrainDump: React.FC = () => {
     }
   };
 
-  // Calculate total minutes across all tasks
-  const totalMinutes = manualMode 
-    ? rounds.reduce((sum, round) => sum + round.totalTime, 0)
-    : tasks.reduce((sum, task) => sum + (task.estimated_minutes || 0), 0);
-  const canStartTournament = totalMinutes >= 75;
-  const isFullTournament = totalMinutes >= 100;
+  // Helper function to get all tasks from rounds
+  const getAllTasks = (rounds: Round[]): Task[] => {
+    return rounds.flatMap(round => round.tasks);
+  };
 
-  // Auto-organize tasks into rounds using bin-packing algorithm (only in auto mode)
-  const organizeTasksIntoRounds = () => {
-    if (manualMode) return; // Don't auto-organize in manual mode
-
+  // Auto-organize tasks into rounds using bin-packing algorithm
+  const organizeTasksIntoRounds = (tasks: Task[]): Round[] => {
     const newRounds: Round[] = [
       { number: 1, tasks: [], totalTime: 0 },
       { number: 2, tasks: [], totalTime: 0 },
@@ -286,25 +302,19 @@ const BrainDump: React.FC = () => {
       targetRound.totalTime += task.estimated_minutes || 0;
     });
 
-    setRounds(newRounds);
+    return newRounds;
   };
 
-  useEffect(() => {
-    organizeTasksIntoRounds();
-  }, [tasks]);
+  // Calculate total minutes across all tasks
+  const totalMinutes = rounds.reduce((sum, round) => sum + round.totalTime, 0);
+  const canStartTournament = totalMinutes >= 75;
+  const isFullTournament = totalMinutes >= 100;
+  const allTasks = getAllTasks(rounds);
 
   const getRoundStatus = (round: Round) => {
     if (round.totalTime === 0) return 'empty';
     if (round.totalTime <= 25) return 'optimal';
     return 'overfilled';
-  };
-
-  const getRoundColor = (status: string) => {
-    switch (status) {
-      case 'optimal': return 'border-yellow-400 bg-yellow-400/10';
-      case 'overfilled': return 'border-red-500 bg-red-500/10';
-      default: return 'border-white/30 bg-white/5';
-    }
   };
 
   return (
@@ -368,7 +378,7 @@ const BrainDump: React.FC = () => {
                 TOURNAMENT BATTLE PLAN
               </h2>
               <div className="text-white/80 text-xs">
-                {tasks.length} tasks • {totalMinutes}min total
+                {allTasks.length} tasks • {totalMinutes}min total
               </div>
             </div>
             <div className="flex gap-1">
@@ -394,7 +404,7 @@ const BrainDump: React.FC = () => {
 
           {/* Rounds */}
           <div className="p-4">
-            {tasks.length === 0 ? (
+            {allTasks.length === 0 ? (
               <div className="text-white/60 text-center py-8 font-mono text-sm">
                 NO TASKS YET - START BRAIN DUMPING!
               </div>
