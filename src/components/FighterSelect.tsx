@@ -69,8 +69,7 @@ export default function FighterSelect() {
               onError={() => setImgOk(false)}
             />
           ) : (
-            <div className="w-48 h-48 mb-2" />   {/* blank placeholder */}
-          )}
+            tsx <div className="w-48 h-48 mb-2"></div> {/* blank placeholder */}
 
           {/* Centered name */}
           <p className="text-2xl font-bold text-yellow-400 text-center mb-1">
