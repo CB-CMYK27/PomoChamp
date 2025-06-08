@@ -46,36 +46,42 @@ export default function FighterSelect() {
         ))}
       </div>
 
-      {/* Full-body splash & quip */}
-      {(hoveredId || selectedId) && (
-        <div className="mt-6 flex flex-col items-center">
-          {(() => {
-            const fighter = fighters.find(
-              (f) => f.id === (hoveredId || selectedId)
-            );
-            if (!fighter) return null;
+      {/* Full-body splash, name & quip */}
+{(hoveredId || selectedId) && (
+  <div className="mt-6 flex flex-col items-center w-full">   {/* centered */}
+    {(() => {
+      const fighter = fighters.find(
+        (f) => f.id === (hoveredId || selectedId)
+      );
+      if (!fighter) return null;
 
-            return (
-              <>
-                {/* Hide img placeholder if full.png missing */}
-                {!imgError && (
-                  <img
-                    src={fighter.full}
-                    alt={fighter.name}
-                    className="w-48 h-48 object-contain mb-2"
-                    onError={() => setImgError(true)}
-                  />
-                )}
+      return (
+        <>
+          {/* Show full.png if it loads; hide on 404 */}
+          {!imgError && (
+            <img
+              src={fighter.full}
+              alt={fighter.name}
+              className="w-48 h-48 object-contain mb-2"
+              onError={() => setImgError(true)}
+            />
+          )}
 
-                {/* One-line tagline */}
-                <p className="text-xl text-center max-w-xs whitespace-nowrap">
-                  {fighter.quip}
-                </p>
-              </>
-            );
-          })()}
-        </div>
-      )}
+          {/* Fighter name — one line, bold */}
+          <p className="text-2xl font-bold text-yellow-400 whitespace-nowrap mb-1">
+            {fighter.name}
+          </p>
+
+          {/* Quip — one line, centered */}
+          <p className="text-xl text-center max-w-xs whitespace-nowrap">
+            {fighter.quip}
+          </p>
+        </>
+      );
+    })()}
+  </div>
+)}
+
 
       {/* Confirm button */}
       <button
