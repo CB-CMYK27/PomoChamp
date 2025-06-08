@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Clock, Target } from 'lucide-react';
 import {
   DndContext,
@@ -179,6 +179,9 @@ const BrainDump: React.FC = () => {
     { number: 4, tasks: [], totalTime: 0 }
   ]);
 
+  // Ref for auto-focusing input after task creation
+  const taskInputRef = useRef<HTMLInputElement>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -331,6 +334,11 @@ const BrainDump: React.FC = () => {
           return organizeTasksIntoRounds([...getAllTasks(prev), newTask]);
         }
       });
+
+      // Focus back to input for rapid task entry
+      setTimeout(() => {
+        taskInputRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -424,6 +432,7 @@ const BrainDump: React.FC = () => {
         <div className="bg-black/30 rounded-lg p-4 border border-blue-700 mb-6">
           <div className="flex gap-3">
             <input
+              ref={taskInputRef}
               type="text"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
