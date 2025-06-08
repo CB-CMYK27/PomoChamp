@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Clock, Target } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   DndContext,
   closestCenter,
@@ -168,6 +169,7 @@ const DroppableRound: React.FC<{
 };
 
 const BrainDump: React.FC = () => {
+  const navigate = useNavigate();                       // ← new
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskMinutes, setNewTaskMinutes] = useState(25);
   const [isLoading, setIsLoading] = useState(false);
@@ -533,6 +535,7 @@ const BrainDump: React.FC = () => {
             </div>
             <button
               disabled={!canStartTournament}
+              onClick={() => navigate('/fighter-select')}          // ← new
               className={`font-mono text-sm px-6 py-2 rounded border transition-all font-bold ${
                 canStartTournament
                   ? isFullTournament
