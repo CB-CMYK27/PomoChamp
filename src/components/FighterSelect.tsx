@@ -47,6 +47,7 @@ export default function FighterSelect() {
       </div>
 
       {/* Full-body splash, name & quip */}
+{/* Full-body splash, name & quip */}
 {(hoveredId || selectedId) && (
   <div className="mt-6 flex flex-col items-center justify-center">
     {(() => {
@@ -55,21 +56,19 @@ export default function FighterSelect() {
       );
       if (!fighter) return null;
 
-      // track per-fighter load failures so we don’t keep flickering
-      const [imgOk, setImgOk] = useState(true);
-
       return (
         <>
-          {/* Either the full.png or a fixed-height blank box so layout never shifts */}
-          {imgOk ? (
+          {/* Show full.png if it loads, else fixed-height blank box */}
+          {!imgError ? (
             <img
               src={fighter.full}
               alt={fighter.name}
               className="w-48 h-48 object-contain mb-2"
-              onError={() => setImgOk(false)}
+              onError={() => setImgError(true)}
             />
           ) : (
-            tsx <div className="w-48 h-48 mb-2"></div> {/* blank placeholder */}
+            <div className="w-48 h-48 mb-2"></div>  {/* blank placeholder */}
+          )}
 
           {/* Centered name */}
           <p className="text-2xl font-bold text-yellow-400 text-center mb-1">
