@@ -1,24 +1,27 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';         // 💛 added useEffect
-import fighters from "../data/fighters.json";
-import { useGameStore } from "../store/gameStore";
+import { useState, useEffect } from 'react';
+import fighters from '../data/fighters.json';
+import { useGameStore } from '../store/gameStore';
 
 export default function FighterSelect() {
   const navigate = useNavigate();
+
+  // hover + selection tracking
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [imgError, setImgError] = useState(false);  // 💛 NEW
-  const setFighter = useGameStore((s) => s.setFighter);
 
-  // 💛 reset error flag whenever you hover / select a new card
-  useEffect(() => {
-    setImgError(false);
-  }, [hoveredId, selectedId]);
+  // 404-image flag
+  const [imgError, setImgError] = useState(false);
+
+  // reset broken-image flag each time we change hover / selection
+  useEffect(() => setImgError(false), [hoveredId, selectedId]);
+
+  const setFighter = useGameStore((s) => s.setFighter);
 
   const handleConfirm = () => {
     if (!selectedId) return;
     setFighter(selectedId);
-    navigate('/fight'); // adjust when FightScreen exists
+    navigate('/fight'); // TODO: change to real fight route
   };
 
   return (
@@ -34,63 +37,57 @@ export default function FighterSelect() {
             onMouseLeave={() => setHoveredId(null)}
             onClick={() => setSelectedId(f.id)}
             className={`w-32 h-32 flex items-center justify-center
-                        ${selectedId === f.id ? 'ring-4 ring-yellow-400' : ''}
-                        bg-gray-900 hover:ring-2 hover:ring-blue-400 transition-all`}
+              ${selectedId === f.id ? 'ring-4 ring-yellow-400' : ''}
+              bg-gray-900 hover:ring-2 hover:ring-blue-400 transition-all`}
           >
-            <img
-              src={f.portrait}
-              alt={f.name}
-              className="w-full h-full object-contain"
-            />
+            <img src={f.portrait} alt={f.name} className="w-full h-full object-contain" />
           </button>
         ))}
       </div>
 
-      {/* Full-body splash, name & quip */}
-{/* Full-body splash, name & quip */}
-{(hoveredId || selectedId) && (
-  <div className="mt-6 flex flex-col items-center justify-center">
-    {(() => {
-      const fighter = fighters.find(
-        (f) => f.id === (hoveredId || selectedId)
-      );
-      if (!fighter) return null;
+      {/* Preview area: full-body art (if present), fighter name, quip */}
+      {(hoveredId || selectedId) && (
+        <div className="mt-6 flex flex-col items-center justify-center">
+          {(() => {
+            const fighter = fighters.find((f) => f.id === (hoveredId || selectedId));
+            if (!fighter) return null;
 
-      return (
-        <>
-          {/* Show full.png if it loads, else fixed-height blank box */}
-          {!imgError ? (
-            <img
-              src={fighter.full}
-              alt={fighter.name}
-              className="w-48 h-48 object-contain mb-2"
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <div className="w-48 h-48 mb-2"></div>  {/* blank placeholder */}
-          )}
+            return (
+              <>
+                {/* full.png or blank placeholder so layout never jumps */}
+                {!imgError ? (
+                  <img
+                    src={fighter.full}
+                    alt={fighter.name}
+                    className="w-48 h-48 object-contain mb-2"
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <>
+                    {/* blank placeholder */}
+                    <div className="w-48 h-48 mb-2" />
+                  </>
+                )}
 
-          {/* Centered name */}
-          <p className="text-2xl font-bold text-yellow-400 text-center mb-1">
-            {fighter.name}
-          </p>
+                {/* Fighter name */}
+                <p className="text-2xl font-bold text-yellow-400 text-center mb-1">
+                  {fighter.name}
+                </p>
 
-          {/* Centered one-line quip */}
-          <p className="text-xl text-center whitespace-nowrap">
-            {fighter.quip}
-          </p>
-        </>
-      );
-    })()}
-  </div>
-)}
-
-
+                {/* One-line quip */}
+                <p className="text-xl text-center whitespace-nowrap">
+                  {fighter.quip}
+                </p>
+              </>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Confirm button */}
       <button
         className={`mt-8 px-6 py-3 bg-yellow-500 text-black font-bold rounded
-                    ${!selectedId ? 'opacity-30 cursor-not-allowed' : ''}`}
+          ${!selectedId ? 'opacity-30 cursor-not-allowed' : ''}`}
         disabled={!selectedId}
         onClick={handleConfirm}
       >
