@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';         // 💛 added useEffect
 import fighters from "../data/fighters.json";
 import { useGameStore } from "../store/gameStore";
 
@@ -7,12 +7,18 @@ export default function FighterSelect() {
   const navigate = useNavigate();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const setFighter = useGameStore((s) => s.setFighter); // assumes setter exists
+  const [imgError, setImgError] = useState(false);  // 💛 NEW
+  const setFighter = useGameStore((s) => s.setFighter);
+
+  // 💛 reset error flag whenever you hover / select a new card
+  useEffect(() => {
+    setImgError(false);
+  }, [hoveredId, selectedId]);
 
   const handleConfirm = () => {
     if (!selectedId) return;
     setFighter(selectedId);
-    navigate('/fight'); // adjust to your FightScreen route
+    navigate('/fight'); // adjust when FightScreen exists
   };
 
   return (
@@ -48,14 +54,23 @@ export default function FighterSelect() {
               (f) => f.id === (hoveredId || selectedId)
             );
             if (!fighter) return null;
+
             return (
               <>
-                <img
-                  src={fighter.full}
-                  alt={fighter.name}
-                  className="w-48 h-48 object-contain mb-2"
-                />
-                <p className="text-xl text-center max-w-xs">{fighter.quip}</p>
+                {/* Hide img placeholder if full.png missing */}
+                {!imgError && (
+                  <img
+                    src={fighter.full}
+                    alt={fighter.name}
+                    className="w-48 h-48 object-contain mb-2"
+                    onError={() => setImgError(true)}
+                  />
+                )}
+
+                {/* One-line tagline */}
+                <p className="text-xl text-center max-w-xs whitespace-nowrap">
+                  {fighter.quip}
+                </p>
               </>
             );
           })()}
