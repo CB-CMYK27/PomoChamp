@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import fighters from "../data/fighters.json";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "../store/gameStore";
 
 export default function FighterSelect() {
   const navigate = useNavigate();
