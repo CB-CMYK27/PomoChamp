@@ -7,12 +7,6 @@ export default function FighterSelect() {
   const navigate = useNavigate();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [imgError, setImgError] = useState(false);          // NEW
-
-// reset error flag whenever hover/selection changes         NEW
-useEffect(() => {
-  setImgError(false);
-}, [hoveredId, selectedId]);
   const setFighter = useGameStore((s) => s.setFighter); // assumes setter exists
 
   const handleConfirm = () => {
