@@ -249,7 +249,7 @@ const BrainDump: React.FC = () => {
   const handleAddTask = () => {
     if (newTaskTitle.trim()) {
       const newTask: Task = {
-        id: Date.now().toString(),
+        id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         title: newTaskTitle.trim(),
         estimated_minutes: newTaskMinutes,
         completed: false,
