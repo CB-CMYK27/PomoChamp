@@ -9,6 +9,8 @@ import {
   useSensors,
   DragEndEvent,
   useDroppable,
+  CollisionDetection,
+  rectIntersection,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -45,12 +47,16 @@ const DraggableTask: React.FC<{ task: Task; onDelete: (id: string) => void }> = 
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ 
+    id: task.id,
+    disabled: false // Allow dragging
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    pointerEvents: isDragging ? 'none' : 'auto', // Prevent interfering with drop detection
   };
 
   return (
@@ -59,7 +65,7 @@ const DraggableTask: React.FC<{ task: Task; onDelete: (id: string) => void }> = 
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-black/40 rounded px-2 py-1 flex items-center gap-2 group border border-white/20 cursor-grab active:cursor-grabbing"
+      className="bg-black/40 rounded px-2 py-1 flex items-center gap-2 group border border-white/20 cursor-grab active:cursor-grabbing relative z-10"
     >
       <span className="text-white text-sm font-mono truncate max-w-[200px]">
         {task.title}
@@ -167,6 +173,19 @@ const BrainDump: React.FC = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Custom collision detection that prioritizes round containers
+  const customCollisionDetection: CollisionDetection = (args) => {
+    const collisions = rectIntersection(args);
+    
+    // Filter to only include round containers (not tasks)
+    const roundCollisions = collisions.filter(collision => 
+      collision.id.toString().startsWith('round-')
+    );
+    
+    // Return round collisions if any, otherwise fall back to all collisions
+    return roundCollisions.length > 0 ? roundCollisions : collisions;
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -450,7 +469,7 @@ const BrainDump: React.FC = () => {
             ) : (
               <DndContext
                 sensors={sensors}
-                collisionDetection={closestCenter}
+                collisionDetection={customCollisionDetection}
                 onDragEnd={handleDragEnd}
               >
                 <div className="space-y-3">
