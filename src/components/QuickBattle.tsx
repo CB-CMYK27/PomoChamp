@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';    
 import { Plus, Trash2, Clock, Zap, Target } from 'lucide-react';
 
 interface Task {
@@ -10,6 +11,7 @@ interface Task {
 }
 
 const QuickBattle: React.FC = () => {
+  const navigate = useNavigate();     
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskMinutes, setNewTaskMinutes] = useState(25);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -55,7 +57,8 @@ const QuickBattle: React.FC = () => {
   };
 
   const handleStartBattle = () => {
-    alert('Fighter selection coming next!');
+    if (!canStartBattle) return;
+    navigate('/fighter-select');                          // NEW
   };
 
   const getStatusColor = () => {
