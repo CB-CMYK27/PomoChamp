@@ -1,0 +1,112 @@
+[
+  {
+    "id": "jack-tower",
+    "name": "Jack Tower",
+    "side": "hero",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/jack-tower/portrait.png",
+    "full": "/fighters/jack-tower/full.png",
+    "stageBg": "/stages/rooftop.png",
+    "quip": "Yippee-ki-pay-your-tasks!"
+  },
+  {
+    "id": "prof-kruber",
+    "name": "Professor Kruber",
+    "side": "villain",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/prof-kruber/portrait.png",
+    "full": "/fighters/prof-kruber/full.png",
+    "stageBg": "/stages/rooftop.png",
+    "quip": "I have an appointment with productivity."
+  },
+  {
+    "id": "raging-stallion",
+    "name": "Raging Stallion",
+    "side": "hero",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/raging-stallion/portrait.png",
+    "full": "/fighters/raging-stallion/full.png",
+    "stageBg": "/stages/moscow-ring.png",
+    "quip": "Ain’t so tough, deadlines!"
+  },
+  {
+    "id": "iron-titan",
+    "name": "Iron Titan",
+    "side": "villain",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/iron-titan/portrait.png",
+    "full": "/fighters/iron-titan/full.png",
+    "stageBg": "/stages/moscow-ring.png",
+    "quip": "I must break your focus."
+  },
+  {
+    "id": "bond-sterling",
+    "name": "Bond Sterling",
+    "side": "hero",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/bond-sterling/portrait.png",
+    "full": "/fighters/bond-sterling/full.png",
+    "stageBg": "/stages/volcano-lair.png",
+    "quip": "The name’s Sterling. Bond Sterling."
+  },
+  {
+    "id": "dr-whiskers",
+    "name": "Dr. Whiskers",
+    "side": "villain",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/dr-whiskers/portrait.png",
+    "full": "/fighters/dr-whiskers/full.png",
+    "stageBg": "/stages/volcano-lair.png",
+    "quip": "We expect you to WORK, Mr Sterling."
+  },
+  {
+    "id": "waves-mcrad",
+    "name": "Waves McRad",
+    "side": "hero",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/waves-mcrad/portrait.png",
+    "full": "/fighters/waves-mcrad/full.png",
+    "stageBg": "/stages/beach-pier.png",
+    "quip": "Shore thing, brah!"
+  },
+  {
+    "id": "gen-buzzkill",
+    "name": "General Buzzkill",
+    "side": "villain",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/gen-buzzkill/portrait.png",
+    "full": "/fighters/gen-buzzkill/full.png",
+    "stageBg": "/stages/beach-pier.png",
+    "quip": "Drop and give me twenty tasks!"
+  },
+  {
+    "id": "beach-belle",
+    "name": "Beach Belle",
+    "side": "hero",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/beach-belle/portrait.png",
+    "full": "/fighters/beach-belle/full.png",
+    "stageBg": "/stages/ocean-shallows.png",
+    "quip": "Sink or swim, deadlines!"
+  },
+  {
+    "id": "jawsome",
+    "name": "Jawsome",
+    "side": "villain",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/jawsome/portrait.png",
+    "full": "/fighters/jawsome/full.png",
+    "stageBg": "/stages/ocean-shallows.png",
+    "quip": "Just when you thought it was safe to procrastinate…"
+  }
+]
