@@ -32,23 +32,27 @@ export default function FighterSelect() {
       <div className="grid grid-cols-5 gap-2 border-4 border-gray-600 p-2 bg-gray-800">
         {fighters.map((f) => (
           <button
-            key={f.id}
-            onMouseEnter={() => {
-              setHoveredId(f.id);
-              setImgBroken(false); // reset 404 flag
-            }}
-            onMouseLeave={() => setHoveredId(null)}
-            onClick={() => setSelectedId(f.id)}
-            className={`w-32 h-32 flex items-center justify-center
-              ${selectedId === f.id ? 'ring-4 ring-yellow-400' : ''}
-              bg-gray-900 hover:ring-2 hover:ring-blue-400 transition-all`}
-          >
-            <img
-              src={f.portrait}
-              alt={f.name}
-              className="w-full h-full object-contain"
-            />
-          </button>
+  key={f.id}
+  onMouseEnter={() => {
+    setHoveredId(f.id);
+    setImgBroken(false);
+  }}
+  onMouseLeave={() => setHoveredId(null)}
+  onClick={() => setSelectedId(f.id)}
+  className={`w-32 h-32 flex items-center justify-center
+    ring-2                                   /* ← always 2 px */
+    ${selectedId === f.id
+      ? 'ring-yellow-400'                    /* selected colour */
+      : 'ring-transparent hover:ring-blue-400'}  /* normal & hover */
+    bg-gray-900 transition-all`}
+>
+  <img
+    src={f.portrait}
+    alt={f.name}
+    className="w-full h-full object-contain"
+  />
+</button>
+
         ))}
       </div>
 
