@@ -1,5 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Clock, Target } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Round {
   number: number;
@@ -16,17 +36,165 @@ interface Task {
   user_id: string;
 }
 
+// Draggable Task Component
+const DraggableTask: React.FC<{ task: Task; onDelete: (id: string) => void }> = ({ task, onDelete }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="bg-black/40 rounded px-2 py-1 flex items-center gap-2 group border border-white/20 cursor-grab active:cursor-grabbing"
+    >
+      <span className="text-white text-sm font-mono truncate max-w-[200px]">
+        {task.title}
+      </span>
+      <span className="text-yellow-400 text-xs font-bold">
+        {task.estimated_minutes}m
+      </span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(task.id);
+        }}
+        className="text-red-400 hover:text-red-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        ✕
+      </button>
+    </div>
+  );
+};
+
+// Droppable Round Component
+const DroppableRound: React.FC<{ 
+  round: Round; 
+  status: string; 
+  onDelete: (id: string) => void;
+}> = ({ round, status, onDelete }) => {
+  const { isOver, setNodeRef } = useDroppable({
+    id: round.number.toString(),
+  });
+
+  const getRoundColor = (status: string) => {
+    switch (status) {
+      case 'optimal': return 'border-yellow-400 bg-yellow-400/10';
+      case 'overfilled': return 'border-red-500 bg-red-500/10';
+      default: return 'border-white/30 bg-white/5';
+    }
+  };
+
+  return (
+    <div 
+      ref={setNodeRef}
+      className={`border rounded-lg p-3 ${getRoundColor(status)} ${isOver ? 'ring-2 ring-yellow-400' : ''} transition-all`}
+    >
+      <div className="flex items-center justify-between">
+        {/* Left: Round + Tasks */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className={`
+            font-mono text-xs px-3 py-1 rounded flex-shrink-0 font-bold
+            ${status === 'optimal'
+              ? 'bg-yellow-400 text-black' 
+              : status === 'overfilled'
+              ? 'bg-red-500 text-white'
+              : 'bg-white/20 text-white/60'
+            }
+          `}>
+            R{round.number}
+          </div>
+          
+          <div className="flex flex-wrap gap-2 flex-1 min-w-0">
+            {round.tasks.length === 0 ? (
+              <div className="text-white/40 text-sm italic py-4 px-4 border-2 border-dashed border-white/20 rounded w-full text-center">
+                Drop tasks here or auto-organize
+              </div>
+            ) : (
+              <SortableContext items={round.tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                {round.tasks.map((task) => (
+                  <DraggableTask key={task.id} task={task} onDelete={onDelete} />
+                ))}
+              </SortableContext>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Time Info */}
+        <div className={`
+          font-mono text-sm px-3 py-1 rounded min-w-[70px] text-center flex-shrink-0 font-bold
+          ${round.totalTime > 25 ? 'text-red-400' : 'text-white/80'}
+        `}>
+          {round.totalTime}/25
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BrainDump: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskMinutes, setNewTaskMinutes] = useState(25);
   const [isLoading, setIsLoading] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
   const [rounds, setRounds] = useState<Round[]>([
     { number: 1, tasks: [], totalTime: 0 },
     { number: 2, tasks: [], totalTime: 0 },
     { number: 3, tasks: [], totalTime: 0 },
     { number: 4, tasks: [], totalTime: 0 }
   ]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const targetRoundNumber = parseInt(over.id as string);
+    
+    // Move task to target round
+    setRounds(prev => {
+      const newRounds = prev.map(round => ({
+        ...round,
+        tasks: round.tasks.filter(task => task.id !== taskId),
+        totalTime: round.tasks.filter(task => task.id !== taskId).reduce((sum, task) => sum + task.estimated_minutes, 0)
+      }));
+
+      const taskToMove = prev.flatMap(round => round.tasks).find(task => task.id === taskId);
+      if (taskToMove) {
+        const targetRound = newRounds.find(round => round.number === targetRoundNumber);
+        if (targetRound) {
+          targetRound.tasks.push(taskToMove);
+          targetRound.totalTime += taskToMove.estimated_minutes;
+        }
+      }
+
+      return newRounds;
+    });
+
+    setManualMode(true); // Switch to manual mode after first drag
+  };
 
   const handleAddTask = () => {
     if (newTaskTitle.trim()) {
@@ -42,11 +210,30 @@ const BrainDump: React.FC = () => {
       setTasks(prev => [...prev, newTask]);
       setNewTaskTitle('');
       setNewTaskMinutes(25);
+
+      // In manual mode, add to first available round
+      if (manualMode) {
+        setRounds(prev => {
+          const newRounds = [...prev];
+          const targetRound = newRounds.find(round => round.totalTime + newTask.estimated_minutes <= 25) || newRounds[0];
+          targetRound.tasks.push(newTask);
+          targetRound.totalTime += newTask.estimated_minutes;
+          return newRounds;
+        });
+      }
     }
   };
 
   const deleteTask = (taskId: string) => {
     setTasks(prev => prev.filter(task => task.id !== taskId));
+    // Also remove from rounds if in manual mode
+    if (manualMode) {
+      setRounds(prev => prev.map(round => ({
+        ...round,
+        tasks: round.tasks.filter(task => task.id !== taskId),
+        totalTime: round.tasks.filter(task => task.id !== taskId).reduce((sum, task) => sum + task.estimated_minutes, 0)
+      })));
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -56,12 +243,16 @@ const BrainDump: React.FC = () => {
   };
 
   // Calculate total minutes across all tasks
-  const totalMinutes = tasks.reduce((sum, task) => sum + (task.estimated_minutes || 0), 0);
+  const totalMinutes = manualMode 
+    ? rounds.reduce((sum, round) => sum + round.totalTime, 0)
+    : tasks.reduce((sum, task) => sum + (task.estimated_minutes || 0), 0);
   const canStartTournament = totalMinutes >= 75;
   const isFullTournament = totalMinutes >= 100;
 
-  // Auto-organize tasks into rounds using bin-packing algorithm
+  // Auto-organize tasks into rounds using bin-packing algorithm (only in auto mode)
   const organizeTasksIntoRounds = () => {
+    if (manualMode) return; // Don't auto-organize in manual mode
+
     const newRounds: Round[] = [
       { number: 1, tasks: [], totalTime: 0 },
       { number: 2, tasks: [], totalTime: 0 },
@@ -208,75 +399,32 @@ const BrainDump: React.FC = () => {
                 NO TASKS YET - START BRAIN DUMPING!
               </div>
             ) : (
-              <div className="space-y-3">
-                {rounds.map((round) => {
-                  const status = getRoundStatus(round);
-                  return (
-                    <div 
-                      key={round.number}
-                      className={`border rounded-lg p-3 ${getRoundColor(status)}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        {/* Left: Round + Tasks */}
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className={`
-                            font-mono text-xs px-3 py-1 rounded flex-shrink-0 font-bold
-                            ${status === 'optimal'
-                              ? 'bg-yellow-400 text-black' 
-                              : status === 'overfilled'
-                              ? 'bg-red-500 text-white'
-                              : 'bg-white/20 text-white/60'
-                            }
-                          `}>
-                            R{round.number}
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 flex-1 min-w-0">
-                            {round.tasks.length === 0 ? (
-                              <span className="text-white/40 text-sm italic">Empty round</span>
-                            ) : (
-                              round.tasks.map((task) => (
-                                <div
-                                  key={task.id}
-                                  className="bg-black/40 rounded px-2 py-1 flex items-center gap-2 group border border-white/20"
-                                >
-                                  <span className="text-white text-sm font-mono truncate max-w-[200px]">
-                                    {task.title}
-                                  </span>
-                                  <span className="text-yellow-400 text-xs font-bold">
-                                    {task.estimated_minutes}m
-                                  </span>
-                                  <button
-                                    onClick={() => deleteTask(task.id)}
-                                    className="text-red-400 hover:text-red-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Right: Time Info */}
-                        <div className={`
-                          font-mono text-sm px-3 py-1 rounded min-w-[70px] text-center flex-shrink-0 font-bold
-                          ${round.totalTime > 25 ? 'text-red-400' : 'text-white/80'}
-                        `}>
-                          {round.totalTime}/25
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="space-y-3">
+                  {rounds.map((round) => {
+                    const status = getRoundStatus(round);
+                    return (
+                      <DroppableRound 
+                        key={round.number} 
+                        round={round} 
+                        status={status}
+                        onDelete={deleteTask}
+                      />
+                    );
+                  })}
+                </div>
+              </DndContext>
             )}
           </div>
 
           {/* Bottom Actions */}
           <div className="p-4 border-t border-blue-700/50 flex items-center justify-between">
             <div className="text-xs text-white/60">
-              💡 Tasks auto-organized by time • Drag & drop coming next
+              💡 {manualMode ? 'Manual mode active - drag tasks between rounds' : 'Tasks auto-organized • Drag to customize'}
             </div>
             <button
               disabled={!canStartTournament}
