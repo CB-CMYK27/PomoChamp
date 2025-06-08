@@ -87,7 +87,7 @@ const DroppableRound: React.FC<{
   onDelete: (id: string) => void;
 }> = ({ round, status, onDelete }) => {
   const { isOver, setNodeRef } = useDroppable({
-    id: round.number.toString(),
+    id: `round-${round.number}`,
   });
 
   const getRoundColor = (status: string) => {
@@ -178,9 +178,19 @@ const BrainDump: React.FC = () => {
     }
 
     const taskId = active.id as string;
-    const targetRoundNumber = parseInt(over.id as string);
+    const overIdString = over.id as string;
     
-    console.log('Drag end:', { taskId, targetRoundNumber });
+    // Extract round number from ID like "round-1", "round-2", etc.
+    const roundMatch = overIdString.match(/round-(\d+)/);
+    const targetRoundNumber = roundMatch ? parseInt(roundMatch[1]) : NaN;
+    
+    console.log('Drag end:', { taskId, overIdString, targetRoundNumber });
+    
+    // Validate target round number
+    if (isNaN(targetRoundNumber) || targetRoundNumber < 1 || targetRoundNumber > 4) {
+      console.log('Invalid target round number:', targetRoundNumber);
+      return;
+    }
     
     // Move task to target round
     setRounds(prev => {
