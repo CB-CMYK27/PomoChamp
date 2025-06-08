@@ -101,7 +101,9 @@ const DroppableRound: React.FC<{
   return (
     <div 
       ref={setNodeRef}
-      className={`border rounded-lg p-3 ${getRoundColor(status)} ${isOver ? 'ring-2 ring-yellow-400' : ''} transition-all`}
+      className={`border rounded-lg p-3 min-h-[80px] transition-all ${getRoundColor(status)} ${
+        isOver ? 'ring-2 ring-yellow-400 bg-yellow-400/20 border-yellow-400' : ''
+      }`}
     >
       <div className="flex items-center justify-between">
         {/* Left: Round + Tasks */}
@@ -118,16 +120,18 @@ const DroppableRound: React.FC<{
             R{round.number}
           </div>
           
-          <div className="flex flex-wrap gap-2 flex-1 min-w-0">
+          <div className="flex flex-col gap-2 flex-1 min-w-0">
             {round.tasks.length === 0 ? (
               <div className="text-white/40 text-sm italic py-4 px-4 border-2 border-dashed border-white/20 rounded w-full text-center">
                 Drop tasks here or auto-organize
               </div>
             ) : (
               <SortableContext items={round.tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                {round.tasks.map((task) => (
-                  <DraggableTask key={task.id} task={task} onDelete={onDelete} />
-                ))}
+                <div className="space-y-2">
+                  {round.tasks.map((task) => (
+                    <DraggableTask key={task.id} task={task} onDelete={onDelete} />
+                  ))}
+                </div>
               </SortableContext>
             )}
           </div>
@@ -167,10 +171,16 @@ const BrainDump: React.FC = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    if (!over) return;
+    // If no drop target, don't do anything
+    if (!over) {
+      console.log('No drop target found');
+      return;
+    }
 
     const taskId = active.id as string;
     const targetRoundNumber = parseInt(over.id as string);
+    
+    console.log('Drag end:', { taskId, targetRoundNumber });
     
     // Move task to target round
     setRounds(prev => {
@@ -187,7 +197,25 @@ const BrainDump: React.FC = () => {
         }
       }
       
-      if (!taskToMove || sourceRoundNumber === targetRoundNumber) return prev;
+      console.log('Found task:', { taskToMove: taskToMove?.title, sourceRoundNumber, targetRoundNumber });
+      
+      // If task not found or same round, don't change anything
+      if (!taskToMove) {
+        console.log('Task not found in any round');
+        return prev;
+      }
+      
+      if (sourceRoundNumber === targetRoundNumber) {
+        console.log('Same round, no change needed');
+        return prev;
+      }
+      
+      // Check if target round has space (with 25min limit)
+      const targetRound = prev.find(r => r.number === targetRoundNumber);
+      if (targetRound && targetRound.totalTime + taskToMove.estimated_minutes > 25) {
+        console.log('Target round would exceed 25 minutes, but allowing anyway');
+        // Still allow the move but user will see red warning
+      }
       
       // Create new rounds array with task moved
       const newRounds = prev.map(round => {
@@ -201,7 +229,7 @@ const BrainDump: React.FC = () => {
           };
         } else if (round.number === targetRoundNumber) {
           // Add task to target round
-          const newTasks = [...round.tasks, taskToMove];
+          const newTasks = [...round.tasks, taskToMove!];
           return {
             ...round,
             tasks: newTasks,
@@ -211,6 +239,7 @@ const BrainDump: React.FC = () => {
         return round;
       });
 
+      console.log('New rounds after move:', newRounds.map(r => ({ round: r.number, tasks: r.tasks.length, time: r.totalTime })));
       return newRounds;
     });
 
