@@ -24,8 +24,8 @@ export default function ModeSelect() {
   const navigate = useNavigate();
 
   const handleQuickBattle = () => {
-    // For now, we'll just show an alert since Quick Battle isn't implemented yet
-    alert('Quick Battle coming soon! Try Tournament mode for now.');
+    // Navigate to Quick Battle instead of showing alert
+    navigate('/quick-battle');
   };
 
   const handleTournament = () => {
@@ -72,13 +72,11 @@ export default function ModeSelect() {
               <p className="text-crtBlue text-center font-bold">
                 Brain-dump tasks → 4 rounds.<br />Organize &amp; conquer.
               </p>
-              <NeonCTA label="ENTER" />
+              <NeonCTA label="BATTLE!" />
             </div>
           </button>
-        </div>
 
-        {/* Footer */}
-        <p className="text-center mt-8 text-white font-arcade">SELECT YOUR MODE</p>
+        </div>
       </div>
     </div>
   );
