@@ -109,11 +109,11 @@ export default function FighterSelect() {
       <div className="flex flex-col items-center max-w-6xl w-full">
         
         {/* Top Row: Heroes + Center Preview + Villains */}
-        <div className="flex items-start gap-4 mb-2">
+        <div className="flex items-start gap-4 mb-1">
           {/* Heroes - Left Side */}
           <div className="flex flex-col items-center">
             <h3 className="text-lg text-blue-400 mb-2 font-bold">HEROES</h3>
-            <div className="grid grid-cols-3 gap-2 border-4 border-blue-500 p-4 bg-gray-800">
+            <div className="grid grid-cols-3 gap-2 border-4 border-blue-500 p-4 bg-gray-800 mb-1">
               {topLeftFighters.map(renderCharacterButton)}
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function FighterSelect() {
           {/* Villains - Right Side */}
           <div className="flex flex-col items-center">
             <h3 className="text-lg text-red-400 mb-2 font-bold">VILLAINS</h3>
-            <div className="grid grid-cols-3 gap-2 border-4 border-red-500 p-4 bg-gray-800">
+            <div className="grid grid-cols-3 gap-2 border-4 border-red-500 p-4 bg-gray-800 mb-1">
               {topRightFighters.map(renderCharacterButton)}
             </div>
           </div>
