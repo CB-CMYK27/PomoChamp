@@ -15,29 +15,27 @@ export default function FighterSelect() {
 
   // Character order array - Heroes top row, Villains bottom row
   const characterOrder = [
-    // Heroes (top row)
-    'jack-tower',
-    'ellen-ryker',
-    'raging-stallion', 
-    'beach-belle',
-    'bond-sterling',
-    'waves-mcrad',       // (inactive)
-    
-    // Villains (bottom row)
-    'prof-kruber',
-    'queen-chroma',
-    'iron-titan',
-    'jawsome',
-    'dr-whiskers',
-    'gen-buzzkill'       // (inactive)
-  ];
+  // Heroes (top row)
+  'jack-tower',
+  'ellen-ryker',
+  'raging-stallion', 
+  'beach-belle',
+  'bond-sterling',
+  
+  // Villains (bottom row)
+  'prof-kruber',
+  'queen-chroma',
+  'iron-titan',
+  'jawsome',
+  'dr-whiskers'
+];
 
   // Inactive characters (will be grayed out)
   const inactiveCharacters = ['waves-mcrad', 'gen-buzzkill'];
 
   // Split into heroes and villains
-  const heroIds = characterOrder.slice(0, 6);
-  const villainIds = characterOrder.slice(6, 12);
+  const heroIds = characterOrder.slice(0, 5);
+const villainIds = characterOrder.slice(5, 10);
 
   // Get fighter data for each group, filtering out any missing fighters
   const heroes = heroIds
