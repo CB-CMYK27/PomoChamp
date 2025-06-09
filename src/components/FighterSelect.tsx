@@ -113,20 +113,13 @@ const villainIds = characterOrder.slice(5, 10);
 
       {/* Character Grid - Heroes and Villains */}
       <div className="flex flex-col gap-4">
-        {/* Heroes Row */}
-        <div className="flex flex-col items-center">
-          <h2 className="text-xl text-blue-400 mb-2">HEROES</h2>
-          <div className="grid grid-cols-5 gap-2 border-4 border-blue-600 p-2 bg-gray-800">
-            {heroes.map(renderCharacterButton)}
-          </div>
+        {/* Character Grid - 2x5 Layout */}
+        <div className="grid grid-cols-5 gap-2 border-4 border-yellow-400 p-4 bg-gray-800 mb-4">
+          {heroes.map(renderCharacterButton)}
         </div>
-
-        {/* Villains Row */}
-        <div className="flex flex-col items-center">
-          <h2 className="text-xl text-red-400 mb-2">VILLAINS</h2>
-          <div className="grid grid-cols-5 gap-2 border-4 border-red-600 p-2 bg-gray-800">
-            {villains.map(renderCharacterButton)}
-          </div>
+        
+        <div className="grid grid-cols-5 gap-2 border-4 border-yellow-400 p-4 bg-gray-800">
+          {villains.map(renderCharacterButton)}
         </div>
       </div>
 
