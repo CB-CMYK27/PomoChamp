@@ -109,4 +109,27 @@
     "stageBg": "/stages/ocean-shallows.png",
     "quip": "Just when you thought it was safe to procrastinate…"
   }
+  },
+  {
+    "id": "ellen-ryker",
+    "name": "Ellen Ryker",
+    "side": "hero",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/ellen-ryker/portrait.png",
+    "full": "/fighters/ellen-ryker/full.png",
+    "stageBg": "/stages/cargo-hold.png",
+    "quip": "Get away from her, you procrastinator!"
+  },
+  {
+    "id": "queen-chroma",
+    "name": "Queen Chroma",
+    "side": "villain",
+    "hp": 100,
+    "attack": 20,
+    "portrait": "/fighters/queen-chroma/portrait.png",
+    "full": "/fighters/queen-chroma/full.png",
+    "stageBg": "/stages/alien-hive.png",
+    "quip": "Resistance is futile. You will be distracted."
+  }
 ]
