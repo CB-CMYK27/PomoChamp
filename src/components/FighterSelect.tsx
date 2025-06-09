@@ -63,18 +63,12 @@ export default function FighterSelect() {
   };
 
   const handleCharacterHover = (characterId: string) => {
-    // Prevent rapid state changes
-    if (hoveredId !== characterId) {
-      setHoveredId(characterId);
-      setImgBroken(false);
-    }
+    setHoveredId(characterId);
+    setImgBroken(false);
   };
 
   const handleCharacterLeave = () => {
-    // Small delay to prevent strobing
-    setTimeout(() => {
-      setHoveredId(null);
-    }, 50);
+    setHoveredId(null);
   };
 
   const renderCharacterButton = (fighter: any) => {
@@ -95,8 +89,7 @@ export default function FighterSelect() {
                       ? 'ring-blue-400' 
                       : 'ring-transparent'}
                     bg-gray-900 hover:bg-gray-800 cursor-pointer
-                    transition-all duration-200`}
-        style={{ pointerEvents: 'auto' }}
+                    transition-all duration-100`}
       >
         <img
           src={fighter.portrait}
@@ -116,7 +109,7 @@ export default function FighterSelect() {
       <div className="flex flex-col items-center max-w-6xl w-full">
         
         {/* Top Row: Heroes + Center Preview + Villains */}
-        <div className="flex items-start gap-8 mb-2">
+        <div className="flex items-start gap-4 mb-2">
           {/* Heroes - Left Side */}
           <div className="flex flex-col items-center">
             <h3 className="text-lg text-blue-400 mb-2 font-bold">HEROES</h3>
@@ -125,25 +118,25 @@ export default function FighterSelect() {
             </div>
           </div>
 
-          {/* Center Preview Area - Properly Centered */}
-          <div className="flex flex-col items-center min-w-[200px] max-w-[250px] justify-start mt-8">
+          {/* Center Preview Area - Moved Down for Better Centering */}
+          <div className="flex flex-col items-center min-w-[200px] max-w-[250px] justify-start mt-16">
             {activeFighter ? (
               <>
                 {!imgBroken ? (
                   <img
                     src={activeFighter.full}
                     alt={activeFighter.name}
-                    className="w-48 h-72 object-contain"
+                    className="w-48 h-64 object-contain"
                     onError={() => setImgBroken(true)}
                   />
                 ) : (
-                  <div className="w-48 h-72 flex items-center justify-center bg-gray-700 rounded">
+                  <div className="w-48 h-64 flex items-center justify-center bg-gray-700 rounded">
                     <span className="text-gray-400">No Image</span>
                   </div>
                 )}
               </>
             ) : (
-              <div className="w-48 h-72 flex items-center justify-center border-2 border-dashed border-gray-600 rounded">
+              <div className="w-48 h-64 flex items-center justify-center border-2 border-dashed border-gray-600 rounded">
                 <span className="text-gray-500 text-center">
                   Hover over<br/>a fighter
                 </span>
@@ -161,7 +154,7 @@ export default function FighterSelect() {
         </div>
 
         {/* Bottom Row: Heroes + Center (empty) + Villains */}
-        <div className="flex items-start gap-8 mb-8">
+        <div className="flex items-start gap-4 mb-8">
           {/* Heroes - Left Side (Bottom Row) */}
           <div className="flex flex-col items-center">
             <div className="grid grid-cols-3 gap-2 border-4 border-blue-500 p-4 bg-gray-800">
