@@ -34,8 +34,8 @@ export default function FighterSelect() {
     'gen-buzzkill'       // Inactive
   ];
 
-  // Inactive characters (will be grayed out)
-  const inactiveCharacters = ['waves-mcrad', 'gen-buzzkill'];
+  // Inactive characters (currently none - all are active!)
+  const inactiveCharacters: string[] = [];
 
   // Split heroes and villains into top/bottom rows
   const heroesTopRow = heroCharacters.slice(0, 3);
@@ -53,13 +53,12 @@ export default function FighterSelect() {
   const activeFighter = fighters.find((f) => f.id === activeId) || null;
 
   const handleConfirm = () => {
-    if (!selectedId || inactiveCharacters.includes(selectedId)) return;
+    if (!selectedId) return;
     setFighter(selectedId);
     navigate('/fight');
   };
 
   const handleCharacterClick = (characterId: string) => {
-    if (inactiveCharacters.includes(characterId)) return;
     setSelectedId(characterId);
   };
 
@@ -69,7 +68,6 @@ export default function FighterSelect() {
   };
 
   const renderCharacterButton = (fighter: any) => {
-    const isInactive = inactiveCharacters.includes(fighter.id);
     const isSelected = selectedId === fighter.id;
     const isHovered = hoveredId === fighter.id;
 
@@ -79,31 +77,21 @@ export default function FighterSelect() {
         onMouseEnter={() => handleCharacterHover(fighter.id)}
         onMouseLeave={() => setHoveredId(null)}
         onClick={() => handleCharacterClick(fighter.id)}
-        disabled={isInactive}
         className={`w-32 h-32 flex items-center justify-center relative
                     ring-2 ring-offset-2 ring-offset-gray-800
-                    ${isSelected && !isInactive
+                    ${isSelected
                       ? 'ring-yellow-400'
-                      : isHovered && !isInactive
+                      : isHovered
                       ? 'ring-blue-400' 
                       : 'ring-transparent'}
-                    ${isInactive 
-                      ? 'bg-gray-700 opacity-40 cursor-not-allowed' 
-                      : 'bg-gray-900 hover:bg-gray-800 cursor-pointer'}
+                    bg-gray-900 hover:bg-gray-800 cursor-pointer
                     transition-all duration-200`}
       >
         <img
           src={fighter.portrait}
           alt={fighter.name}
-          className={`w-full h-full object-contain ${isInactive ? 'grayscale' : ''}`}
+          className="w-full h-full object-contain"
         />
-        {isInactive && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-red-500 text-xs font-bold bg-black bg-opacity-70 px-2 py-1 rounded">
-              INACTIVE
-            </span>
-          </div>
-        )}
       </button>
     );
   };
@@ -111,7 +99,7 @@ export default function FighterSelect() {
   return (
     <div className="flex flex-col items-center min-h-screen bg-black text-neonYel font-arcade p-4">
       {/* Heading */}
-      <h1 className="text-3xl mb-8">CHOOSE&nbsp;YOUR&nbsp;FIGHTER</h1>
+      <h1 className="text-3xl mb-12 mt-6">CHOOSE&nbsp;YOUR&nbsp;FIGHTER</h1>
 
       {/* Main Grid Layout */}
       <div className="flex flex-col items-center max-w-6xl w-full">
@@ -127,24 +115,24 @@ export default function FighterSelect() {
           </div>
 
           {/* Center Preview Area */}
-          <div className="flex flex-col items-center min-w-[200px] max-w-[250px]">
+          <div className="flex flex-col items-center min-w-[200px] max-w-[250px] justify-center">
             {activeFighter ? (
               <>
                 {!imgBroken ? (
                   <img
                     src={activeFighter.full}
                     alt={activeFighter.name}
-                    className="w-48 h-48 object-contain"
+                    className="w-48 h-80 object-contain"
                     onError={() => setImgBroken(true)}
                   />
                 ) : (
-                  <div className="w-48 h-48 flex items-center justify-center bg-gray-700 rounded">
+                  <div className="w-48 h-80 flex items-center justify-center bg-gray-700 rounded">
                     <span className="text-gray-400">No Image</span>
                   </div>
                 )}
               </>
             ) : (
-              <div className="w-48 h-48 flex items-center justify-center border-2 border-dashed border-gray-600 rounded">
+              <div className="w-48 h-80 flex items-center justify-center border-2 border-dashed border-gray-600 rounded">
                 <span className="text-gray-500 text-center">
                   Hover over<br/>a fighter
                 </span>
@@ -184,34 +172,27 @@ export default function FighterSelect() {
         </div>
 
         {/* Bottom Info Area */}
-        <div className="flex flex-col items-center min-h-[120px] max-w-md">
+        <div className="flex flex-col items-center min-h-[100px] max-w-2xl">
           {activeFighter && (
             <>
-              <h2 className="text-2xl font-bold text-yellow-400 text-center mb-2">
+              <h2 className="text-2xl font-bold text-yellow-400 text-center mb-3">
                 {activeFighter.name}
               </h2>
 
-              <p className="text-lg text-center mb-4 leading-relaxed">
+              <p className="text-lg text-center mb-4 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
                 {activeFighter.quip}
               </p>
 
-              {/* Show inactive message */}
-              {inactiveCharacters.includes(activeFighter.id) ? (
-                <div className="px-4 py-2 bg-red-900 border border-red-600 rounded">
-                  <span className="text-red-300 text-sm">Character temporarily unavailable</span>
-                </div>
-              ) : (
-                <button
-                  disabled={!selectedId || inactiveCharacters.includes(selectedId)}
-                  onClick={handleConfirm}
-                  className={`px-6 py-3 bg-yellow-500 text-black font-bold rounded-lg text-lg transition-all
-                              ${(!selectedId || inactiveCharacters.includes(selectedId))
-                                ? 'opacity-50 cursor-not-allowed' 
-                                : 'hover:bg-yellow-400 hover:scale-105'}`}
-                >
-                  {selectedId ? `FIGHT AS ${activeFighter.name.toUpperCase()}!` : 'SELECT A FIGHTER!'}
-                </button>
-              )}
+              <button
+                disabled={!selectedId}
+                onClick={handleConfirm}
+                className={`px-6 py-3 bg-yellow-500 text-black font-bold rounded-lg text-lg transition-all
+                            ${!selectedId
+                              ? 'opacity-50 cursor-not-allowed' 
+                              : 'hover:bg-yellow-400 hover:scale-105'}`}
+              >
+                {selectedId ? `FIGHT AS ${activeFighter.name.toUpperCase()}!` : 'SELECT A FIGHTER!'}
+              </button>
             </>
           )}
         </div>
