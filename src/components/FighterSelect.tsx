@@ -111,60 +111,65 @@ const villainIds = characterOrder.slice(5, 10);
       {/* Heading */}
       <h1 className="text-3xl mb-6">CHOOSE&nbsp;YOUR&nbsp;FIGHTER</h1>
 
-      {/* Character Grid - Heroes and Villains */}
-      <div className="flex flex-col gap-4">
-        {/* Character Grid - 2x5 Layout */}
-        <div className="grid grid-cols-5 gap-2 border-4 border-yellow-400 p-4 bg-gray-800 mb-4">
-          {heroes.map(renderCharacterButton)}
-        </div>
+      {/* Main Content: Grid Left, Preview Right */}
+      <div className="flex flex-row gap-8 items-start max-w-6xl w-full">
         
-        <div className="grid grid-cols-5 gap-2 border-4 border-yellow-400 p-4 bg-gray-800">
-          {villains.map(renderCharacterButton)}
+        {/* Left Side: Character Grid */}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-5 gap-2 border-4 border-yellow-400 p-4 bg-gray-800">
+            {heroes.map(renderCharacterButton)}
+          </div>
+          
+          <div className="grid grid-cols-5 gap-2 border-4 border-yellow-400 p-4 bg-gray-800">
+            {villains.map(renderCharacterButton)}
+          </div>
         </div>
-      </div>
 
-      {/* Character Preview Zone */}
-      <div className="mt-8 flex flex-col items-center min-h-[200px]">
-        {activeFighter && (
-          <>
-            {!imgBroken ? (
-              <img
-                src={activeFighter.full}
-                alt={activeFighter.name}
-                className="w-40 h-40 object-contain mb-2"
-                onError={() => setImgBroken(true)}
-              />
-            ) : (
-              <div className="w-40 h-40 mb-2 flex items-center justify-center bg-gray-700 rounded">
-                <span className="text-gray-400 text-sm">No Image</span>
-              </div>
-            )}
+        {/* Right Side: Character Preview */}
+        <div className="flex flex-col items-center min-w-[300px] max-w-[400px]">
+          {activeFighter && (
+            <>
+              {!imgBroken ? (
+                <img
+                  src={activeFighter.full}
+                  alt={activeFighter.name}
+                  className="w-48 h-48 object-contain mb-4"
+                  onError={() => setImgBroken(true)}
+                />
+              ) : (
+                <div className="w-48 h-48 mb-4 flex items-center justify-center bg-gray-700 rounded">
+                  <span className="text-gray-400 text-sm">No Image</span>
+                </div>
+              )}
 
-            <p className="text-2xl font-bold text-yellow-400 text-center mb-1">
-              {activeFighter.name}
-            </p>
+              <p className="text-2xl font-bold text-yellow-400 text-center mb-2">
+                {activeFighter.name}
+              </p>
 
-            <p className="text-xl text-center whitespace-nowrap mb-2">
-              {activeFighter.quip}
-            </p>
+              <p className="text-lg text-center mb-4 px-4">
+                {activeFighter.quip}
+              </p>
 
-            {/* Character Type Badge */}
-            <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-              heroIds.includes(activeFighter.id) 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-red-600 text-white'
-            }`}>
-              {heroIds.includes(activeFighter.id) ? 'HERO' : 'VILLAIN'}
+              {/* Confirm Button */}
+              <button
+                disabled={!selectedId || (selectedId && inactiveCharacters.includes(selectedId))}
+                onClick={handleConfirm}
+                className={`px-6 py-3 bg-yellow-500 text-black font-bold rounded-lg text-lg
+                            ${(!selectedId || (selectedId && inactiveCharacters.includes(selectedId)))
+                              && 'opacity-30 cursor-not-allowed'}`}
+              >
+                {selectedId ? `FIGHT AS ${fighters.find(f => f.id === selectedId)?.name.toUpperCase()}!` : 'SELECT A FIGHTER!'}
+              </button>
+            </>
+          )}
+          
+          {!activeFighter && (
+            <div className="text-center text-gray-400 mt-12">
+              <p className="text-lg">Hover over a fighter</p>
+              <p className="text-sm">to see their details</p>
             </div>
-
-            {/* Show inactive message */}
-            {inactiveCharacters.includes(activeFighter.id) && (
-              <div className="mt-2 px-4 py-2 bg-red-900 border border-red-600 rounded">
-                <span className="text-red-300 text-sm">Character temporarily unavailable</span>
-              </div>
-            )}
-          </>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Confirm Button */}
