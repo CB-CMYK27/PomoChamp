@@ -108,17 +108,24 @@ export default function FighterSelect() {
       {/* Main Grid Layout */}
       <div className="flex flex-col items-center max-w-6xl w-full">
         
-        {/* Top Row: Heroes + Center Preview + Villains */}
-        <div className="flex items-start gap-4 mb-1">
-          {/* Heroes - Left Side */}
+        {/* Character Grid Layout - Heroes vs Villains */}
+        <div className="flex items-start gap-4 mb-8">
+          {/* Heroes - Left Side (Unified 3x2 Grid) */}
           <div className="flex flex-col items-center">
             <h3 className="text-lg text-blue-400 mb-2 font-bold">HEROES</h3>
-            <div className="grid grid-cols-3 gap-2 border-4 border-blue-500 p-4 bg-gray-800 mb-1">
-              {topLeftFighters.map(renderCharacterButton)}
+            <div className="border-4 border-blue-500 p-4 bg-gray-800">
+              {/* Top Row Heroes */}
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {topLeftFighters.map(renderCharacterButton)}
+              </div>
+              {/* Bottom Row Heroes */}
+              <div className="grid grid-cols-3 gap-2">
+                {bottomLeftFighters.map(renderCharacterButton)}
+              </div>
             </div>
           </div>
 
-          {/* Center Preview Area - Moved Down for Better Centering */}
+          {/* Center Preview Area */}
           <div className="flex flex-col items-center min-w-[200px] max-w-[250px] justify-start mt-16">
             {activeFighter ? (
               <>
@@ -144,33 +151,18 @@ export default function FighterSelect() {
             )}
           </div>
 
-          {/* Villains - Right Side */}
+          {/* Villains - Right Side (Unified 3x2 Grid) */}
           <div className="flex flex-col items-center">
             <h3 className="text-lg text-red-400 mb-2 font-bold">VILLAINS</h3>
-            <div className="grid grid-cols-3 gap-2 border-4 border-red-500 p-4 bg-gray-800 mb-1">
-              {topRightFighters.map(renderCharacterButton)}
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Row: Heroes + Center (empty) + Villains */}
-        <div className="flex items-start gap-4 mb-8">
-          {/* Heroes - Left Side (Bottom Row) */}
-          <div className="flex flex-col items-center">
-            <div className="grid grid-cols-3 gap-2 border-4 border-blue-500 p-4 bg-gray-800">
-              {bottomLeftFighters.map(renderCharacterButton)}
-            </div>
-          </div>
-
-          {/* Center Spacer (keeps alignment) */}
-          <div className="min-w-[200px] max-w-[250px]">
-            {/* Empty space to maintain alignment */}
-          </div>
-
-          {/* Villains - Right Side (Bottom Row) */}
-          <div className="flex flex-col items-center">
-            <div className="grid grid-cols-3 gap-2 border-4 border-red-500 p-4 bg-gray-800">
-              {bottomRightFighters.map(renderCharacterButton)}
+            <div className="border-4 border-red-500 p-4 bg-gray-800">
+              {/* Top Row Villains */}
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {topRightFighters.map(renderCharacterButton)}
+              </div>
+              {/* Bottom Row Villains */}
+              <div className="grid grid-cols-3 gap-2">
+                {bottomRightFighters.map(renderCharacterButton)}
+              </div>
             </div>
           </div>
         </div>
