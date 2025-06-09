@@ -13,46 +13,53 @@ export default function FighterSelect() {
 
   const setFighter = useGameStore((s) => s.setFighter);
 
-  // Character order array - 2x5 grid layout
-  const characterOrder = [
-    // Top row (5 characters)
+  // Character arrangement - Heroes left, Villains right
+  const heroCharacters = [
+    // Heroes - Left side (3x2)
     'jack-tower',
-    'ellen-ryker',
-    'raging-stallion', 
+    'ellen-ryker', 
+    'raging-stallion',
     'beach-belle',
     'bond-sterling',
-    
-    // Bottom row (5 characters)
+    'waves-mcrad'        // Inactive
+  ];
+
+  const villainCharacters = [
+    // Villains - Right side (3x2)
     'prof-kruber',
     'queen-chroma',
     'iron-titan',
     'jawsome',
-    'dr-whiskers'
+    'dr-whiskers',
+    'gen-buzzkill'       // Inactive
   ];
 
-  // Split into top and bottom rows
-  const topRow = characterOrder.slice(0, 5);
-  const bottomRow = characterOrder.slice(5, 10);
+  // Inactive characters (will be grayed out)
+  const inactiveCharacters = ['waves-mcrad', 'gen-buzzkill'];
 
-  // Get fighter data for each row, filtering out any missing fighters
-  const topFighters = topRow
-    .map(id => fighters.find(f => f.id === id))
-    .filter(f => f !== undefined);
+  // Split heroes and villains into top/bottom rows
+  const heroesTopRow = heroCharacters.slice(0, 3);
+  const heroesBottomRow = heroCharacters.slice(3, 6);
+  const villainsTopRow = villainCharacters.slice(0, 3);
+  const villainsBottomRow = villainCharacters.slice(3, 6);
 
-  const bottomFighters = bottomRow
-    .map(id => fighters.find(f => f.id === id))
-    .filter(f => f !== undefined);
+  // Get fighter data for each section
+  const topLeftFighters = heroesTopRow.map(id => fighters.find(f => f.id === id)).filter(f => f !== undefined);
+  const bottomLeftFighters = heroesBottomRow.map(id => fighters.find(f => f.id === id)).filter(f => f !== undefined);
+  const topRightFighters = villainsTopRow.map(id => fighters.find(f => f.id === id)).filter(f => f !== undefined);
+  const bottomRightFighters = villainsBottomRow.map(id => fighters.find(f => f.id === id)).filter(f => f !== undefined);
 
   const activeId = hoveredId || selectedId;
   const activeFighter = fighters.find((f) => f.id === activeId) || null;
 
   const handleConfirm = () => {
-    if (!selectedId) return;
+    if (!selectedId || inactiveCharacters.includes(selectedId)) return;
     setFighter(selectedId);
     navigate('/fight');
   };
 
   const handleCharacterClick = (characterId: string) => {
+    if (inactiveCharacters.includes(characterId)) return;
     setSelectedId(characterId);
   };
 
@@ -62,6 +69,7 @@ export default function FighterSelect() {
   };
 
   const renderCharacterButton = (fighter: any) => {
+    const isInactive = inactiveCharacters.includes(fighter.id);
     const isSelected = selectedId === fighter.id;
     const isHovered = hoveredId === fighter.id;
 
@@ -71,21 +79,31 @@ export default function FighterSelect() {
         onMouseEnter={() => handleCharacterHover(fighter.id)}
         onMouseLeave={() => setHoveredId(null)}
         onClick={() => handleCharacterClick(fighter.id)}
-        className={`w-32 h-32 flex items-center justify-center
+        disabled={isInactive}
+        className={`w-32 h-32 flex items-center justify-center relative
                     ring-2 ring-offset-2 ring-offset-gray-800
-                    ${isSelected
+                    ${isSelected && !isInactive
                       ? 'ring-yellow-400'
-                      : isHovered
+                      : isHovered && !isInactive
                       ? 'ring-blue-400' 
                       : 'ring-transparent'}
-                    bg-gray-900 hover:bg-gray-800 cursor-pointer
+                    ${isInactive 
+                      ? 'bg-gray-700 opacity-40 cursor-not-allowed' 
+                      : 'bg-gray-900 hover:bg-gray-800 cursor-pointer'}
                     transition-all duration-200`}
       >
         <img
           src={fighter.portrait}
           alt={fighter.name}
-          className="w-full h-full object-contain"
+          className={`w-full h-full object-contain ${isInactive ? 'grayscale' : ''}`}
         />
+        {isInactive && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-red-500 text-xs font-bold bg-black bg-opacity-70 px-2 py-1 rounded">
+              INACTIVE
+            </span>
+          </div>
+        )}
       </button>
     );
   };
@@ -95,61 +113,106 @@ export default function FighterSelect() {
       {/* Heading */}
       <h1 className="text-3xl mb-8">CHOOSE&nbsp;YOUR&nbsp;FIGHTER</h1>
 
-      {/* Main Content: Grid Left, Preview Right */}
-      <div className="flex flex-row gap-12 items-start max-w-7xl w-full justify-center">
+      {/* Main Grid Layout */}
+      <div className="flex flex-col items-center max-w-6xl w-full">
         
-        {/* Left Side: Character Grid */}
-        <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-5 gap-3 border-4 border-yellow-400 p-6 bg-gray-800">
-            {topFighters.map(renderCharacterButton)}
+        {/* Top Row: Heroes + Center Preview + Villains */}
+        <div className="flex items-center gap-8 mb-4">
+          {/* Heroes - Left Side */}
+          <div className="flex flex-col items-center">
+            <h3 className="text-lg text-blue-400 mb-2 font-bold">HEROES</h3>
+            <div className="grid grid-cols-3 gap-2 border-4 border-blue-500 p-4 bg-gray-800">
+              {topLeftFighters.map(renderCharacterButton)}
+            </div>
           </div>
-          
-          <div className="grid grid-cols-5 gap-3 border-4 border-yellow-400 p-6 bg-gray-800">
-            {bottomFighters.map(renderCharacterButton)}
+
+          {/* Center Preview Area */}
+          <div className="flex flex-col items-center min-w-[200px] max-w-[250px]">
+            {activeFighter ? (
+              <>
+                {!imgBroken ? (
+                  <img
+                    src={activeFighter.full}
+                    alt={activeFighter.name}
+                    className="w-48 h-48 object-contain"
+                    onError={() => setImgBroken(true)}
+                  />
+                ) : (
+                  <div className="w-48 h-48 flex items-center justify-center bg-gray-700 rounded">
+                    <span className="text-gray-400">No Image</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="w-48 h-48 flex items-center justify-center border-2 border-dashed border-gray-600 rounded">
+                <span className="text-gray-500 text-center">
+                  Hover over<br/>a fighter
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Villains - Right Side */}
+          <div className="flex flex-col items-center">
+            <h3 className="text-lg text-red-400 mb-2 font-bold">VILLAINS</h3>
+            <div className="grid grid-cols-3 gap-2 border-4 border-red-500 p-4 bg-gray-800">
+              {topRightFighters.map(renderCharacterButton)}
+            </div>
           </div>
         </div>
 
-        {/* Right Side: Character Preview */}
-        <div className="flex flex-col items-center justify-start min-w-[350px] mt-8">
-          {activeFighter ? (
-            <>
-              {!imgBroken ? (
-                <img
-                  src={activeFighter.full}
-                  alt={activeFighter.name}
-                  className="w-56 h-56 object-contain mb-6"
-                  onError={() => setImgBroken(true)}
-                />
-              ) : (
-                <div className="w-56 h-56 mb-6 flex items-center justify-center bg-gray-700 rounded">
-                  <span className="text-gray-400">No Image</span>
-                </div>
-              )}
+        {/* Bottom Row: Heroes + Center (empty) + Villains */}
+        <div className="flex items-center gap-8 mb-8">
+          {/* Heroes - Left Side (Bottom Row) */}
+          <div className="flex flex-col items-center">
+            <div className="grid grid-cols-3 gap-2 border-4 border-blue-500 p-4 bg-gray-800">
+              {bottomLeftFighters.map(renderCharacterButton)}
+            </div>
+          </div>
 
-              <h2 className="text-3xl font-bold text-yellow-400 text-center mb-4">
+          {/* Center Spacer (keeps alignment) */}
+          <div className="min-w-[200px] max-w-[250px]">
+            {/* Empty space to maintain alignment */}
+          </div>
+
+          {/* Villains - Right Side (Bottom Row) */}
+          <div className="flex flex-col items-center">
+            <div className="grid grid-cols-3 gap-2 border-4 border-red-500 p-4 bg-gray-800">
+              {bottomRightFighters.map(renderCharacterButton)}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Info Area */}
+        <div className="flex flex-col items-center min-h-[120px] max-w-md">
+          {activeFighter && (
+            <>
+              <h2 className="text-2xl font-bold text-yellow-400 text-center mb-2">
                 {activeFighter.name}
               </h2>
 
-              <p className="text-xl text-center mb-6 px-4 leading-relaxed">
+              <p className="text-lg text-center mb-4 leading-relaxed">
                 {activeFighter.quip}
               </p>
 
-              {/* Single Confirm Button */}
-              <button
-                disabled={!selectedId}
-                onClick={handleConfirm}
-                className={`px-8 py-4 bg-yellow-500 text-black font-bold rounded-lg text-xl transition-all
-                            ${!selectedId ? 'opacity-50 cursor-not-allowed' : 'hover:bg-yellow-400 hover:scale-105'}`}
-              >
-                {selectedId ? `FIGHT AS ${activeFighter.name.toUpperCase()}!` : 'SELECT A FIGHTER!'}
-              </button>
+              {/* Show inactive message */}
+              {inactiveCharacters.includes(activeFighter.id) ? (
+                <div className="px-4 py-2 bg-red-900 border border-red-600 rounded">
+                  <span className="text-red-300 text-sm">Character temporarily unavailable</span>
+                </div>
+              ) : (
+                <button
+                  disabled={!selectedId || inactiveCharacters.includes(selectedId)}
+                  onClick={handleConfirm}
+                  className={`px-6 py-3 bg-yellow-500 text-black font-bold rounded-lg text-lg transition-all
+                              ${(!selectedId || inactiveCharacters.includes(selectedId))
+                                ? 'opacity-50 cursor-not-allowed' 
+                                : 'hover:bg-yellow-400 hover:scale-105'}`}
+                >
+                  {selectedId ? `FIGHT AS ${activeFighter.name.toUpperCase()}!` : 'SELECT A FIGHTER!'}
+                </button>
+              )}
             </>
-          ) : (
-            <div className="text-center text-gray-400 mt-16">
-              <div className="text-6xl mb-4">👆</div>
-              <p className="text-xl mb-2">Choose Your Champion</p>
-              <p className="text-lg">Hover to preview • Click to select</p>
-            </div>
           )}
         </div>
       </div>
