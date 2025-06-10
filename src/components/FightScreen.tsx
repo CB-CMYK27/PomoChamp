@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import fighters from '../data/fighters.json';
 
 interface Fighter {
   id: string;
   name: string;
   portrait: string;
-  sprite: string;
+  full: string;
   quip: string;
-  stage: string;
+  stageBg: string;
 }
 
 interface Task {
@@ -19,12 +20,40 @@ interface Task {
 
 interface FightSession {
   selectedFighter: Fighter;
+  opponent: Fighter;
   tasks: Task[];
-  timeRemaining: number; // in seconds
+  timeRemaining: number;
   fighterHP: number;
   opponentHP: number;
   gameState: 'fighting' | 'paused' | 'victory' | 'defeat';
+  gameMode: 'quick-battle' | 'tournament';
+  currentRound: number;
+  stage: string;
 }
+
+// Character counterpart mappings
+const COUNTERPARTS: { [key: string]: string } = {
+  'jack-tower': 'prof-kruber',
+  'prof-kruber': 'jack-tower',
+  'jawsome': 'beach-belle',
+  'beach-belle': 'jawsome',
+  'ellen-ryker': 'queen-chroma',
+  'queen-chroma': 'ellen-ryker',
+  'raging-stallion': 'iron-titan',
+  'iron-titan': 'raging-stallion',
+  'bond-sterling': 'dr-whiskers',
+  'dr-whiskers': 'bond-sterling',
+  'waves-mcrad': 'gen-buzzkill',
+  'gen-buzzkill': 'waves-mcrad'
+};
+
+// Available stages (only 4 priority stages for now)
+const AVAILABLE_STAGES = [
+  'jack-tower-construction.jpg',
+  'ellen-ryker-cargo-hold.jpg', 
+  'prof-kruber-rooftop.jpg',
+  'queen-chroma-hive.jpg'
+];
 
 const FightScreen: React.FC = () => {
   const location = useLocation();
@@ -33,10 +62,50 @@ const FightScreen: React.FC = () => {
   const audioRef = useRef<{ [key: string]: HTMLAudioElement }>({});
 
   // Get data from navigation state
-  const { selectedFighter, tasks: initialTasks } = location.state || {};
+  const { selectedFighter, tasks: initialTasks, gameMode = 'quick-battle', currentRound = 1 } = location.state || {};
+
+  // Helper function to get opponent
+  const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
+    if (!playerFighter) return null;
+    
+    if (mode === 'quick-battle') {
+      // Quick Battle: Fight counterpart
+      const counterpartId = COUNTERPARTS[playerFighter.id];
+      const counterpart = fighters.find((f: any) => f.id === counterpartId);
+      return counterpart || null;
+    } else {
+      // Tournament: Random opponent (different each round)
+      const availableOpponents = fighters.filter((f: any) => f.id !== playerFighter.id);
+      const opponentIndex = (round - 1) % availableOpponents.length;
+      return availableOpponents[opponentIndex] || null;
+    }
+  };
+
+  // Helper function to get stage
+  const getStage = (playerFighter: Fighter, mode: string, round: number): string => {
+    if (!playerFighter) return AVAILABLE_STAGES[0];
+    
+    if (mode === 'quick-battle' || round === 1) {
+      // Quick Battle or Tournament Round 1: Use player's stage (if available)
+      const playerStage = playerFighter.stageBg;
+      if (playerStage && AVAILABLE_STAGES.some(stage => stage.includes(playerFighter.id))) {
+        return playerStage;
+      }
+      // Fallback to first available stage
+      return AVAILABLE_STAGES[0];
+    } else {
+      // Tournament later rounds: Random stage
+      const stageIndex = (round - 1) % AVAILABLE_STAGES.length;
+      return AVAILABLE_STAGES[stageIndex];
+    }
+  };
+
+  const opponent = selectedFighter ? getOpponent(selectedFighter, gameMode, currentRound) : null;
+  const stageBackground = selectedFighter ? getStage(selectedFighter, gameMode, currentRound) : AVAILABLE_STAGES[0];
 
   const [session, setSession] = useState<FightSession>({
     selectedFighter: selectedFighter || null,
+    opponent: opponent,
     tasks: initialTasks?.map((task: any, index: number) => ({
       ...task,
       id: task.id || `task-${index}`,
@@ -45,7 +114,10 @@ const FightScreen: React.FC = () => {
     timeRemaining: 25 * 60, // 25 minutes in seconds
     fighterHP: 100,
     opponentHP: 100,
-    gameState: 'fighting'
+    gameState: 'fighting',
+    gameMode: gameMode,
+    currentRound: currentRound,
+    stage: stageBackground
   });
 
   const [musicStarted, setMusicStarted] = useState(false);
@@ -100,7 +172,7 @@ const FightScreen: React.FC = () => {
           
           return { ...prev, timeRemaining: remainingSeconds };
         });
-      }, 100); // Check every 100ms for smooth updates
+      }, 100);
 
       return () => {
         if (timerRef.current) {
@@ -185,16 +257,15 @@ const FightScreen: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-gradient-to-b from-purple-900 via-blue-900 to-black relative overflow-hidden"
+      className="min-h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden"
+      style={{ 
+        backgroundImage: `url(/stages/${session.stage})`,
+        backgroundColor: '#1a1a2e' // Fallback
+      }}
       onClick={startMusic}
     >
-      {/* Animated background elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-10 left-10 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-        <div className="absolute top-32 right-20 w-1 h-1 bg-pink-400 rounded-full animate-ping"></div>
-        <div className="absolute bottom-40 left-1/4 w-1 h-1 bg-yellow-400 rounded-full animate-pulse"></div>
-        <div className="absolute top-1/2 right-10 w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
-      </div>
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black bg-opacity-40"></div>
       
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col">
@@ -202,7 +273,7 @@ const FightScreen: React.FC = () => {
         {/* Header with timer and pause */}
         <div className="flex justify-between items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
           <div className="text-yellow-400 font-mono text-lg font-bold">
-            ROUND 1 - {completedTasks}/{totalTasks} TASKS
+            {session.gameMode === 'tournament' ? `ROUND ${session.currentRound}` : 'QUICK BATTLE'} - {completedTasks}/{totalTasks} TASKS
           </div>
           
           <div className="text-center">
@@ -218,7 +289,7 @@ const FightScreen: React.FC = () => {
           </div>
           
           <div className="text-yellow-400 font-mono text-lg font-bold">
-            {session.selectedFighter.name}
+            {/* Fighter name removed - shown under sprite instead */}
           </div>
         </div>
 
@@ -228,7 +299,7 @@ const FightScreen: React.FC = () => {
           {/* Player fighter */}
           <div className="flex flex-col items-center">
             <div className="mb-4">
-              <div className="text-yellow-400 font-mono text-lg font-bold mb-2">{session.selectedFighter.name}</div>
+              <div className="text-yellow-400 font-mono text-lg font-bold mb-2 text-center">{session.selectedFighter.name}</div>
               <div className="w-48 h-4 bg-gray-800 border-2 border-white rounded">
                 <div 
                   className="h-full bg-gradient-to-r from-green-500 to-yellow-500 transition-all duration-500 rounded"
@@ -238,11 +309,21 @@ const FightScreen: React.FC = () => {
               <div className="text-white font-mono text-sm mt-1 text-center">{session.fighterHP} HP</div>
             </div>
             
-            <div className={`w-48 h-72 bg-gradient-to-b from-cyan-900 to-blue-900 border-2 border-cyan-400 flex items-center justify-center rounded-lg
+            <div className={`w-48 h-72 flex flex-col items-center justify-center relative
                            ${session.fighterHP < 30 ? 'animate-pulse' : ''} 
                            ${session.gameState === 'victory' ? 'animate-bounce' : ''}`}>
-              <div className="text-cyan-400 font-mono text-xl text-center font-bold">
-                {session.selectedFighter.name.split(' ').map(word => word.substring(0, 4)).join('\n')}
+              <img 
+                src={session.selectedFighter.full}
+                alt={session.selectedFighter.name}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  // Fallback to a colored box if image fails
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+              <div className="absolute bottom-0 text-cyan-400 font-mono text-xs text-center bg-black bg-opacity-80 px-2 py-1 rounded max-w-full">
+                "{session.selectedFighter.quip}"
               </div>
             </div>
           </div>
@@ -253,7 +334,10 @@ const FightScreen: React.FC = () => {
               <h3 className="text-yellow-400 font-mono text-lg font-bold mb-4 text-center">BATTLE TASKS</h3>
               
               {session.tasks.length === 0 ? (
-                <div className="text-white font-mono text-center">NO TASKS LOADED</div>
+                <div className="text-white font-mono text-center">
+                  <div className="mb-2">NO TASKS LOADED</div>
+                  <div className="text-xs text-gray-400">Go to Quick Battle → Add tasks → Fighter Select → Fight</div>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {session.tasks.map((task) => (
@@ -287,7 +371,9 @@ const FightScreen: React.FC = () => {
           {/* Opponent fighter */}
           <div className="flex flex-col items-center">
             <div className="mb-4">
-              <div className="text-red-400 font-mono text-lg font-bold mb-2">PROCRASTINATION</div>
+              <div className="text-red-400 font-mono text-lg font-bold mb-2 text-center">
+                {session.opponent ? session.opponent.name : 'PROCRASTINATION'}
+              </div>
               <div className="w-48 h-4 bg-gray-800 border-2 border-white rounded">
                 <div 
                   className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500 rounded"
@@ -297,17 +383,37 @@ const FightScreen: React.FC = () => {
               <div className="text-white font-mono text-sm mt-1 text-center">{session.opponentHP} HP</div>
             </div>
             
-            <div className={`w-48 h-72 bg-gradient-to-b from-red-900 to-black border-2 border-red-500 flex items-center justify-center rounded-lg
+            <div className={`w-48 h-72 flex flex-col items-center justify-center relative
                            ${session.opponentHP < 30 ? 'animate-pulse' : ''} 
                            ${session.gameState === 'defeat' ? 'animate-bounce' : ''}`}>
-              <div className="text-red-400 font-mono text-2xl text-center font-bold">
-                LAZY<br/>MODE
-              </div>
+              {session.opponent ? (
+                <>
+                  <img 
+                    src={session.opponent.full}
+                    alt={session.opponent.name}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      // Fallback to a colored box if image fails
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute bottom-0 text-red-400 font-mono text-xs text-center bg-black bg-opacity-80 px-2 py-1 rounded max-w-full">
+                    "{session.opponent.quip}"
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-b from-red-900 to-black border-2 border-red-500 flex items-center justify-center rounded-lg">
+                  <div className="text-red-400 font-mono text-xl text-center font-bold">
+                    LAZY<br/>MODE
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Game state overlay */}
+        {/* Game state overlays */}
         {session.gameState === 'paused' && (
           <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
             <div className="text-center p-8 bg-black bg-opacity-80 border-2 border-yellow-400 rounded-lg">
@@ -326,7 +432,9 @@ const FightScreen: React.FC = () => {
           <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
             <div className="text-center p-8 bg-black bg-opacity-80 border-2 border-yellow-400 rounded-lg">
               <h2 className="text-yellow-400 font-mono text-6xl font-bold mb-4 animate-pulse">VICTORY!</h2>
-              <p className="text-white font-mono text-lg mb-6">All tasks completed! You are the champion!</p>
+              <p className="text-white font-mono text-lg mb-6">
+                {session.opponent ? `You defeated ${session.opponent.name}!` : 'All tasks completed!'}
+              </p>
               <div className="space-x-4">
                 <button 
                   onClick={() => navigate('/quick-battle')}
@@ -349,7 +457,9 @@ const FightScreen: React.FC = () => {
           <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
             <div className="text-center p-8 bg-black bg-opacity-80 border-2 border-red-400 rounded-lg">
               <h2 className="text-red-400 font-mono text-6xl font-bold mb-4 animate-pulse">DEFEATED!</h2>
-              <p className="text-white font-mono text-lg mb-6">Time ran out! Procrastination wins this round.</p>
+              <p className="text-white font-mono text-lg mb-6">
+                {session.opponent ? `${session.opponent.name} wins this round!` : 'Time ran out!'}
+              </p>
               <div className="space-x-4">
                 <button 
                   onClick={() => navigate('/quick-battle')}
@@ -372,6 +482,9 @@ const FightScreen: React.FC = () => {
         <div className="bg-black bg-opacity-80 p-3 text-center border-t-2 border-cyan-400">
           <div className="text-yellow-400 font-mono text-sm">
             Click anywhere to start background music • Complete tasks to deal damage • Don't let time run out!
+          </div>
+          <div className="text-cyan-400 font-mono text-xs mt-1">
+            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: {session.stage}
           </div>
         </div>
       </div>
