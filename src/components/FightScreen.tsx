@@ -277,11 +277,6 @@ const FightScreen: React.FC = () => {
       className="min-h-screen relative overflow-hidden"
       onClick={startMusic}
     >
-  return (
-    <div 
-      className="min-h-screen relative overflow-hidden"
-      onClick={startMusic}
-    >
       {/* Background image as actual img element */}
       <img 
         src={`/stages/${session.stage}`}
@@ -523,7 +518,7 @@ const FightScreen: React.FC = () => {
             Click anywhere to start background music • Complete tasks to deal damage • Don't let time run out!
           </div>
           <div className="text-cyan-400 font-mono text-xs mt-1">
-            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: ./stages/{session.stage}
+            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage}
           </div>
         </div>
       </div>
