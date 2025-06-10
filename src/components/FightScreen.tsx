@@ -89,7 +89,7 @@ const FightScreen: React.FC = () => {
     if (mode === 'quick-battle' || round === 1) {
       // Quick Battle or Tournament Round 1: Use player's stage (if available)
       const stageMapping: { [key: string]: string } = {
-        'jack-tower': 'rooftop.webp',
+        'jack-tower': 'construction-floor.webp',
         'prof-kruber': 'rooftop.webp',
         'jawsome': 'ocean-shallows.png',
         'beach-belle': 'ocean-shallows.png',
