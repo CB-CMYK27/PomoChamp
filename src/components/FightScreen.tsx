@@ -88,9 +88,6 @@ const FightScreen: React.FC = () => {
     
     if (mode === 'quick-battle' || round === 1) {
       // Quick Battle or Tournament Round 1: Use player's stage (if available)
-      const playerStage = playerFighter.stageBg;
-      
-      // Map fighter to correct stage file
       const stageMapping: { [key: string]: string } = {
         'jack-tower': 'rooftop.png',
         'prof-kruber': 'rooftop.png',
@@ -277,10 +274,13 @@ const FightScreen: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden"
+      className="min-h-screen relative overflow-hidden"
       style={{ 
-        backgroundImage: `url('/stages/${session.stage}')`,
-        backgroundColor: '#1a1a2e' // Fallback
+        backgroundImage: `url('./stages/${session.stage}')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#1a1a2e'
       }}
       onClick={startMusic}
     >
@@ -333,7 +333,7 @@ const FightScreen: React.FC = () => {
         </div>
 
         {/* Combat area */}
-        <div className="flex-1 flex items-center justify-between px-8 py-8 min-h-0"
+        <div className="flex-1 flex items-center justify-between px-8 py-8"
              style={{ height: 'calc(100vh - 160px)' }}>
           
           {/* Player fighter */}
@@ -346,7 +346,6 @@ const FightScreen: React.FC = () => {
                 alt={session.selectedFighter.name}
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  // Fallback to a colored box if image fails
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                 }}
@@ -404,22 +403,9 @@ const FightScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Opponent fighter */}
-          <div className="flex flex-col items-center">
-            <div className="mb-4">
-              <div className="text-red-400 font-mono text-lg font-bold mb-2 text-center">
-                {session.opponent ? session.opponent.name : 'PROCRASTINATION'}
-              </div>
-              <div className="w-48 h-4 bg-gray-800 border-2 border-white rounded">
-                <div 
-                  className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500 rounded"
-                  style={{ width: `${session.opponentHP}%` }}
-                ></div>
-              </div>
-              <div className="text-white font-mono text-sm mt-1 text-center">{session.opponentHP} HP</div>
-            </div>
-            
-            <div className={`w-48 h-72 flex flex-col items-center justify-center relative
+          {/* Opponent fighter - EXACT SAME SIZE AS PLAYER */}
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className={`w-72 h-96 flex flex-col items-center justify-center relative
                            ${session.opponentHP < 30 ? 'animate-pulse' : ''} 
                            ${session.gameState === 'defeat' ? 'animate-bounce' : ''}`}>
               {session.opponent ? (
@@ -427,15 +413,14 @@ const FightScreen: React.FC = () => {
                   <img 
                     src={session.opponent.full}
                     alt={session.opponent.name}
-                    className="w-full h-full object-contain scale-x-[-1]"
+                    className="w-full h-full object-contain"
                     style={{ transform: 'scaleX(-1)' }}
                     onError={(e) => {
-                      // Fallback to a colored box if image fails
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
                     }}
                   />
-                  <div className="absolute bottom-0 text-red-400 font-mono text-xs text-center bg-black bg-opacity-80 px-2 py-1 rounded max-w-full">
+                  <div className="absolute bottom-0 text-red-400 font-mono text-sm text-center bg-black bg-opacity-80 px-3 py-2 rounded max-w-full">
                     "{session.opponent.quip}"
                   </div>
                 </>
@@ -521,7 +506,7 @@ const FightScreen: React.FC = () => {
             Click anywhere to start background music • Complete tasks to deal damage • Don't let time run out!
           </div>
           <div className="text-cyan-400 font-mono text-xs mt-1">
-            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage}
+            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: ./stages/{session.stage}
           </div>
         </div>
       </div>
