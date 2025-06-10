@@ -424,25 +424,23 @@ const FightScreen: React.FC = () => {
                            ${session.opponentHP < 30 ? 'animate-pulse' : ''} 
                            ${session.gameState === 'defeat' ? 'animate-bounce' : ''}`}>
               {session.opponent ? (
-                <>
-                  <img 
-                    src={session.opponent.full}
-                    alt={session.opponent.name}
-                    className="w-full h-full object-contain object-bottom"
-                    style={{ transform: 'scaleX(-1)' }}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                </>
-              ) : (
-                <div className="w-full h-full bg-gradient-to-b from-red-900 to-black border-2 border-red-500 flex items-center justify-center rounded-lg">
-                  <div className="text-red-400 font-mono text-xl text-center font-bold">
-                    LAZY<br/>MODE
-                  </div>
-                </div>
-              )}
+  <img 
+    src={session.opponent.full}
+    alt={session.opponent.name}
+    className="w-full h-full object-contain object-bottom"
+    style={{ transform: 'scaleX(-1)' }}
+    onError={(e) => {
+      const target = e.target as HTMLImageElement;
+      target.style.display = 'none';
+    }}
+  />
+) : (
+  <div className="w-full h-full bg-gradient-to-b from-red-900 to-black border-2 border-red-500 flex items-center justify-center rounded-lg">
+    <div className="text-red-400 font-mono text-xl text-center font-bold">
+      LAZY<br/>MODE
+    </div>
+  </div>
+)}
             </div>
             {/* Quip positioned at bottom of combat area */}
             {session.opponent && (
