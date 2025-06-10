@@ -49,11 +49,10 @@ const COUNTERPARTS: { [key: string]: string } = {
 
 // Available stages (using your existing stage files)
 const AVAILABLE_STAGES = [
+  'construction-floor.webp',
   'rooftop.webp',
-  'ocean-shallows.png', 
-  'volcano-lair.png',
-  'beach-pier.png',
-  'moscow-ring.png'
+  'cargo-hold.webp', 
+  'alien-hive.webp',
 ];
 
 const FightScreen: React.FC = () => {
@@ -84,38 +83,40 @@ const FightScreen: React.FC = () => {
 
   // Helper function to get stage
   const getStage = (playerFighter: Fighter, mode: string, round: number): string => {
-    if (!playerFighter) return AVAILABLE_STAGES[0];
+  if (!playerFighter) return 'construction-floor.webp';
+  
+  if (mode === 'quick-battle' || round === 1) {
+    // Quick Battle or Tournament Round 1: Use player's stage (if available)
     
-    if (mode === 'quick-battle' || round === 1) {
-      // Quick Battle or Tournament Round 1: Use player's stage (if available)
-      const stageMapping: { [key: string]: string } = {
-        'jack-tower': 'construction-floor.webp',
-        'prof-kruber': 'rooftop.webp',
-        'jawsome': 'ocean-shallows.png',
-        'beach-belle': 'ocean-shallows.png',
-        'ellen-ryker': 'volcano-lair.png',
-        'queen-chroma': 'volcano-lair.png',
-        'raging-stallion': 'moscow-ring.png',
-        'iron-titan': 'moscow-ring.png',
-        'bond-sterling': 'volcano-lair.png',
-        'dr-whiskers': 'volcano-lair.png',
-        'waves-mcrad': 'beach-pier.png',
-        'gen-buzzkill': 'beach-pier.png'
-      };
-      
-      const mappedStage = stageMapping[playerFighter.id];
-      if (mappedStage && AVAILABLE_STAGES.includes(mappedStage)) {
-        return mappedStage;
-      }
-      
-      // Fallback to first available stage
-      return AVAILABLE_STAGES[0];
-    } else {
-      // Tournament later rounds: Random stage
-      const stageIndex = (round - 1) % AVAILABLE_STAGES.length;
-      return AVAILABLE_STAGES[stageIndex];
+    // Map fighter to correct stage file
+    const stageMapping: { [key: string]: string } = {
+      'jack-tower': 'construction-floor.webp',
+      'prof-kruber': 'rooftop.webp',
+      'ellen-ryker': 'cargo-hold.webp',
+      'queen-chroma': 'alien-hive.webp',
+      'jawsome': 'ocean-shallows.webp',       // Future stage
+      'beach-belle': 'lifeguard-deck.webp',   // Future stage
+      'raging-stallion': 'boxing-ring.webp',  // Future stage
+      'iron-titan': 'moscow-ring.webp',       // Future stage
+      'bond-sterling': 'casino-terrace.webp', // Future stage
+      'dr-whiskers': 'volcano-lair.webp',     // Future stage
+      'waves-mcrad': 'construction-floor.webp',    // Fallback for now
+      'gen-buzzkill': 'construction-floor.webp'    // Fallback for now
+    };
+    
+    const mappedStage = stageMapping[playerFighter.id];
+    if (mappedStage && AVAILABLE_STAGES.includes(mappedStage)) {
+      return mappedStage;
     }
-  };
+    
+    // Safe fallback to Jack Tower's stage
+    return 'construction-floor.webp';
+  } else {
+    // Tournament later rounds: Random stage from available stages only
+    const stageIndex = (round - 1) % AVAILABLE_STAGES.length;
+    return AVAILABLE_STAGES[stageIndex];
+  }
+}
 
   const opponent = selectedFighter ? getOpponent(selectedFighter, gameMode, currentRound) : null;
   const stageBackground = selectedFighter ? getStage(selectedFighter, gameMode, currentRound) : AVAILABLE_STAGES[0];
