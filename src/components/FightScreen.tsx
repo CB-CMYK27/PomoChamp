@@ -349,22 +349,23 @@ const FightScreen: React.FC = () => {
              style={{ height: 'calc(100vh - 160px)' }}>
           
           {/* Player fighter */}
-          <div className="flex flex-col items-center justify-center h-full">
-            <div className={`w-72 h-96 flex flex-col items-center justify-center relative
+          <div className="flex flex-col items-center justify-start h-full relative">
+            <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
                            ${session.fighterHP < 30 ? 'animate-pulse' : ''} 
                            ${session.gameState === 'victory' ? 'animate-bounce' : ''}`}>
               <img 
                 src={session.selectedFighter.full}
                 alt={session.selectedFighter.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain object-top"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                 }}
               />
-              <div className="absolute bottom-0 text-cyan-400 font-mono text-sm text-center bg-black bg-opacity-80 px-3 py-2 rounded max-w-full">
-                "{session.selectedFighter.quip}"
-              </div>
+            </div>
+            {/* Quip positioned at bottom of combat area */}
+            <div className="absolute bottom-4 left-4 text-cyan-400 font-mono text-sm text-left">
+              "{session.selectedFighter.quip}"
             </div>
           </div>
 
@@ -416,8 +417,8 @@ const FightScreen: React.FC = () => {
           </div>
 
           {/* Opponent fighter - EXACT SAME SIZE AS PLAYER */}
-          <div className="flex flex-col items-center justify-center h-full">
-            <div className={`w-72 h-96 flex flex-col items-center justify-center relative
+          <div className="flex flex-col items-center justify-start h-full relative">
+            <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
                            ${session.opponentHP < 30 ? 'animate-pulse' : ''} 
                            ${session.gameState === 'defeat' ? 'animate-bounce' : ''}`}>
               {session.opponent ? (
@@ -425,16 +426,13 @@ const FightScreen: React.FC = () => {
                   <img 
                     src={session.opponent.full}
                     alt={session.opponent.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain object-top"
                     style={{ transform: 'scaleX(-1)' }}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
                     }}
                   />
-                  <div className="absolute bottom-0 text-red-400 font-mono text-sm text-center bg-black bg-opacity-80 px-3 py-2 rounded max-w-full">
-                    "{session.opponent.quip}"
-                  </div>
                 </>
               ) : (
                 <div className="w-full h-full bg-gradient-to-b from-red-900 to-black border-2 border-red-500 flex items-center justify-center rounded-lg">
@@ -444,6 +442,12 @@ const FightScreen: React.FC = () => {
                 </div>
               )}
             </div>
+            {/* Quip positioned at bottom of combat area */}
+            {session.opponent && (
+              <div className="absolute bottom-4 right-4 text-red-400 font-mono text-sm text-right">
+                "{session.opponent.quip}"
+              </div>
+            )}
           </div>
         </div>
 
