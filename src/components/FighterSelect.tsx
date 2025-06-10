@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import fighters from '../data/fighters.json';
 import { useGameStore } from '../store/gameStore';
