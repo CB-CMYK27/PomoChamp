@@ -366,7 +366,7 @@ const FightScreen: React.FC = () => {
             </div>
             {/* Quip positioned at bottom of combat area */}
             <div className="absolute bottom-0 left-4 text-cyan-400 font-mono text-sm text-left max-w-xs" 
-     style={{ bottom: '-8px' }}>
+     style={{ bottom: '-16px' }}>
               "{session.selectedFighter.quip}"
             </div>
           </div>
@@ -447,7 +447,7 @@ const FightScreen: React.FC = () => {
             {/* Quip positioned at bottom of combat area */}
             {session.opponent && (
               <div className="absolute bottom-0 right-4 text-red-400 font-mono text-sm text-right max-w-xs"
-     style={{ bottom: '-8px' }}>
+     style={{ bottom: '-16px' }}>
                 "{session.opponent.quip}"
               </div>
             )}
