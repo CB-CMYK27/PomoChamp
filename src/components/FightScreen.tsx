@@ -47,12 +47,13 @@ const COUNTERPARTS: { [key: string]: string } = {
   'gen-buzzkill': 'waves-mcrad'
 };
 
-// Available stages (only 4 priority stages for now)
+// Available stages (using your existing stage files)
 const AVAILABLE_STAGES = [
-  'jack-tower-construction.jpg',
-  'ellen-ryker-cargo-hold.jpg', 
-  'prof-kruber-rooftop.jpg',
-  'queen-chroma-hive.jpg'
+  'rooftop.png',
+  'ocean-shallows.png', 
+  'volcano-lair.png',
+  'beach-pier.png',
+  'moscow-ring.png'
 ];
 
 const FightScreen: React.FC = () => {
@@ -88,7 +89,7 @@ const FightScreen: React.FC = () => {
     if (mode === 'quick-battle' || round === 1) {
       // Quick Battle or Tournament Round 1: Use player's stage (if available)
       const playerStage = playerFighter.stageBg;
-      if (playerStage && AVAILABLE_STAGES.some(stage => stage.includes(playerFighter.id))) {
+      if (playerStage && AVAILABLE_STAGES.includes(playerStage)) {
         return playerStage;
       }
       // Fallback to first available stage
