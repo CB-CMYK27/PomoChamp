@@ -277,13 +277,29 @@ const FightScreen: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden"
-      style={{ 
-        backgroundImage: session.stage ? `url(/stages/${session.stage})` : 'none',
-        backgroundColor: '#1a1a2e' // Fallback
-      }}
+      className="min-h-screen relative overflow-hidden"
       onClick={startMusic}
     >
+      {/* Background image as img element for better loading */}
+      <img 
+        src={`/stages/${session.stage}`}
+        alt="Stage background"
+        className="absolute inset-0 w-full h-full object-cover"
+        onError={(e) => {
+          console.log('Background image failed to load:', session.stage);
+          // Hide the image and show fallback background
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+        }}
+        onLoad={() => console.log('Background image loaded:', session.stage)}
+      />
+      
+      {/* Fallback background */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-gradient-to-b from-purple-900 via-blue-900 to-black"
+        style={{ zIndex: -1 }}
+      ></div>
+      
       {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black bg-opacity-40"></div>
       
