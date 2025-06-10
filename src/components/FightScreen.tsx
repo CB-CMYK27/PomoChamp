@@ -428,7 +428,7 @@ const FightScreen: React.FC = () => {
     src={session.opponent.full}
     alt={session.opponent.name}
     className="w-full h-full object-contain object-bottom"
-   
+    style={{ transform: 'scaleX(-1)' }}
     onError={(e) => {
       const target = e.target as HTMLImageElement;
       target.style.display = 'none';
