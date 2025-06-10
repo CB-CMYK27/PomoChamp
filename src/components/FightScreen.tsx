@@ -419,37 +419,29 @@ const FightScreen: React.FC = () => {
           </div>
 
           {/* Opponent fighter - EXACT SAME SIZE AS PLAYER */}
-          <div className="flex flex-col items-center justify-start h-full relative">
-            <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
-                           ${session.opponentHP < 30 ? 'animate-pulse' : ''} 
-                           ${session.gameState === 'defeat' ? 'animate-bounce' : ''}`}>
-              {session.opponent ? (
-  <img 
-    src={session.opponent.full}
-    alt={session.opponent.name}
-    className="w-full h-full object-contain object-bottom"
-    style={{ transform: 'scaleX(-1)' }}
-    onError={(e) => {
-      const target = e.target as HTMLImageElement;
-      target.style.display = 'none';
-    }}
-  />
-) : (
-  <div className="w-full h-full bg-gradient-to-b from-red-900 to-black border-2 border-red-500 flex items-center justify-center rounded-lg">
-    <div className="text-red-400 font-mono text-xl text-center font-bold">
-      LAZY<br/>MODE
-    </div>
+<div className="flex flex-col items-center justify-start h-full relative">
+  <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
+                 ${session.opponentHP < 30 ? 'animate-pulse' : ''} 
+                 ${session.gameState === 'defeat' ? 'animate-bounce' : ''}`}>
+    <img 
+      src={session.opponent?.full || ''}
+      alt={session.opponent?.name || 'No opponent'}
+      className="w-full h-full object-contain object-bottom"
+      style={{ transform: 'scaleX(-1)' }}
+      onError={(e) => {
+        const target = e.target as HTMLImageElement;
+        target.style.display = 'none';
+      }}
+    />
   </div>
-)}
-            </div>
-            {/* Quip positioned at bottom of combat area */}
-            {session.opponent && (
-              <div className="absolute bottom-0 right-4 text-red-400 font-mono text-sm text-right max-w-xs"
-     style={{ bottom: '-16px' }}>
-                "{session.opponent.quip}"
-              </div>
-            )}
-          </div>
+  {/* Quip positioned at bottom of combat area */}
+  {session.opponent && (
+    <div className="absolute right-4 text-red-400 font-mono text-sm text-right max-w-xs"
+         style={{ bottom: '-16px' }}>
+      "{session.opponent.quip}"
+    </div>
+  )}
+</div>
         </div>
 
         {/* Game state overlays */}
