@@ -58,7 +58,18 @@ const QuickBattle: React.FC = () => {
 
   const handleStartBattle = () => {
     if (!canStartBattle) return;
-    navigate('/fighter-select');                          // NEW
+    
+    // Convert tasks to the format expected by Fight Screen
+    const formattedTasks = tasks.map(task => ({
+      id: task.id,
+      name: task.title,                    // Convert 'title' to 'name'
+      estimatedTime: task.estimated_minutes,  // Convert 'estimated_minutes' to 'estimatedTime'
+      completed: false
+    }));
+    
+    navigate('/fighter-select', {
+      state: { tasks: formattedTasks }     // Pass the tasks!
+    });
   };
 
   const getStatusColor = () => {
