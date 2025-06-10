@@ -290,12 +290,21 @@ const FightScreen: React.FC = () => {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         
-        {/* Header with timer and pause */}
-        <div className="flex justify-center items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
-          <div className="absolute left-4 text-yellow-400 font-mono text-lg font-bold">
-            {session.gameMode === 'tournament' ? `ROUND ${session.currentRound}` : 'QUICK BATTLE'} - {completedTasks}/{totalTasks} TASKS
+        {/* Header with HP bars and timer */}
+        <div className="flex justify-between items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
+          {/* Left - Player HP Bar */}
+          <div className="flex flex-col items-center">
+            <div className="text-yellow-400 font-mono text-lg font-bold mb-2">{session.selectedFighter.name}</div>
+            <div className="w-48 h-4 bg-gray-800 border-2 border-white rounded">
+              <div 
+                className="h-full bg-gradient-to-r from-green-500 to-yellow-500 transition-all duration-500 rounded"
+                style={{ width: `${session.fighterHP}%` }}
+              ></div>
+            </div>
+            <div className="text-white font-mono text-sm mt-1">{session.fighterHP} HP</div>
           </div>
           
+          {/* Center - Timer */}
           <div className="text-center">
             <div className={`font-mono text-4xl font-bold ${session.timeRemaining < 300 ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`}>
               {formatTime(session.timeRemaining)}
@@ -308,28 +317,28 @@ const FightScreen: React.FC = () => {
             </button>
           </div>
           
-          <div className="absolute right-4 text-yellow-400 font-mono text-lg font-bold">
-            {/* Empty - keeping for balance */}
+          {/* Right - Opponent HP Bar */}
+          <div className="flex flex-col items-center">
+            <div className="text-red-400 font-mono text-lg font-bold mb-2">
+              {session.opponent ? session.opponent.name : 'PROCRASTINATION'}
+            </div>
+            <div className="w-48 h-4 bg-gray-800 border-2 border-white rounded">
+              <div 
+                className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500 rounded"
+                style={{ width: `${session.opponentHP}%` }}
+              ></div>
+            </div>
+            <div className="text-white font-mono text-sm mt-1">{session.opponentHP} HP</div>
           </div>
         </div>
 
         {/* Combat area */}
-        <div className="flex-1 flex items-center justify-between px-8 py-4">
+        <div className="flex-1 flex items-center justify-between px-8 py-8 min-h-0"
+             style={{ height: 'calc(100vh - 160px)' }}>
           
           {/* Player fighter */}
-          <div className="flex flex-col items-center">
-            <div className="mb-4">
-              <div className="text-yellow-400 font-mono text-lg font-bold mb-2 text-center">{session.selectedFighter.name}</div>
-              <div className="w-48 h-4 bg-gray-800 border-2 border-white rounded">
-                <div 
-                  className="h-full bg-gradient-to-r from-green-500 to-yellow-500 transition-all duration-500 rounded"
-                  style={{ width: `${session.fighterHP}%` }}
-                ></div>
-              </div>
-              <div className="text-white font-mono text-sm mt-1 text-center">{session.fighterHP} HP</div>
-            </div>
-            
-            <div className={`w-48 h-72 flex flex-col items-center justify-center relative
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className={`w-72 h-96 flex flex-col items-center justify-center relative
                            ${session.fighterHP < 30 ? 'animate-pulse' : ''} 
                            ${session.gameState === 'victory' ? 'animate-bounce' : ''}`}>
               <img 
@@ -342,16 +351,23 @@ const FightScreen: React.FC = () => {
                   target.style.display = 'none';
                 }}
               />
-              <div className="absolute bottom-0 text-cyan-400 font-mono text-xs text-center bg-black bg-opacity-80 px-2 py-1 rounded max-w-full">
+              <div className="absolute bottom-0 text-cyan-400 font-mono text-sm text-center bg-black bg-opacity-80 px-3 py-2 rounded max-w-full">
                 "{session.selectedFighter.quip}"
               </div>
             </div>
           </div>
 
           {/* Task list - center */}
-          <div className="flex-1 max-w-md mx-8">
-            <div className="bg-black bg-opacity-80 border-2 border-yellow-400 p-6 max-h-96 overflow-y-auto rounded-lg">
-              <h3 className="text-yellow-400 font-mono text-lg font-bold mb-4 text-center">BATTLE TASKS</h3>
+          <div className="flex-1 max-w-md mx-8 flex flex-col items-center">
+            {/* Quick Battle Title */}
+            <h2 className="text-red-400 font-mono text-2xl font-bold mb-4">
+              {session.gameMode === 'tournament' ? `ROUND ${session.currentRound}` : 'QUICK BATTLE'}
+            </h2>
+            
+            <div className="bg-black bg-opacity-80 border-2 border-yellow-400 p-6 max-h-96 overflow-y-auto rounded-lg w-full">
+              <h3 className="text-yellow-400 font-mono text-lg font-bold mb-4 text-center">
+                BATTLE TASKS ({completedTasks}/{totalTasks})
+              </h3>
               
               {session.tasks.length === 0 ? (
                 <div className="text-white font-mono text-center">
