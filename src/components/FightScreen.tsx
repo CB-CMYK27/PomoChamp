@@ -49,7 +49,7 @@ const COUNTERPARTS: { [key: string]: string } = {
 
 // Available stages (using your existing stage files)
 const AVAILABLE_STAGES = [
-  'rooftop.png',
+  'rooftop.webp',
   'ocean-shallows.png', 
   'volcano-lair.png',
   'beach-pier.png',
@@ -89,8 +89,8 @@ const FightScreen: React.FC = () => {
     if (mode === 'quick-battle' || round === 1) {
       // Quick Battle or Tournament Round 1: Use player's stage (if available)
       const stageMapping: { [key: string]: string } = {
-        'jack-tower': 'rooftop.png',
-        'prof-kruber': 'rooftop.png',
+        'jack-tower': 'rooftop.webp',
+        'prof-kruber': 'rooftop.webp',
         'jawsome': 'ocean-shallows.png',
         'beach-belle': 'ocean-shallows.png',
         'ellen-ryker': 'volcano-lair.png',
@@ -277,13 +277,28 @@ const FightScreen: React.FC = () => {
       className="min-h-screen relative overflow-hidden"
       onClick={startMusic}
     >
-      {/* Background image */}
-      <div 
-        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: `url('/stages/${session.stage}')`,
-          zIndex: 0
+  return (
+    <div 
+      className="min-h-screen relative overflow-hidden"
+      onClick={startMusic}
+    >
+      {/* Background image as actual img element */}
+      <img 
+        src={`/stages/${session.stage}`}
+        alt="Stage background"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ zIndex: 0 }}
+        onLoad={() => console.log('✅ Background image loaded successfully:', session.stage)}
+        onError={(e) => {
+          console.log('❌ Background image failed to load:', session.stage);
+          console.log('Error:', e);
         }}
+      />
+      
+      {/* Fallback gradient background */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-gradient-to-b from-purple-900 via-blue-900 to-black"
+        style={{ zIndex: -1 }}
       ></div>
       
       {/* Lighter dark overlay for readability */}
