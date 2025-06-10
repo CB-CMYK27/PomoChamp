@@ -89,9 +89,28 @@ const FightScreen: React.FC = () => {
     if (mode === 'quick-battle' || round === 1) {
       // Quick Battle or Tournament Round 1: Use player's stage (if available)
       const playerStage = playerFighter.stageBg;
-      if (playerStage && AVAILABLE_STAGES.includes(playerStage)) {
-        return playerStage;
+      
+      // Map fighter to correct stage file
+      const stageMapping: { [key: string]: string } = {
+        'jack-tower': 'rooftop.png',
+        'prof-kruber': 'rooftop.png',
+        'jawsome': 'ocean-shallows.png',
+        'beach-belle': 'ocean-shallows.png',
+        'ellen-ryker': 'volcano-lair.png',
+        'queen-chroma': 'volcano-lair.png',
+        'raging-stallion': 'moscow-ring.png',
+        'iron-titan': 'moscow-ring.png',
+        'bond-sterling': 'volcano-lair.png',
+        'dr-whiskers': 'volcano-lair.png',
+        'waves-mcrad': 'beach-pier.png',
+        'gen-buzzkill': 'beach-pier.png'
+      };
+      
+      const mappedStage = stageMapping[playerFighter.id];
+      if (mappedStage && AVAILABLE_STAGES.includes(mappedStage)) {
+        return mappedStage;
       }
+      
       // Fallback to first available stage
       return AVAILABLE_STAGES[0];
     } else {
@@ -260,7 +279,7 @@ const FightScreen: React.FC = () => {
     <div 
       className="min-h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden"
       style={{ 
-        backgroundImage: `url(/stages/${session.stage})`,
+        backgroundImage: session.stage ? `url(/stages/${session.stage})` : 'none',
         backgroundColor: '#1a1a2e' // Fallback
       }}
       onClick={startMusic}
@@ -272,8 +291,8 @@ const FightScreen: React.FC = () => {
       <div className="relative z-10 min-h-screen flex flex-col">
         
         {/* Header with timer and pause */}
-        <div className="flex justify-between items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
-          <div className="text-yellow-400 font-mono text-lg font-bold">
+        <div className="flex justify-center items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
+          <div className="absolute left-4 text-yellow-400 font-mono text-lg font-bold">
             {session.gameMode === 'tournament' ? `ROUND ${session.currentRound}` : 'QUICK BATTLE'} - {completedTasks}/{totalTasks} TASKS
           </div>
           
@@ -289,8 +308,8 @@ const FightScreen: React.FC = () => {
             </button>
           </div>
           
-          <div className="text-yellow-400 font-mono text-lg font-bold">
-            {/* Fighter name removed - shown under sprite instead */}
+          <div className="absolute right-4 text-yellow-400 font-mono text-lg font-bold">
+            {/* Empty - keeping for balance */}
           </div>
         </div>
 
@@ -392,7 +411,8 @@ const FightScreen: React.FC = () => {
                   <img 
                     src={session.opponent.full}
                     alt={session.opponent.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain scale-x-[-1]"
+                    style={{ transform: 'scaleX(-1)' }}
                     onError={(e) => {
                       // Fallback to a colored box if image fails
                       const target = e.target as HTMLImageElement;
@@ -485,7 +505,7 @@ const FightScreen: React.FC = () => {
             Click anywhere to start background music • Complete tasks to deal damage • Don't let time run out!
           </div>
           <div className="text-cyan-400 font-mono text-xs mt-1">
-            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: {session.stage}
+            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage}
           </div>
         </div>
       </div>
