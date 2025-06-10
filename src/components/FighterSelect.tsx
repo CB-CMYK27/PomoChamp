@@ -5,6 +5,8 @@ import { useGameStore } from '../store/gameStore';
 
 export default function FighterSelect() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { tasks } = location.state || {};
 
   /* state */
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -54,8 +56,19 @@ export default function FighterSelect() {
 
   const handleConfirm = () => {
     if (!selectedId) return;
-    setFighter(selectedId);
-    navigate('/fight');
+    
+    const selectedFighter = fighters.find(f => f.id === selectedId);
+    if (!selectedFighter) return;
+    
+    setFighter(selectedId);  // Keep your existing game store logic
+    
+    // Navigate to fight screen with fighter and tasks data
+    navigate('/fight', {
+      state: {
+        selectedFighter: selectedFighter,
+        tasks: tasks || []
+      }
+    });
   };
 
   const handleCharacterClick = (characterId: string) => {
