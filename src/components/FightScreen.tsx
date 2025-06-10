@@ -275,20 +275,22 @@ const FightScreen: React.FC = () => {
   return (
     <div 
       className="min-h-screen relative overflow-hidden"
-      style={{ 
-        backgroundImage: `url('./stages/${session.stage}')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: '#1a1a2e'
-      }}
       onClick={startMusic}
     >
-      {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+      {/* Background image */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+        style={{ 
+          backgroundImage: `url('/stages/${session.stage}')`,
+          zIndex: 0
+        }}
+      ></div>
+      
+      {/* Lighter dark overlay for readability */}
+      <div className="absolute inset-0 bg-black bg-opacity-30" style={{ zIndex: 1 }}></div>
       
       {/* Main content */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative min-h-screen flex flex-col" style={{ zIndex: 2 }}>
         
         {/* Header with HP bars and timer */}
         <div className="flex justify-between items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
