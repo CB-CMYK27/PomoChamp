@@ -6,3 +6,35 @@
 html, body {
   background: #0d0d0f; /* bezel color */
 }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* optional CRT bezel backdrop so you see an instant change */
+html, body {
+  background: #0d0d0f; /* bezel color */
+}
+
+/* ADD THIS CSS ANIMATION HERE: */
+@keyframes growShrink {
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.0);
+    opacity: 0.8;
+  }
+}
