@@ -143,35 +143,22 @@ const FightScreen: React.FC = () => {
   const opponent = selectedFighter ? getOpponent(selectedFighter, gameMode, currentRound) : null;
   const stageBackground = selectedFighter ? getStage(selectedFighter, gameMode, currentRound) : AVAILABLE_STAGES[0];
 
-  const [session, setSession] = useState<FightSession>({
-    selectedFighter: selectedFighter || null,
-    opponent: opponent,
-    tasks: initialTasks?.map((task: any, index: number) => ({
-      ...task,
-      id: task.id || `task-${index}`,
-      completed: false
-    })) || [],
-    // ADD THIS ENTIRE FUNCTION:
-// Initialize task timers when fighting starts
-const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
-  return tasks.map((task, index) => ({
-    taskId: task.id,
-    estimatedTime: task.estimatedTime,
-    timeRemaining: task.estimatedTime * 60, // convert minutes to seconds
-    isActive: index === 0, // only first task starts active
-    hasFailed: false,
-    isInGracePeriod: false,
-    startTime: index === 0 ? Date.now() : 0 // only first task gets start time
-  }));
-};
-    timeRemaining: 25 * 60, // 25 minutes in seconds
-    fighterHP: 100,
-    opponentHP: 100,
-    gameState: 'fighting',
-    gameMode: gameMode,
-    currentRound: currentRound,
-    stage: stageBackground
-    currentTaskIndex: 0,
+const [session, setSession] = useState<FightSession>({
+  selectedFighter: selectedFighter || null,
+  opponent: opponent,
+  tasks: initialTasks?.map((task: any, index: number) => ({
+    ...task,
+    id: task.id || `task-${index}`,
+    completed: false
+  })) || [],
+  timeRemaining: 25 * 60,
+  fighterHP: 100,
+  opponentHP: 100,
+  gameState: 'intro',
+  gameMode: gameMode,
+  currentRound: currentRound,
+  stage: stageBackground,
+  currentTaskIndex: 0,
   taskTimers: [],
   failedTasks: [],
   gracePeriod: {
@@ -179,7 +166,19 @@ const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
     taskId: null,
     timeRemaining: 0
   }
-  });
+});
+
+const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
+  return tasks.map((task, index) => ({
+    taskId: task.id,
+    estimatedTime: task.estimatedTime,
+    timeRemaining: task.estimatedTime * 60,
+    isActive: index === 0,
+    hasFailed: false,
+    isInGracePeriod: false,
+    startTime: index === 0 ? Date.now() : 0
+  }));
+};
 
   const [musicStarted, setMusicStarted] = useState(false);
 
