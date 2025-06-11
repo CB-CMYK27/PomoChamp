@@ -158,8 +158,27 @@ const FightScreen: React.FC = () => {
     gameMode: gameMode,
     currentRound: currentRound,
     stage: stageBackground
+    currentTaskIndex: 0,
+  taskTimers: [],
+  failedTasks: [],
+  gracePeriod: {
+    isActive: false,
+    taskId: null,
+    timeRemaining: 0
+  }
   });
-
+// Initialize task timers when fighting starts
+const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
+  return tasks.map((task, index) => ({
+    taskId: task.id,
+    estimatedTime: task.estimatedTime,
+    timeRemaining: task.estimatedTime * 60, // convert minutes to seconds
+    isActive: index === 0, // only first task starts active
+    hasFailed: false,
+    isInGracePeriod: false,
+    startTime: index === 0 ? Date.now() : 0 // only first task gets start time
+  }));
+};
   const [musicStarted, setMusicStarted] = useState(false);
 
   // Audio setup
