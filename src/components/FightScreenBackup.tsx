@@ -139,6 +139,7 @@ const FightScreen: React.FC = () => {
   });
 
   const [musicStarted, setMusicStarted] = useState(false);
+  const [audioInitialized, setAudioInitialized] = useState(false);
 
   // Audio setup
   useEffect(() => {
@@ -146,6 +147,7 @@ const FightScreen: React.FC = () => {
     sounds.forEach(sound => {
       audioRef.current[sound] = new Audio(`/sfx/${sound}.wav`);
       audioRef.current[sound].preload = 'auto';
+      audioRef.current[sound].volume = 0.7; // Set volume for sound effects
     });
     
     // Background music
@@ -154,13 +156,45 @@ const FightScreen: React.FC = () => {
     audioRef.current['bg-music'].volume = 0.3;
   }, []);
 
+  // Initialize audio context (required for browser audio policies)
+  const initializeAudio = () => {
+    if (!audioInitialized) {
+      console.log('🎵 Initializing audio context...');
+      
+      // Try to play and immediately pause each sound to "unlock" them
+      Object.entries(audioRef.current).forEach(([name, audio]) => {
+        if (audio && typeof audio.play === 'function') {
+          audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            console.log(`✅ Audio unlocked: ${name}`);
+          }).catch((error) => {
+            console.log(`❌ Audio unlock failed for ${name}:`, error);
+          });
+        }
+      });
+      
+      setAudioInitialized(true);
+    }
+  };
+
   // Play sound effect
   const playSound = (soundName: string) => {
+    console.log(`🔊 Attempting to play sound: ${soundName}`);
+    
     if (audioRef.current[soundName]) {
       audioRef.current[soundName].currentTime = 0;
-      audioRef.current[soundName].play().catch(() => {
-        // Ignore audio play errors (browser restrictions)
+      audioRef.current[soundName].play().then(() => {
+        console.log(`✅ Successfully played: ${soundName}`);
+      }).catch((error) => {
+        console.log(`❌ Failed to play ${soundName}:`, error);
+        // If audio fails and not initialized, try to initialize
+        if (!audioInitialized) {
+          initializeAudio();
+        }
       });
+    } else {
+      console.log(`❌ Audio file not found: ${soundName}`);
     }
   };
 
@@ -202,18 +236,26 @@ const FightScreen: React.FC = () => {
 
   // Complete a task
   const completeTask = (taskId: string) => {
+    console.log(`⚔️ Completing task: ${taskId}`);
+    
     setSession(prev => {
       const updatedTasks = prev.tasks.map(task => 
         task.id === taskId ? { ...task, completed: true } : task
       );
       
-const damagePerTask = 100 / prev.tasks.length;
-const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
+      // Calculate damage based on number of tasks
+      const damagePerTask = 100 / prev.tasks.length;
+      const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
+      
+      console.log(`💥 Dealing ${damagePerTask} damage. Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
+      
+      // Play punch sound immediately
       playSound('punch');
       
       // Check for victory
       const allTasksComplete = updatedTasks.every(task => task.completed);
       if (allTasksComplete || newOpponentHP <= 0) {
+        console.log('🏆 Victory condition met!');
         playSound('victory');
         return {
           ...prev,
@@ -246,8 +288,14 @@ const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Start background music on first interaction
-  const startMusic = () => {
+  // Start background music and initialize audio on first interaction
+  const handleFirstInteraction = () => {
+    console.log('🎮 First user interaction detected');
+    
+    // Initialize audio context
+    initializeAudio();
+    
+    // Start background music
     if (!musicStarted && audioRef.current['bg-music']) {
       audioRef.current['bg-music'].play().catch(() => {});
       setMusicStarted(true);
@@ -277,7 +325,7 @@ const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
   return (
     <div 
       className="min-h-screen relative overflow-hidden"
-      onClick={startMusic}
+      onClick={handleFirstInteraction}
     >
       {/* Background image as actual img element */}
       <img 
@@ -402,7 +450,10 @@ const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
                       
                       {!task.completed && session.gameState === 'fighting' && (
                         <button
-                          onClick={() => completeTask(task.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            completeTask(task.id);
+                          }}
                           className="bg-red-600 text-white font-mono px-3 py-1 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors ml-2"
                         >
                           COMPLETE
@@ -420,29 +471,29 @@ const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
           </div>
 
           {/* Opponent fighter - EXACT SAME SIZE AS PLAYER */}
-<div className="flex flex-col items-center justify-start h-full relative">
-  <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
-                 ${session.opponentHP < 30 ? 'animate-pulse' : ''} 
-                 ${session.gameState === 'defeat' ? 'animate-bounce' : ''}`}>
-    <img 
-      src={session.opponent?.full || ''}
-      alt={session.opponent?.name || 'No opponent'}
-      className="w-full h-full object-contain object-bottom"
-      style={{ transform: 'scaleX(-1)' }}
-      onError={(e) => {
-        const target = e.target as HTMLImageElement;
-        target.style.display = 'none';
-      }}
-    />
-  </div>
-  {/* Quip positioned at bottom of combat area */}
-  {session.opponent && (
-    <div className="absolute right-4 text-red-400 font-mono text-sm text-right max-w-xs"
-         style={{ bottom: '-16px' }}>
-      "{session.opponent.quip}"
-    </div>
-  )}
-</div>
+          <div className="flex flex-col items-center justify-start h-full relative">
+            <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
+                           ${session.opponentHP < 30 ? 'animate-pulse' : ''} 
+                           ${session.gameState === 'defeat' ? 'animate-bounce' : ''}`}>
+              <img 
+                src={session.opponent?.full || ''}
+                alt={session.opponent?.name || 'No opponent'}
+                className="w-full h-full object-contain object-bottom"
+                style={{ transform: 'scaleX(-1)' }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+            </div>
+            {/* Quip positioned at bottom of combat area */}
+            {session.opponent && (
+              <div className="absolute right-4 text-red-400 font-mono text-sm text-right max-w-xs"
+                   style={{ bottom: '-16px' }}>
+                "{session.opponent.quip}"
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Game state overlays */}
@@ -513,10 +564,10 @@ const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
         {/* Bottom status bar */}
         <div className="bg-black bg-opacity-80 p-3 text-center border-t-2 border-cyan-400">
           <div className="text-yellow-400 font-mono text-sm">
-            Click anywhere to start background music • Complete tasks to deal damage • Don't let time run out!
+            Click anywhere to start audio • Complete tasks to deal damage • Don't let time run out!
           </div>
           <div className="text-cyan-400 font-mono text-xs mt-1">
-            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage}
+            Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | Audio: {audioInitialized ? '✅' : '❌'}
           </div>
         </div>
       </div>
