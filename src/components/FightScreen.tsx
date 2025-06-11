@@ -288,31 +288,55 @@ const completeTask = (taskId: string) => {
       task.id === taskId ? { ...task, completed: true } : task
     );
     
-    // Find the specific task that was completed
     const completedTask = prev.tasks.find(task => task.id === taskId);
     const taskIndex = prev.tasks.findIndex(task => task.id === taskId);
     
-    // Calculate damage based on task's estimated time (minutes * 4)
     const damagePerTask = completedTask ? completedTask.estimatedTime * 4 : 20;
     const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
     
     console.log(`💥 Dealing ${damagePerTask} damage (${completedTask?.estimatedTime} min task). Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
     
-    // Play punch sound immediately
     playSound('punch');
     
-    // Update task timers - mark current as inactive, activate next
     const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
       if (timer.taskId === taskId) {
-        // Mark completed task as inactive
         return { ...timer, isActive: false, isInGracePeriod: false };
       }
       if (index === taskIndex + 1) {
-        // Activate next task
         return { ...timer, isActive: true, startTime: Date.now() };
       }
       return timer;
     });
+
+    const updatedGracePeriod = prev.gracePeriod.taskId === taskId 
+      ? { isActive: false, taskId: null, timeRemaining: 0 }
+      : prev.gracePeriod;
+    
+    const allTasksComplete = updatedTasks.every(task => task.completed);
+    if (allTasksComplete || newOpponentHP <= 0) {
+      console.log('🏆 Victory condition met!');
+      playSound('victory');
+      return {
+        ...prev,
+        tasks: updatedTasks,
+        opponentHP: newOpponentHP,
+        gameState: 'victory',
+        taskTimers: updatedTaskTimers,
+        gracePeriod: updatedGracePeriod,
+        currentTaskIndex: taskIndex + 1
+      };
+    }
+    
+    return {
+      ...prev,
+      tasks: updatedTasks,
+      opponentHP: newOpponentHP,
+      taskTimers: updatedTaskTimers,
+      gracePeriod: updatedGracePeriod,
+      currentTaskIndex: taskIndex + 1
+    };
+  });
+};
 
     // Clear grace period if completing task during grace period
     const updatedGracePeriod = prev.gracePeriod.taskId === taskId 
