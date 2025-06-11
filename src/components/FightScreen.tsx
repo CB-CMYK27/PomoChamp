@@ -57,11 +57,12 @@ const AVAILABLE_STAGES = [
 
 // Speech Bubble Component
 const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
-  <div className={`absolute top-32 z-40 animate-bounce max-w-xs`}
-       style={{ 
-         left: isLeft ? '30%' : '70%',
-         transform: 'translateX(-50%)'
-       }}>
+<div className={`absolute z-40 animate-bounce max-w-xs`}
+     style={{ 
+       left: isLeft ? '55%' : '15%',  // Player: 30% → 55% (right), Opponent: 70% → 15% (left)
+       top: '10%',                    // Both: top-32 → 10% (higher up)
+       transform: 'translateX(-50%)'
+     }}>
     <div className="bg-white text-black p-4 rounded-lg border-4 border-gray-800 relative font-mono text-sm font-bold shadow-xl">
       "{text}"
       {/* Downward pointing tail */}
