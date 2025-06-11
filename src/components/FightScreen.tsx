@@ -470,7 +470,7 @@ const completeTask = (taskId: string) => {
                   style={{ width: `${session.opponentHP}%` }}
                 ></div>
               </div>
-              <div className="text-white font-mono text-sm mt-1">{session.opponentHP} HP</div>
+              <div className="text-white font-mono text-sm mt-1">{Math.round(session.opponentHP)} HP</div>
             </div>
           </div>
         )}
