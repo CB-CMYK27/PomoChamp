@@ -335,7 +335,7 @@ const completeTask = (taskId: string) => {
       gracePeriod: updatedGracePeriod,
       currentTaskIndex: taskIndex + 1
     };
-  });
+  };
 
 
     // Clear grace period if completing task during grace period
