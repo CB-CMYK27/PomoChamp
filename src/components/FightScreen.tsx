@@ -337,16 +337,6 @@ const completeTask = (taskId: string) => {
     };
   });
 };
-    
-    return {
-      ...prev,
-      tasks: updatedTasks,
-      opponentHP: newOpponentHP,
-      taskTimers: updatedTaskTimers,
-      gracePeriod: updatedGracePeriod,
-      currentTaskIndex: taskIndex + 1
-    };
-  };
 
 
     // Clear grace period if completing task during grace period
