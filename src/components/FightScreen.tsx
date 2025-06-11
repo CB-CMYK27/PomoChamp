@@ -57,17 +57,20 @@ const AVAILABLE_STAGES = [
 
 // Speech Bubble Component
 const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
-  <div className={`absolute ${isLeft ? 'left-8' : 'right-8'} top-16 max-w-xs z-40 animate-bounce`}>
-    <div className={`bg-white text-black p-4 rounded-lg border-4 border-gray-800 relative font-mono text-sm font-bold
-                    ${isLeft ? 'ml-8' : 'mr-8'} shadow-lg`}>
+  <div className={`absolute top-32 z-40 animate-bounce max-w-xs`}
+       style={{ 
+         left: isLeft ? '30%' : '70%',
+         transform: 'translateX(-50%)'
+       }}>
+    <div className="bg-white text-black p-4 rounded-lg border-4 border-gray-800 relative font-mono text-sm font-bold shadow-xl">
       "{text}"
-      {/* Speech bubble tail */}
-      <div className={`absolute top-full ${isLeft ? 'left-8' : 'right-8'} w-0 h-0 
+      {/* Downward pointing tail */}
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 
                       border-l-[12px] border-r-[12px] border-t-[15px] 
-                      border-l-transparent border-r-transparent border-t-white`}></div>
-      <div className={`absolute ${isLeft ? 'left-8' : 'right-8'} w-0 h-0 
+                      border-l-transparent border-r-transparent border-t-white"></div>
+      <div className="absolute left-1/2 transform -translate-x-1/2 w-0 h-0 
                       border-l-[15px] border-r-[15px] border-t-[18px] 
-                      border-l-transparent border-r-transparent border-t-gray-800`}
+                      border-l-transparent border-r-transparent border-t-gray-800"
            style={{ top: 'calc(100% - 3px)' }}></div>
     </div>
   </div>
