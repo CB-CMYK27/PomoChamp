@@ -90,39 +90,42 @@ const CountdownOverlay: React.FC<{ number: number; phase: string }> = ({ number,
     );
   }
   
-if (phase === 'on-task') {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center z-50">
-      <img 
-        src="/images/on-task.png" 
-        alt="ON TASK!"
-        className="max-w-md max-h-64 object-contain transform"
-        style={{
-          animation: 'growShrink 4s ease-in-out'
-        }}
-        onError={(e) => {
-          // Fallback to text if image doesn't exist
-          const target = e.target as HTMLImageElement;
-          target.style.display = 'none';
-          // Show text fallback
-          const fallback = target.parentElement?.querySelector('.text-fallback') as HTMLElement;
-          if (fallback) fallback.style.display = 'block';
-        }}
-      />
-      
-      {/* Fallback text if image fails */}
-      <div className="text-fallback text-red-400 font-mono font-black text-8xl 
-                      transform transition-all duration-1000
-                      drop-shadow-[0_0_30px_rgba(255,0,0,0.8)]"
-           style={{
-             animation: 'growShrink 4s ease-in-out',
-             display: 'none'
-           }}>
-        ON TASK!
+  if (phase === 'on-task') {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center z-50">
+        <img 
+          src="/images/on-task.png" 
+          alt="ON TASK!"
+          className="max-w-md max-h-64 object-contain transform"
+          style={{
+            animation: 'growShrink 4s ease-in-out'
+          }}
+          onError={(e) => {
+            // Fallback to text if image doesn't exist
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            // Show text fallback
+            const fallback = target.parentElement?.querySelector('.text-fallback') as HTMLElement;
+            if (fallback) fallback.style.display = 'block';
+          }}
+        />
+        
+        {/* Fallback text if image fails */}
+        <div className="text-fallback text-red-400 font-mono font-black text-8xl 
+                        transform transition-all duration-1000
+                        drop-shadow-[0_0_30px_rgba(255,0,0,0.8)]"
+             style={{
+               animation: 'growShrink 4s ease-in-out',
+               display: 'none'
+             }}>
+          ON TASK!
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+  
+  return null; // ← ADD THIS LINE!
+};
 
 const FightScreen: React.FC = () => {
   const location = useLocation();
