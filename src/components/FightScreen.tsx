@@ -303,33 +303,44 @@ const FightScreen: React.FC = () => {
   }, [session.gameState, session.timeRemaining]);
 
   // Complete a task
-  const completeTask = (taskId: string) => {
-    setSession(prev => {
-      const updatedTasks = prev.tasks.map(task => 
-        task.id === taskId ? { ...task, completed: true } : task
-      );
-      
-      const newOpponentHP = Math.max(0, prev.opponentHP - 100 / numberOfTasks);
-      playSound('punch');
-      
-      const allTasksComplete = updatedTasks.every(task => task.completed);
-      if (allTasksComplete || newOpponentHP <= 0) {
-        playSound('victory');
-        return {
-          ...prev,
-          tasks: updatedTasks,
-          opponentHP: newOpponentHP,
-          gameState: 'victory'
-        };
-      }
-      
+// Complete a task
+const completeTask = (taskId: string) => {
+  console.log(`⚔️ Completing task: ${taskId}`);
+  
+  setSession(prev => {
+    const updatedTasks = prev.tasks.map(task => 
+      task.id === taskId ? { ...task, completed: true } : task
+    );
+    
+    // Calculate damage based on number of tasks
+    const damagePerTask = 100 / prev.tasks.length;
+    const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
+    
+    console.log(`💥 Dealing ${damagePerTask} damage. Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
+    
+    // Play punch sound immediately
+    playSound('punch');
+    
+    // Check for victory
+    const allTasksComplete = updatedTasks.every(task => task.completed);
+    if (allTasksComplete || newOpponentHP <= 0) {
+      console.log('🏆 Victory condition met!');
+      playSound('victory');
       return {
         ...prev,
         tasks: updatedTasks,
-        opponentHP: newOpponentHP
+        opponentHP: newOpponentHP,
+        gameState: 'victory'
       };
-    });
-  };
+    }
+    
+    return {
+      ...prev,
+      tasks: updatedTasks,
+      opponentHP: newOpponentHP
+    };
+  });
+};
 
   // Pause/Resume game
   const togglePause = () => {
