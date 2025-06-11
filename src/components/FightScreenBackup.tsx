@@ -207,7 +207,8 @@ const FightScreen: React.FC = () => {
         task.id === taskId ? { ...task, completed: true } : task
       );
       
-      const newOpponentHP = Math.max(0, prev.opponentHP - 25);
+const damagePerTask = 100 / prev.tasks.length;
+const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
       playSound('punch');
       
       // Check for victory
