@@ -218,7 +218,7 @@ const QuickBattle: React.FC = () => {
                 : 'border-white/30 text-white/30 cursor-not-allowed'
             }`}
           >
-            {!canStartBattle ? `NEED ${20 - totalMinutes}MIN MORE TO START` : 
+            {!canStartBattle ? `NEED ${25 - totalMinutes}MIN MORE TO START` : 
              'CHOOSE YOUR FIGHTER!'}
           </button>
         </div>
