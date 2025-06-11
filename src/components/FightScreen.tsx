@@ -445,7 +445,7 @@ const completeTask = (taskId: string) => {
                   style={{ width: `${session.fighterHP}%` }}
                 ></div>
               </div>
-              <div className="text-white font-mono text-sm mt-1">{session.fighterHP} HP</div>
+              <div className="text-white font-mono text-sm mt-1">{Math.round(session.fighterHP)} HP</div>
             </div>
             
             <div className="text-center">
