@@ -225,7 +225,7 @@ const QuickBattle: React.FC = () => {
 
         {/* Helper Text */}
         <div className="text-center mt-4 text-white/60 text-sm font-mono">
-          💡 Add tasks totaling 20-25 minutes for optimal battle experience
+          💡 Add tasks totaling 25 minutes for optimal battle experience
         </div>
       </div>
     </div>
