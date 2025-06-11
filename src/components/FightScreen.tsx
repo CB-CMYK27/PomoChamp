@@ -142,6 +142,10 @@ const FightScreen: React.FC = () => {
   const [countdownNumber, setCountdownNumber] = useState(5);
   const [musicStarted, setMusicStarted] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
+  
+  // Skip system
+  const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [canSkip, setCanSkip] = useState(true);
 
   // Helper function to get opponent
   const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
@@ -214,37 +218,97 @@ const FightScreen: React.FC = () => {
   useEffect(() => {
     if (session.gameState === 'intro') {
       const sequence = async () => {
-        // Phase 1: Players bounce (2 seconds)
-        setIntroPhase('intro');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Phase 2: Player quip (2.5 seconds)
-        setIntroPhase('player-quip');
-        await new Promise(resolve => setTimeout(resolve, 2500));
-        
-        // Phase 3: Opponent quip (2.5 seconds)  
-        setIntroPhase('opponent-quip');
-        await new Promise(resolve => setTimeout(resolve, 2500));
-        
-        // Phase 4: Countdown 5→1
-        setIntroPhase('countdown');
-        for (let i = 5; i >= 1; i--) {
-          setCountdownNumber(i);
-          await new Promise(resolve => setTimeout(resolve, 800));
+        try {
+          // Phase 1: Players bounce (2 seconds)
+          setIntroPhase('intro');
+          await new Promise(resolve => {
+            introTimeoutRef.current = setTimeout(resolve, 2000);
+          });
+          
+          // Phase 2: Player quip (2.5 seconds)
+          setIntroPhase('player-quip');
+          await new Promise(resolve => {
+            introTimeoutRef.current = setTimeout(resolve, 2500);
+          });
+          
+          // Phase 3: Opponent quip (2.5 seconds)  
+          setIntroPhase('opponent-quip');
+          await new Promise(resolve => {
+            introTimeoutRef.current = setTimeout(resolve, 2500);
+          });
+          
+          // Phase 4: Countdown 5→1
+          setIntroPhase('countdown');
+          for (let i = 5; i >= 1; i--) {
+            setCountdownNumber(i);
+            await new Promise(resolve => {
+              introTimeoutRef.current = setTimeout(resolve, 800);
+            });
+          }
+          
+          // Phase 5: "ON TASK!" (4 seconds)
+          setIntroPhase('on-task');
+          await new Promise(resolve => {
+            introTimeoutRef.current = setTimeout(resolve, 4000);
+          });
+          
+          // Phase 6: Start fighting!
+          setSession(prev => ({ ...prev, gameState: 'fighting' }));
+          setIntroPhase('fighting');
+          setCanSkip(false);
+        } catch (error) {
+          // Sequence was interrupted (skipped)
+          console.log('🏃 Intro sequence skipped');
         }
-        
-        // Phase 5: "ON TASK!" (4 seconds)
-        setIntroPhase('on-task');
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        
-        // Phase 6: Start fighting!
-        setSession(prev => ({ ...prev, gameState: 'fighting' }));
-        setIntroPhase('fighting');
       };
       
       sequence();
     }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (introTimeoutRef.current) {
+        clearTimeout(introTimeoutRef.current);
+      }
+    };
   }, [session.gameState]);
+
+  // Skip intro phase
+  const skipIntroPhase = () => {
+    if (!canSkip || session.gameState !== 'intro') return;
+    
+    console.log(`⏭️ Skipping intro phase: ${introPhase}`);
+    
+    // Cancel current timeout
+    if (introTimeoutRef.current) {
+      clearTimeout(introTimeoutRef.current);
+      introTimeoutRef.current = null;
+    }
+    
+    // Advance to next phase
+    switch (introPhase) {
+      case 'intro':
+        setIntroPhase('player-quip');
+        break;
+      case 'player-quip':
+        setIntroPhase('opponent-quip');
+        break;
+      case 'opponent-quip':
+        setIntroPhase('countdown');
+        setCountdownNumber(5);
+        break;
+      case 'countdown':
+        setIntroPhase('on-task');
+        break;
+      case 'on-task':
+        setSession(prev => ({ ...prev, gameState: 'fighting' }));
+        setIntroPhase('fighting');
+        setCanSkip(false);
+        break;
+      default:
+        break;
+    }
+  };
 
   // Audio setup
   useEffect(() => {
@@ -408,6 +472,17 @@ const FightScreen: React.FC = () => {
     }
   };
 
+  // Handle clicks during intro (skip) vs fighting (audio)
+  const handleScreenClick = () => {
+    // During intro: skip to next phase
+    if (canSkip && session.gameState === 'intro') {
+      skipIntroPhase();
+    } else {
+      // During fighting: initialize audio
+      handleFirstInteraction();
+    }
+  };
+
   // Get fighter animation based on intro phase
   const getFighterAnimation = (isPlayer: boolean) => {
     if (introPhase === 'intro') {
@@ -451,7 +526,7 @@ const FightScreen: React.FC = () => {
   return (
     <div 
       className="min-h-screen relative overflow-hidden"
-      onClick={handleFirstInteraction}
+      onClick={handleScreenClick}
     >
       {/* Background image */}
       <img 
@@ -619,6 +694,15 @@ const FightScreen: React.FC = () => {
 
         {/* Countdown Overlay */}
         <CountdownOverlay number={countdownNumber} phase={introPhase} />
+
+        {/* Skip hint during intro */}
+        {canSkip && session.gameState === 'intro' && (
+          <div className="absolute top-4 right-4 z-50">
+            <div className="bg-black bg-opacity-80 text-yellow-400 font-mono text-sm px-3 py-2 rounded border border-yellow-400 animate-pulse">
+              Click to skip ⏭️
+            </div>
+          </div>
+        )}
 
         {/* Game state overlays */}
         {session.gameState === 'paused' && (
