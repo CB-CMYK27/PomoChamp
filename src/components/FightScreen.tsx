@@ -345,7 +345,7 @@ const completeTask = (taskId: string) => {
     };
   });
 };
-      }
+      
       
       return {
         ...prev,
