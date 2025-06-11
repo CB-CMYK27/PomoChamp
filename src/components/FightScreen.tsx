@@ -206,41 +206,77 @@ const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
     }
   };
 
-  // Timer logic with drift correction
-  useEffect(() => {
-    if (session.gameState === 'fighting' && session.timeRemaining > 0) {
-      const startTime = Date.now();
-      const expectedTime = session.timeRemaining * 1000;
+  // Dual timer logic - session timer + individual task timers
+useEffect(() => {
+  if (session.gameState === 'fighting' && session.timeRemaining > 0) {
+    // Initialize task timers on first run
+    if (session.taskTimers.length === 0 && session.tasks.length > 0) {
+      const initialTimers = initializeTaskTimers(session.tasks);
+      setSession(prev => ({ ...prev, taskTimers: initialTimers }));
+      return;
+    }
 
-      timerRef.current = setInterval(() => {
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, expectedTime - elapsedTime);
-        const remainingSeconds = Math.ceil(remainingTime / 1000);
+    const startTime = Date.now();
+    const expectedTime = session.timeRemaining * 1000;
 
-        setSession(prev => {
-          if (remainingSeconds <= 0) {
-            // Time's up - player takes damage
-            const newFighterHP = Math.max(0, prev.fighterHP - 20);
-            playSound('grunt');
-            
-            if (newFighterHP <= 0) {
-              return { ...prev, timeRemaining: 0, fighterHP: 0, gameState: 'defeat' };
-            }
-            
-            return { ...prev, timeRemaining: 0, fighterHP: newFighterHP };
+    timerRef.current = setInterval(() => {
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, expectedTime - elapsedTime);
+      const remainingSeconds = Math.ceil(remainingTime / 1000);
+
+      setSession(prev => {
+        // Update main session timer
+        if (remainingSeconds <= 0) {
+          // Session time expired
+          const newFighterHP = Math.max(0, prev.fighterHP - 20);
+          playSound('grunt');
+          
+          if (newFighterHP <= 0) {
+            return { ...prev, timeRemaining: 0, fighterHP: 0, gameState: 'defeat' };
           }
           
-          return { ...prev, timeRemaining: remainingSeconds };
-        });
-      }, 100);
-
-      return () => {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
+          return { ...prev, timeRemaining: 0, fighterHP: newFighterHP };
         }
-      };
-    }
-  }, [session.gameState, session.timeRemaining]);
+
+        // Update individual task timers
+        const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
+          if (!timer.isActive || timer.hasFailed) return timer;
+
+          const taskElapsed = Date.now() - timer.startTime;
+          const taskRemaining = Math.max(0, timer.timeRemaining * 1000 - taskElapsed);
+          const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
+
+          // Check if task time expired
+          if (taskRemainingSeconds <= 0 && !timer.isInGracePeriod) {
+            // Start grace period
+            return {
+              ...timer,
+              timeRemaining: 0,
+              isInGracePeriod: true
+            };
+          }
+
+          return {
+            ...timer,
+            timeRemaining: Math.max(0, taskRemainingSeconds)
+          };
+        });
+
+        return {
+          ...prev,
+          timeRemaining: remainingSeconds,
+          taskTimers: updatedTaskTimers
+        };
+      });
+    }, 100);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }
+}, [session.gameState, session.timeRemaining, session.taskTimers.length])
 
   // Complete a task
   const completeTask = (taskId: string) => {
