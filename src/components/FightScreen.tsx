@@ -335,6 +335,17 @@ const completeTask = (taskId: string) => {
       gracePeriod: updatedGracePeriod,
       currentTaskIndex: taskIndex + 1
     };
+  });
+};
+    
+    return {
+      ...prev,
+      tasks: updatedTasks,
+      opponentHP: newOpponentHP,
+      taskTimers: updatedTaskTimers,
+      gracePeriod: updatedGracePeriod,
+      currentTaskIndex: taskIndex + 1
+    };
   };
 
 
