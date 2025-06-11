@@ -212,7 +212,7 @@ const FightScreen: React.FC = () => {
         
         // Phase 5: "ON TASK!" (1.5 seconds)
         setIntroPhase('on-task');
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 4000));
         
         // Phase 6: Start fighting!
         setSession(prev => ({ ...prev, gameState: 'fighting' }));
