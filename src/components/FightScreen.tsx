@@ -125,7 +125,7 @@ const CountdownOverlay: React.FC<{ number: number; phase: string }> = ({ number,
     );
   }
   
-  return null; // ← ADD THIS LINE!
+  return null;
 };
 
 const FightScreen: React.FC = () => {
@@ -140,6 +140,8 @@ const FightScreen: React.FC = () => {
   // Intro animation states
   const [introPhase, setIntroPhase] = useState<'intro' | 'player-quip' | 'opponent-quip' | 'countdown' | 'on-task' | 'fighting'>('intro');
   const [countdownNumber, setCountdownNumber] = useState(5);
+  const [musicStarted, setMusicStarted] = useState(false);
+  const [audioInitialized, setAudioInitialized] = useState(false);
 
   // Helper function to get opponent
   const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
@@ -208,8 +210,6 @@ const FightScreen: React.FC = () => {
     stage: stageBackground
   });
 
-  const [musicStarted, setMusicStarted] = useState(false);
-
   // Intro Animation Sequence
   useEffect(() => {
     if (session.gameState === 'intro') {
@@ -233,7 +233,7 @@ const FightScreen: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, 800));
         }
         
-        // Phase 5: "ON TASK!" (1.5 seconds)
+        // Phase 5: "ON TASK!" (4 seconds)
         setIntroPhase('on-task');
         await new Promise(resolve => setTimeout(resolve, 4000));
         
@@ -252,6 +252,7 @@ const FightScreen: React.FC = () => {
     sounds.forEach(sound => {
       audioRef.current[sound] = new Audio(`/sfx/${sound}.wav`);
       audioRef.current[sound].preload = 'auto';
+      audioRef.current[sound].volume = 0.7;
     });
     
     audioRef.current['bg-music'] = new Audio('/sfx/fight-music.mp3');
@@ -259,11 +260,45 @@ const FightScreen: React.FC = () => {
     audioRef.current['bg-music'].volume = 0.3;
   }, []);
 
+  // Initialize audio context (required for browser autoplay restrictions)
+  const initializeAudio = () => {
+    if (!audioInitialized) {
+      console.log('🎵 Initializing audio context...');
+      
+      // Try to play and immediately pause each sound to "unlock" them
+      Object.entries(audioRef.current).forEach(([name, audio]) => {
+        if (audio && typeof audio.play === 'function') {
+          audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            console.log(`✅ Audio unlocked: ${name}`);
+          }).catch((error) => {
+            console.log(`❌ Audio unlock failed for ${name}:`, error);
+          });
+        }
+      });
+      
+      setAudioInitialized(true);
+    }
+  };
+
   // Play sound effect
   const playSound = (soundName: string) => {
+    console.log(`🔊 Attempting to play sound: ${soundName}`);
+    
     if (audioRef.current[soundName]) {
       audioRef.current[soundName].currentTime = 0;
-      audioRef.current[soundName].play().catch(() => {});
+      audioRef.current[soundName].play().then(() => {
+        console.log(`✅ Successfully played: ${soundName}`);
+      }).catch((error) => {
+        console.log(`❌ Failed to play ${soundName}:`, error);
+        // If audio fails and not initialized, try to initialize
+        if (!audioInitialized) {
+          initializeAudio();
+        }
+      });
+    } else {
+      console.log(`❌ Audio file not found: ${soundName}`);
     }
   };
 
@@ -302,45 +337,47 @@ const FightScreen: React.FC = () => {
     }
   }, [session.gameState, session.timeRemaining]);
 
-  // Complete a task
-// Complete a task
-const completeTask = (taskId: string) => {
-  console.log(`⚔️ Completing task: ${taskId}`);
-  
-  setSession(prev => {
-    const updatedTasks = prev.tasks.map(task => 
-      task.id === taskId ? { ...task, completed: true } : task
-    );
+  // Complete a task - FIXED WITH MINUTES-BASED DAMAGE
+  const completeTask = (taskId: string) => {
+    console.log(`⚔️ Completing task: ${taskId}`);
     
-    // Calculate damage based on number of tasks
-    const damagePerTask = 100 / prev.tasks.length;
-    const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
-    
-    console.log(`💥 Dealing ${damagePerTask} damage. Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
-    
-    // Play punch sound immediately
-    playSound('punch');
-    
-    // Check for victory
-    const allTasksComplete = updatedTasks.every(task => task.completed);
-    if (allTasksComplete || newOpponentHP <= 0) {
-      console.log('🏆 Victory condition met!');
-      playSound('victory');
+    setSession(prev => {
+      const updatedTasks = prev.tasks.map(task => 
+        task.id === taskId ? { ...task, completed: true } : task
+      );
+      
+      // Find the specific task that was completed
+      const completedTask = prev.tasks.find(task => task.id === taskId);
+      
+      // Calculate damage based on task's estimated time (minutes * 4)
+      const damagePerTask = completedTask ? completedTask.estimatedTime * 4 : 20;
+      const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
+      
+      console.log(`💥 Dealing ${damagePerTask} damage (${completedTask?.estimatedTime} min task). Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
+      
+      // Play punch sound immediately
+      playSound('punch');
+      
+      // Check for victory
+      const allTasksComplete = updatedTasks.every(task => task.completed);
+      if (allTasksComplete || newOpponentHP <= 0) {
+        console.log('🏆 Victory condition met!');
+        playSound('victory');
+        return {
+          ...prev,
+          tasks: updatedTasks,
+          opponentHP: newOpponentHP,
+          gameState: 'victory'
+        };
+      }
+      
       return {
         ...prev,
         tasks: updatedTasks,
-        opponentHP: newOpponentHP,
-        gameState: 'victory'
+        opponentHP: newOpponentHP
       };
-    }
-    
-    return {
-      ...prev,
-      tasks: updatedTasks,
-      opponentHP: newOpponentHP
-    };
-  });
-};
+    });
+  };
 
   // Pause/Resume game
   const togglePause = () => {
@@ -357,8 +394,14 @@ const completeTask = (taskId: string) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Start background music on first interaction
-  const startMusic = () => {
+  // Start background music and initialize audio on first interaction
+  const handleFirstInteraction = () => {
+    console.log('🎮 First user interaction detected');
+    
+    // Initialize audio context
+    initializeAudio();
+    
+    // Start background music
     if (!musicStarted && audioRef.current['bg-music']) {
       audioRef.current['bg-music'].play().catch(() => {});
       setMusicStarted(true);
@@ -408,7 +451,7 @@ const completeTask = (taskId: string) => {
   return (
     <div 
       className="min-h-screen relative overflow-hidden"
-      onClick={startMusic}
+      onClick={handleFirstInteraction}
     >
       {/* Background image */}
       <img 
@@ -525,12 +568,15 @@ const completeTask = (taskId: string) => {
                           <div className={`font-mono text-sm font-bold ${task.completed ? 'text-green-400 line-through' : 'text-white'}`}>
                             {task.name}
                           </div>
-                          <div className="text-gray-400 text-xs">{task.estimatedTime} min</div>
+                          <div className="text-gray-400 text-xs">{task.estimatedTime} min ({task.estimatedTime * 4} damage)</div>
                         </div>
                         
                         {!task.completed && session.gameState === 'fighting' && (
                           <button
-                            onClick={() => completeTask(task.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              completeTask(task.id);
+                            }}
                             className="bg-red-600 text-white font-mono px-3 py-1 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors ml-2"
                           >
                             COMPLETE
@@ -643,10 +689,10 @@ const completeTask = (taskId: string) => {
         {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat') && (
           <div className="bg-black bg-opacity-80 p-3 text-center border-t-2 border-cyan-400">
             <div className="text-yellow-400 font-mono text-sm">
-              Click anywhere to start background music • Complete tasks to deal damage • Don't let time run out!
+              Click anywhere to start audio • Complete tasks to deal damage • Don't let time run out!
             </div>
             <div className="text-cyan-400 font-mono text-xs mt-1">
-              Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage}
+              Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | Audio: {audioInitialized ? '✅' : '❌'}
             </div>
           </div>
         )}
