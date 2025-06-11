@@ -45,6 +45,10 @@ interface FightSession {
   gameMode: 'quick-battle' | 'tournament';
   currentRound: number;
   stage: string;
+   currentTaskIndex: number;
+  taskTimers: TaskTimer[];
+  failedTasks: string[];
+  gracePeriod: GracePeriodState;
 }
 
 // Character counterpart mappings
