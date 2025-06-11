@@ -309,7 +309,7 @@ const FightScreen: React.FC = () => {
         task.id === taskId ? { ...task, completed: true } : task
       );
       
-      const newOpponentHP = Math.max(0, prev.opponentHP - 25);
+      const newOpponentHP = Math.max(0, prev.opponentHP - 100 / numberOfTasks);
       playSound('punch');
       
       const allTasksComplete = updatedTasks.every(task => task.completed);
