@@ -575,15 +575,13 @@ const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
   };
 
   // Handle clicks during intro (skip) vs fighting (audio)
-  const handleScreenClick = () => {
-    // During intro: skip to next phase
-    if (canSkip && session.gameState === 'intro') {
-      skipIntroPhase();
-    } else {
-      // During fighting: initialize audio
-      handleFirstInteraction();
-    }
-  };
+ const handleScreenClick = () => {
+  if (canSkip && session.gameState === 'intro') {
+    setSkipRequested(true);
+  } else {
+    handleFirstInteraction();
+  }
+};
 
   // Get currently active task
   const getCurrentTask = () => {
