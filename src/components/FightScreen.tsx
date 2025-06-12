@@ -282,13 +282,14 @@ await new Promise(resolve => {
   introTimeoutRef.current = setTimeout(resolve, 2500);
 });
           
- // Phase 4: Countdown 5→1 (ORIGINAL FOR LOOP + TIMEOUT FIX)
+// Phase 4: Countdown 5→1 (ORIGINAL FOR LOOP + TIMEOUT FIX)
 setIntroPhase('countdown');
 for (let i = 5; i >= 1; i--) {
   setCountdownNumber(i);
   
   // Use a local timeout variable to avoid reference conflicts
   await new Promise(resolve => {
+    currentResolveRef.current = resolve;
     const timeout = setTimeout(resolve, 800);
     introTimeoutRef.current = timeout; // Only for cleanup reference
   });
