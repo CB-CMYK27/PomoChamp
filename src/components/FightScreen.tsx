@@ -95,7 +95,7 @@ const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLef
           width: 320,                             // ≈20 rem – plenty of wrapping room
           height: 160,                            // ≈10 rem
           backgroundImage:
-            "url('/images/—Pngtree—pixel speech bubble_8533530.png')",
+            "url('/images/pixel-speech-bubble.png')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',            // keep the pixel-art crisp

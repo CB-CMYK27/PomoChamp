@@ -86,7 +86,7 @@ const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLef
     <div 
       className={`w-48 h-24 flex items-center justify-center relative ${isLeft ? '' : 'transform scale-x-[-1]'}`}
       style={{
-        backgroundImage: "url('/images/—Pngtree—pixel speech bubble_8533530.png')",
+        backgroundImage: "url('/images/pixel-speech-bubble.png')",
         backgroundSize: '100% 100%',
         backgroundRepeat: 'no-repeat'
       }}
