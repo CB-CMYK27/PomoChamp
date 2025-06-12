@@ -75,46 +75,28 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-// Speech Bubble Component – centred & text-safe
-const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => {
-  // Slide away from the exact centre so the tail still lines up with each fighter
-  const xOffset = isLeft ? -240 : 240;           // tweak if you want the bubble nearer / farther
-
-  return (
-    <div
-      className="absolute z-40 pointer-events-none"
+// Speech Bubble Component - PIXELATED DESIGN
+const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
+  <div className={`absolute z-40 animate-bounce`}
+       style={{ 
+         left: isLeft ? '30%' : '70%',
+         top: '20%',
+         transform: 'translateX(-50%)'
+       }}>
+    <div 
+      className={`w-48 h-24 flex items-center justify-center relative ${isLeft ? '' : 'transform scale-x-[-1]'}`}
       style={{
-        top: '12%',                               // vertical placement (≈ upper-middle of screen)
-        left: '50%',                              // anchor at centre …
-        transform: `translateX(${xOffset}px)`,    // … then nudge left or right
+        backgroundImage: "url('/images/pixel-speech-bubble.png')",
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat'
       }}
     >
-      <div
-        className="relative flex items-center justify-center"
-        style={{
-          width: 320,                             // ≈20 rem – plenty of wrapping room
-          height: 160,                            // ≈10 rem
-          backgroundImage:
-            "url('/images/pixel-speech-bubble.png')",
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          imageRendering: 'pixelated',            // keep the pixel-art crisp
-          transform: isLeft ? undefined : 'scaleX(-1)', // flip for the opponent
-        }}
-      >
-        <span
-          className={`font-mono font-bold leading-snug text-base text-black px-6 text-center
-                      whitespace-pre-wrap break-words
-                      ${isLeft ? '' : 'scale-x-[-1]'}`}   // un-flip the text when the bubble flips
-          style={{ maxWidth: 240 }}              // stops long quips spilling past the edge
-        >
-          {text}
-        </span>
-      </div>
+      <span className={`font-mono text-sm font-bold text-black px-4 py-2 text-center ${isLeft ? '' : 'transform scale-x-[-1]'}`}>
+        "{text}"
+      </span>
     </div>
-  );
-};
-
+  </div>
+);
 
 // Countdown Overlay Component
 const CountdownOverlay: React.FC<{ number: number; phase: string }> = ({ number, phase }) => {
