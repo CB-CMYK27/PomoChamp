@@ -277,14 +277,33 @@ const FightScreen: React.FC = () => {
             introTimeoutRef.current = setTimeout(resolve, 2500);
           });
           
-          // Phase 4: Countdown 5→1
-          setIntroPhase('countdown');
-          for (let i = 5; i >= 1; i--) {
-            setCountdownNumber(i);
-            await new Promise(resolve => {
-              introTimeoutRef.current = setTimeout(resolve, 800);
-            });
-          }
+          // Phase 4: Countdown 5→1 (FIXED VERSION)
+setIntroPhase('countdown');
+
+setCountdownNumber(5);
+await new Promise(resolve => {
+  introTimeoutRef.current = setTimeout(resolve, 800);
+});
+
+setCountdownNumber(4);
+await new Promise(resolve => {
+  introTimeoutRef.current = setTimeout(resolve, 800);
+});
+
+setCountdownNumber(3);
+await new Promise(resolve => {
+  introTimeoutRef.current = setTimeout(resolve, 800);
+});
+
+setCountdownNumber(2);
+await new Promise(resolve => {
+  introTimeoutRef.current = setTimeout(resolve, 800);
+});
+
+setCountdownNumber(1);
+await new Promise(resolve => {
+  introTimeoutRef.current = setTimeout(resolve, 800);
+});
           
           // Phase 5: "ON TASK!" (4 seconds)
           setIntroPhase('on-task');
