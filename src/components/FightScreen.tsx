@@ -250,7 +250,7 @@ const FightScreen: React.FC = () => {
       isActive: index === 0,
       hasFailed: false,
       isInGracePeriod: false,
-      startTime: index === 0 ? Date.now() : 0
+      startTime: 0  // Will be set when session timer starts
     }));
   };
 
