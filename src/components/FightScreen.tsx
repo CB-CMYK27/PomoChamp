@@ -320,42 +320,7 @@ for (let i = 5; i >= 1; i--) {
     };
   }, [session.gameState]);
 
-  // Skip intro phase
-  const skipIntroPhase = () => {
-    if (!canSkip || session.gameState !== 'intro') return;
-    
-    console.log(`⏭️ Skipping intro phase: ${introPhase}`);
-    
-    // Cancel current timeout
-    if (introTimeoutRef.current) {
-      clearTimeout(introTimeoutRef.current);
-      introTimeoutRef.current = null;
-    }
-    
-    // Advance to next phase
-    switch (introPhase) {
-      case 'intro':
-        setIntroPhase('player-quip');
-        break;
-      case 'player-quip':
-        setIntroPhase('opponent-quip');
-        break;
-      case 'opponent-quip':
-        setIntroPhase('countdown');
-        setCountdownNumber(5);
-        break;
-      case 'countdown':
-        setIntroPhase('on-task');
-        break;
-      case 'on-task':
-        setSession(prev => ({ ...prev, gameState: 'fighting' }));
-        setIntroPhase('fighting');
-        setCanSkip(false);
-        break;
-      default:
-        break;
-    }
-  };
+  
 
   // Audio setup
   useEffect(() => {
