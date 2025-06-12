@@ -296,10 +296,11 @@ for (let i = 5; i >= 1; i--) {
 }
           
           // Phase 5: "ON TASK!" (4 seconds)
-          setIntroPhase('on-task');
-          await new Promise(resolve => {
-            introTimeoutRef.current = setTimeout(resolve, 4000);
-          });
+setIntroPhase('on-task');
+await new Promise(resolve => {
+  currentResolveRef.current = resolve;
+  introTimeoutRef.current = setTimeout(resolve, 4000);
+});
           
           // Phase 6: Start fighting!
           setSession(prev => ({ ...prev, gameState: 'fighting' }));
