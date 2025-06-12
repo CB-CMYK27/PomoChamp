@@ -162,12 +162,12 @@ const FightScreen: React.FC = () => {
   const [countdownNumber, setCountdownNumber] = useState(5);
   const [musicStarted, setMusicStarted] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
-  const [skipRequested, setSkipRequested] = useState(false);
-  
-  // Skip system
+  const [canSkip, setCanSkip] = useState(true);
+
+  // Skip system using useRef to avoid re-renders
   const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentResolveRef = useRef<(() => void) | null>(null);
-  const [canSkip, setCanSkip] = useState(true);
+  const skipCountdownRef = useRef(false);
 
   // Helper function to get opponent
   const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
@@ -286,7 +286,7 @@ const FightScreen: React.FC = () => {
           setIntroPhase('countdown');
           for (let i = 5; i >= 1; i--) {
             // Check if skip was requested at the beginning of each iteration
-            if (skipRequested) {
+            if (skipCountdownRef.current) {
               console.log('🏃 Skip requested during countdown, breaking loop');
               break;
             }
@@ -301,22 +301,17 @@ const FightScreen: React.FC = () => {
           }
           
           // If skip was requested during countdown, jump directly to on-task
-          if (skipRequested) {
+          if (skipCountdownRef.current) {
             console.log('🏃 Skipping directly to ON TASK phase');
-            setSkipRequested(false); // Reset skip flag
-            setIntroPhase('on-task');
-            await new Promise(resolve => {
-              currentResolveRef.current = resolve;
-              introTimeoutRef.current = setTimeout(resolve, 4000);
-            });
-          } else {
-            // Phase 5: "ON TASK!" (4 seconds) - only if not skipped
-            setIntroPhase('on-task');
-            await new Promise(resolve => {
-              currentResolveRef.current = resolve;
-              introTimeoutRef.current = setTimeout(resolve, 4000);
-            });
+            skipCountdownRef.current = false; // Reset skip flag
           }
+          
+          // Phase 5: "ON TASK!" (4 seconds)
+          setIntroPhase('on-task');
+          await new Promise(resolve => {
+            currentResolveRef.current = resolve;
+            introTimeoutRef.current = setTimeout(resolve, 4000);
+          });
           
           // Phase 6: Start fighting!
           setSession(prev => ({ ...prev, gameState: 'fighting' }));
@@ -337,7 +332,7 @@ const FightScreen: React.FC = () => {
         clearTimeout(introTimeoutRef.current);
       }
     };
-  }, [session.gameState, skipRequested]); // Added skipRequested as dependency
+  }, [session.gameState]); // Removed skipRequested from dependencies
 
   
 
@@ -567,7 +562,12 @@ const skipIntroPhase = () => {
   // Special handling for countdown phase - set skip flag instead of resolving
   if (introPhase === 'countdown') {
     console.log('🏃 Setting skip flag for countdown');
-    setSkipRequested(true);
+    skipCountdownRef.current = true;
+    // Also resolve current promise to advance the sequence
+    if (currentResolveRef.current) {
+      currentResolveRef.current();
+      currentResolveRef.current = null;
+    }
     return;
   }
   
