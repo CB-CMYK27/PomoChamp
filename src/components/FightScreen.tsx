@@ -75,31 +75,25 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-// Speech Bubble Component - REDESIGNED WITH LAYOUT-BASED POSITIONING
+// Speech Bubble Component - PIXELATED DESIGN
 const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
-  <div className={`absolute z-40 animate-bounce max-w-xs`}
+  <div className={`absolute z-40 animate-bounce`}
        style={{ 
-         // Position bubbles in the center conversation area
-         // Left fighter bubble: 30% from left (right edge of left fighter area)
-         // Right fighter bubble: 70% from left (left edge of right fighter area)
          left: isLeft ? '30%' : '70%',
-         
-         // Position vertically in the upper-middle area, above task list
          top: '20%',
-         
-         // Center the bubble on its anchor point
          transform: 'translateX(-50%)'
        }}>
-    <div className="bg-white text-black p-4 rounded-lg border-4 border-gray-800 relative font-mono text-sm font-bold shadow-xl">
-      "{text}"
-      {/* Downward pointing tail */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 
-                      border-l-[12px] border-r-[12px] border-t-[15px] 
-                      border-l-transparent border-r-transparent border-t-white"></div>
-      <div className="absolute left-1/2 transform -translate-x-1/2 w-0 h-0 
-                      border-l-[15px] border-r-[15px] border-t-[18px] 
-                      border-l-transparent border-r-transparent border-t-gray-800"
-           style={{ top: 'calc(100% - 3px)' }}></div>
+    <div 
+      className={`w-48 h-24 flex items-center justify-center relative ${isLeft ? '' : 'transform scale-x-[-1]'}`}
+      style={{
+        backgroundImage: "url('/images/—Pngtree—pixel speech bubble_8533530.png')",
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <span className={`font-mono text-sm font-bold text-black px-4 py-2 text-center ${isLeft ? '' : 'transform scale-x-[-1]'}`}>
+        "{text}"
+      </span>
     </div>
   </div>
 );
