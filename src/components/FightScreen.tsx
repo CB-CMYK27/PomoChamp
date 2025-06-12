@@ -442,9 +442,10 @@ const FightScreen: React.FC = () => {
           const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
             if (!timer.isActive || timer.hasFailed) return timer;
 
-            const taskElapsed = Date.now() - timer.startTime;
-            const taskRemaining = Math.max(0, timer.timeRemaining * 1000 - taskElapsed);
-            const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
+const taskElapsed = Date.now() - timer.startTime;
+const totalTaskTime = timer.estimatedTime * 60 * 1000; // total time in milliseconds  
+const taskRemaining = Math.max(0, totalTaskTime - taskElapsed);
+const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
 
             // Check if task time expired
             if (taskRemainingSeconds <= 0 && !timer.isInGracePeriod) {
