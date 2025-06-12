@@ -166,6 +166,7 @@ const FightScreen: React.FC = () => {
   
   // Skip system
   const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentResolveRef = useRef<(() => void) | null>(null);
   const [canSkip, setCanSkip] = useState(true);
 
   // Helper function to get opponent
