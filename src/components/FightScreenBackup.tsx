@@ -18,6 +18,22 @@ interface Task {
   completed: boolean;
 }
 
+interface TaskTimer {
+  taskId: string;
+  estimatedTime: number; // minutes
+  timeRemaining: number; // seconds
+  isActive: boolean;
+  hasFailed: boolean;
+  isInGracePeriod: boolean;
+  startTime: number; // when this task timer started (for accuracy)
+}
+
+interface GracePeriodState {
+  isActive: boolean;
+  taskId: string | null;
+  timeRemaining: number; // 10 seconds
+}
+
 interface FightSession {
   selectedFighter: Fighter;
   opponent: Fighter;
@@ -29,6 +45,10 @@ interface FightSession {
   gameMode: 'quick-battle' | 'tournament';
   currentRound: number;
   stage: string;
+  currentTaskIndex: number;
+  taskTimers: TaskTimer[];
+  failedTasks: string[];
+  gracePeriod: GracePeriodState;
 }
 
 // Character counterpart mappings
@@ -55,24 +75,25 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-// Speech Bubble Component
+// Speech Bubble Component - PIXELATED DESIGN
 const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
-<div className={`absolute z-40 animate-bounce max-w-xs`}
-     style={{ 
-       left: isLeft ? '55%' : '15%',  // Player: 30% → 55% (right), Opponent: 70% → 15% (left)
-       top: '10%',                    // Both: top-32 → 10% (higher up)
-       transform: 'translateX(-50%)'
-     }}>
-    <div className="bg-white text-black p-4 rounded-lg border-4 border-gray-800 relative font-mono text-sm font-bold shadow-xl">
-      "{text}"
-      {/* Downward pointing tail */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 
-                      border-l-[12px] border-r-[12px] border-t-[15px] 
-                      border-l-transparent border-r-transparent border-t-white"></div>
-      <div className="absolute left-1/2 transform -translate-x-1/2 w-0 h-0 
-                      border-l-[15px] border-r-[15px] border-t-[18px] 
-                      border-l-transparent border-r-transparent border-t-gray-800"
-           style={{ top: 'calc(100% - 3px)' }}></div>
+  <div className={`absolute z-40 animate-bounce`}
+       style={{ 
+         left: isLeft ? '30%' : '70%',
+         top: '20%',
+         transform: 'translateX(-50%)'
+       }}>
+    <div 
+      className={`w-48 h-24 flex items-center justify-center relative ${isLeft ? '' : 'transform scale-x-[-1]'}`}
+      style={{
+        backgroundImage: "url('/images/—Pngtree—pixel speech bubble_8533530.png')",
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <span className={`font-mono text-sm font-bold text-black px-4 py-2 text-center ${isLeft ? '' : 'transform scale-x-[-1]'}`}>
+        "{text}"
+      </span>
     </div>
   </div>
 );
@@ -142,10 +163,12 @@ const FightScreen: React.FC = () => {
   const [countdownNumber, setCountdownNumber] = useState(5);
   const [musicStarted, setMusicStarted] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
-  
-  // Skip system
-  const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [canSkip, setCanSkip] = useState(true);
+
+  // Skip system using useRef to avoid re-renders
+  const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentResolveRef = useRef<(() => void) | null>(null);
+  const skipCountdownRef = useRef(false);
 
   // Helper function to get opponent
   const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
@@ -208,11 +231,31 @@ const FightScreen: React.FC = () => {
     timeRemaining: 25 * 60,
     fighterHP: 100,
     opponentHP: 100,
-    gameState: 'intro', // Start with intro instead of fighting
+    gameState: 'intro',
     gameMode: gameMode,
     currentRound: currentRound,
-    stage: stageBackground
+    stage: stageBackground,
+    currentTaskIndex: 0,
+    taskTimers: [],
+    failedTasks: [],
+    gracePeriod: {
+      isActive: false,
+      taskId: null,
+      timeRemaining: 0
+    }
   });
+
+  const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
+    return tasks.map((task, index) => ({
+      taskId: task.id,
+      estimatedTime: task.estimatedTime,
+      timeRemaining: task.estimatedTime * 60,
+      isActive: index === 0,
+      hasFailed: false,
+      isInGracePeriod: false,
+      startTime: index === 0 ? Date.now() : 0
+    }));
+  };
 
   // Intro Animation Sequence
   useEffect(() => {
@@ -222,33 +265,52 @@ const FightScreen: React.FC = () => {
           // Phase 1: Players bounce (2 seconds)
           setIntroPhase('intro');
           await new Promise(resolve => {
+            currentResolveRef.current = resolve;
             introTimeoutRef.current = setTimeout(resolve, 2000);
           });
           
           // Phase 2: Player quip (2.5 seconds)
           setIntroPhase('player-quip');
           await new Promise(resolve => {
+            currentResolveRef.current = resolve;
             introTimeoutRef.current = setTimeout(resolve, 2500);
           });
           
           // Phase 3: Opponent quip (2.5 seconds)  
           setIntroPhase('opponent-quip');
           await new Promise(resolve => {
+            currentResolveRef.current = resolve;
             introTimeoutRef.current = setTimeout(resolve, 2500);
           });
           
-          // Phase 4: Countdown 5→1
+          // Phase 4: Countdown 5→1 (UPDATED WITH SKIP LOGIC)
           setIntroPhase('countdown');
           for (let i = 5; i >= 1; i--) {
+            // Check if skip was requested at the beginning of each iteration
+            if (skipCountdownRef.current) {
+              console.log('🏃 Skip requested during countdown, breaking loop');
+              break;
+            }
+            
             setCountdownNumber(i);
+            
             await new Promise(resolve => {
-              introTimeoutRef.current = setTimeout(resolve, 800);
+              currentResolveRef.current = resolve;
+              const timeout = setTimeout(resolve, 800);
+              introTimeoutRef.current = timeout;
             });
+          }
+          
+          // If skip was requested during countdown, jump directly to on-task
+          if (skipCountdownRef.current) {
+            console.log('🏃 Skipping directly to ON TASK phase');
+            skipCountdownRef.current = false; // Reset skip flag
           }
           
           // Phase 5: "ON TASK!" (4 seconds)
           setIntroPhase('on-task');
           await new Promise(resolve => {
+            currentResolveRef.current = resolve;
             introTimeoutRef.current = setTimeout(resolve, 4000);
           });
           
@@ -271,44 +333,9 @@ const FightScreen: React.FC = () => {
         clearTimeout(introTimeoutRef.current);
       }
     };
-  }, [session.gameState]);
+  }, [session.gameState]); // Removed skipRequested from dependencies
 
-  // Skip intro phase
-  const skipIntroPhase = () => {
-    if (!canSkip || session.gameState !== 'intro') return;
-    
-    console.log(`⏭️ Skipping intro phase: ${introPhase}`);
-    
-    // Cancel current timeout
-    if (introTimeoutRef.current) {
-      clearTimeout(introTimeoutRef.current);
-      introTimeoutRef.current = null;
-    }
-    
-    // Advance to next phase
-    switch (introPhase) {
-      case 'intro':
-        setIntroPhase('player-quip');
-        break;
-      case 'player-quip':
-        setIntroPhase('opponent-quip');
-        break;
-      case 'opponent-quip':
-        setIntroPhase('countdown');
-        setCountdownNumber(5);
-        break;
-      case 'countdown':
-        setIntroPhase('on-task');
-        break;
-      case 'on-task':
-        setSession(prev => ({ ...prev, gameState: 'fighting' }));
-        setIntroPhase('fighting');
-        setCanSkip(false);
-        break;
-      default:
-        break;
-    }
-  };
+  
 
   // Audio setup
   useEffect(() => {
@@ -366,9 +393,16 @@ const FightScreen: React.FC = () => {
     }
   };
 
-  // Timer logic - only start when fighting
+  // Dual timer logic - session timer + individual task timers
   useEffect(() => {
     if (session.gameState === 'fighting' && session.timeRemaining > 0) {
+      // Initialize task timers on first run
+      if (session.taskTimers.length === 0 && session.tasks.length > 0) {
+        const initialTimers = initializeTaskTimers(session.tasks);
+        setSession(prev => ({ ...prev, taskTimers: initialTimers }));
+        return;
+      }
+
       const startTime = Date.now();
       const expectedTime = session.timeRemaining * 1000;
 
@@ -378,7 +412,9 @@ const FightScreen: React.FC = () => {
         const remainingSeconds = Math.ceil(remainingTime / 1000);
 
         setSession(prev => {
+          // Update main session timer
           if (remainingSeconds <= 0) {
+            // Session time expired
             const newFighterHP = Math.max(0, prev.fighterHP - 20);
             playSound('grunt');
             
@@ -388,8 +424,37 @@ const FightScreen: React.FC = () => {
             
             return { ...prev, timeRemaining: 0, fighterHP: newFighterHP };
           }
-          
-          return { ...prev, timeRemaining: remainingSeconds };
+
+          // Update individual task timers
+          const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
+            if (!timer.isActive || timer.hasFailed) return timer;
+
+const taskElapsed = Date.now() - timer.startTime;
+const totalTaskTime = timer.estimatedTime * 60 * 1000; // total time in milliseconds  
+const taskRemaining = Math.max(0, totalTaskTime - taskElapsed);
+const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
+
+            // Check if task time expired
+            if (taskRemainingSeconds <= 0 && !timer.isInGracePeriod) {
+              // Start grace period
+              return {
+                ...timer,
+                timeRemaining: 0,
+                isInGracePeriod: true
+              };
+            }
+
+            return {
+              ...timer,
+              timeRemaining: Math.max(0, taskRemainingSeconds)
+            };
+          });
+
+          return {
+            ...prev,
+            timeRemaining: remainingSeconds,
+            taskTimers: updatedTaskTimers
+          };
         });
       }, 100);
 
@@ -399,9 +464,9 @@ const FightScreen: React.FC = () => {
         }
       };
     }
-  }, [session.gameState, session.timeRemaining]);
+  }, [session.gameState, session.taskTimers.length]);
 
-  // Complete a task - FIXED WITH MINUTES-BASED DAMAGE
+  // Complete a task - ENHANCED WITH TASK TIMER LOGIC
   const completeTask = (taskId: string) => {
     console.log(`⚔️ Completing task: ${taskId}`);
     
@@ -410,19 +475,30 @@ const FightScreen: React.FC = () => {
         task.id === taskId ? { ...task, completed: true } : task
       );
       
-      // Find the specific task that was completed
       const completedTask = prev.tasks.find(task => task.id === taskId);
+      const taskIndex = prev.tasks.findIndex(task => task.id === taskId);
       
-      // Calculate damage based on task's estimated time (minutes * 4)
       const damagePerTask = completedTask ? completedTask.estimatedTime * 4 : 20;
       const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
       
       console.log(`💥 Dealing ${damagePerTask} damage (${completedTask?.estimatedTime} min task). Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
       
-      // Play punch sound immediately
       playSound('punch');
       
-      // Check for victory
+      const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
+        if (timer.taskId === taskId) {
+          return { ...timer, isActive: false, isInGracePeriod: false };
+        }
+        if (index === taskIndex + 1) {
+          return { ...timer, isActive: true, startTime: Date.now() };
+        }
+        return timer;
+      });
+
+      const updatedGracePeriod = prev.gracePeriod.taskId === taskId 
+        ? { isActive: false, taskId: null, timeRemaining: 0 }
+        : prev.gracePeriod;
+      
       const allTasksComplete = updatedTasks.every(task => task.completed);
       if (allTasksComplete || newOpponentHP <= 0) {
         console.log('🏆 Victory condition met!');
@@ -431,14 +507,20 @@ const FightScreen: React.FC = () => {
           ...prev,
           tasks: updatedTasks,
           opponentHP: newOpponentHP,
-          gameState: 'victory'
+          gameState: 'victory',
+          taskTimers: updatedTaskTimers,
+          gracePeriod: updatedGracePeriod,
+          currentTaskIndex: taskIndex + 1
         };
       }
       
       return {
         ...prev,
         tasks: updatedTasks,
-        opponentHP: newOpponentHP
+        opponentHP: newOpponentHP,
+        taskTimers: updatedTaskTimers,
+        gracePeriod: updatedGracePeriod,
+        currentTaskIndex: taskIndex + 1
       };
     });
   };
@@ -472,16 +554,54 @@ const FightScreen: React.FC = () => {
     }
   };
 
-  // Handle clicks during intro (skip) vs fighting (audio)
-  const handleScreenClick = () => {
-    // During intro: skip to next phase
-    if (canSkip && session.gameState === 'intro') {
-      skipIntroPhase();
-    } else {
-      // During fighting: initialize audio
-      handleFirstInteraction();
+  // Skip intro phase - UPDATED LOGIC
+const skipIntroPhase = () => {
+  if (!canSkip || session.gameState !== 'intro') return;
+  
+  console.log(`⏭️ Skipping intro phase: ${introPhase}`);
+  
+  // Special handling for countdown phase - set skip flag instead of resolving
+  if (introPhase === 'countdown') {
+    console.log('🏃 Setting skip flag for countdown');
+    skipCountdownRef.current = true;
+    // Also resolve current promise to advance the sequence
+    if (currentResolveRef.current) {
+      currentResolveRef.current();
+      currentResolveRef.current = null;
     }
+    return;
+  }
+  
+  // For other phases, resolve current Promise immediately to advance sequence
+  if (currentResolveRef.current) {
+    currentResolveRef.current();
+    currentResolveRef.current = null;
+  }
+};
+
+const handleScreenClick = () => {
+  if (canSkip && session.gameState === 'intro') {
+    skipIntroPhase();
+  } else {
+    handleFirstInteraction();
+  }
+};
+
+  // Get currently active task
+  const getCurrentTask = () => {
+    const activeTimer = session.taskTimers.find(timer => timer.isActive);
+    if (!activeTimer) return null;
+    
+    const task = session.tasks.find(task => task.id === activeTimer.taskId);
+    return { task, timer: activeTimer };
   };
+
+  // Format time for task timer display
+  const formatTaskTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
 
   // Get fighter animation based on intro phase
   const getFighterAnimation = (isPlayer: boolean) => {
@@ -567,9 +687,25 @@ const FightScreen: React.FC = () => {
             </div>
             
             <div className="text-center">
+              {/* Main Session Timer */}
               <div className={`font-mono text-4xl font-bold ${session.timeRemaining < 300 ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`}>
                 {formatTime(session.timeRemaining)}
               </div>
+              
+              {/* Current Task Timer */}
+              {getCurrentTask() && (
+                <div className="mt-2">
+                  <div className="text-cyan-400 font-mono text-sm">
+                    Task {session.currentTaskIndex + 1}: {getCurrentTask()?.task?.name}
+                  </div>
+                  <div className={`font-mono text-lg font-bold ${
+                    getCurrentTask()?.timer?.timeRemaining <= 30 ? 'text-red-400 animate-pulse' : 'text-cyan-400'
+                  }`}>
+                    {formatTaskTime(getCurrentTask()?.timer?.timeRemaining || 0)}
+                  </div>
+                </div>
+              )}
+              
               <button 
                 onClick={togglePause}
                 className="mt-2 bg-blue-600 text-white font-mono px-4 py-1 text-sm border-2 border-blue-400 hover:bg-blue-500 transition-colors"
