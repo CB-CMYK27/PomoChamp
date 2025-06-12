@@ -277,33 +277,17 @@ const FightScreen: React.FC = () => {
             introTimeoutRef.current = setTimeout(resolve, 2500);
           });
           
-          // Phase 4: Countdown 5→1 (FIXED VERSION)
+ // Phase 4: Countdown 5→1 (ORIGINAL FOR LOOP + TIMEOUT FIX)
 setIntroPhase('countdown');
-
-setCountdownNumber(5);
-await new Promise(resolve => {
-  introTimeoutRef.current = setTimeout(resolve, 800);
-});
-
-setCountdownNumber(4);
-await new Promise(resolve => {
-  introTimeoutRef.current = setTimeout(resolve, 800);
-});
-
-setCountdownNumber(3);
-await new Promise(resolve => {
-  introTimeoutRef.current = setTimeout(resolve, 800);
-});
-
-setCountdownNumber(2);
-await new Promise(resolve => {
-  introTimeoutRef.current = setTimeout(resolve, 800);
-});
-
-setCountdownNumber(1);
-await new Promise(resolve => {
-  introTimeoutRef.current = setTimeout(resolve, 800);
-});
+for (let i = 5; i >= 1; i--) {
+  setCountdownNumber(i);
+  
+  // Use a local timeout variable to avoid reference conflicts
+  await new Promise(resolve => {
+    const timeout = setTimeout(resolve, 800);
+    introTimeoutRef.current = timeout; // Only for cleanup reference
+  });
+}
           
           // Phase 5: "ON TASK!" (4 seconds)
           setIntroPhase('on-task');
