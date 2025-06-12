@@ -24,14 +24,7 @@ interface TaskTimer {
   timeRemaining: number; // seconds
   isActive: boolean;
   hasFailed: boolean;
-  isInGracePeriod: boolean;
   startTime: number; // when this task timer started (for accuracy)
-}
-
-interface GracePeriodState {
-  isActive: boolean;
-  taskId: string | null;
-  timeRemaining: number; // 10 seconds
 }
 
 interface FightSession {
@@ -48,7 +41,6 @@ interface FightSession {
   currentTaskIndex: number;
   taskTimers: TaskTimer[];
   failedTasks: string[];
-  gracePeriod: GracePeriodState;
 }
 
 // Character counterpart mappings
@@ -75,7 +67,7 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-// Speech Bubble Component - PIXELATED DESIGN
+// Speech Bubble Component
 const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
   <div className={`absolute z-40 animate-bounce`}
        style={{ 
@@ -237,12 +229,7 @@ const FightScreen: React.FC = () => {
     stage: stageBackground,
     currentTaskIndex: 0,
     taskTimers: [],
-    failedTasks: [],
-    gracePeriod: {
-      isActive: false,
-      taskId: null,
-      timeRemaining: 0
-    }
+    failedTasks: []
   });
 
   const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
@@ -252,7 +239,6 @@ const FightScreen: React.FC = () => {
       timeRemaining: task.estimatedTime * 60,
       isActive: index === 0,
       hasFailed: false,
-      isInGracePeriod: false,
       startTime: index === 0 ? Date.now() : 0
     }));
   };
@@ -333,9 +319,7 @@ const FightScreen: React.FC = () => {
         clearTimeout(introTimeoutRef.current);
       }
     };
-  }, [session.gameState]); // Removed skipRequested from dependencies
-
-  
+  }, [session.gameState]);
 
   // Audio setup
   useEffect(() => {
@@ -429,18 +413,70 @@ const FightScreen: React.FC = () => {
           const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
             if (!timer.isActive || timer.hasFailed) return timer;
 
-const taskElapsed = Date.now() - timer.startTime;
-const totalTaskTime = timer.estimatedTime * 60 * 1000; // total time in milliseconds  
-const taskRemaining = Math.max(0, totalTaskTime - taskElapsed);
-const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
+            const taskElapsed = Date.now() - timer.startTime;
+            const totalTaskTime = timer.estimatedTime * 60 * 1000; // total time in milliseconds  
+            const taskRemaining = Math.max(0, totalTaskTime - taskElapsed);
+            const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
 
-            // Check if task time expired
-            if (taskRemainingSeconds <= 0 && !timer.isInGracePeriod) {
-              // Start grace period
+            // CRITICAL FIX: Check if task time expired - IMMEDIATE DAMAGE
+            if (taskRemainingSeconds <= 0) {
+              console.log(`⚔️ Task timer expired for task: ${timer.taskId}`);
+              
+              // Calculate damage based on task's estimated time
+              const damageTaken = timer.estimatedTime * 4;
+              console.log(`💥 Player takes ${damageTaken} damage for failed task`);
+              
+              // Update player HP
+              const newFighterHP = Math.max(0, prev.fighterHP - damageTaken);
+              
+              // Play grunt sound
+              playSound('grunt');
+              
+              // Add to failed tasks
+              const newFailedTasks = [...prev.failedTasks, timer.taskId];
+              
+              // Find next uncompleted and unfailed task
+              const nextTaskIndex = prev.tasks.findIndex((task, taskIndex) => 
+                !task.completed && 
+                !newFailedTasks.includes(task.id) && 
+                taskIndex > prev.currentTaskIndex
+              );
+              
+              // Update session state with damage and next task
+              setTimeout(() => {
+                setSession(currentSession => {
+                  const updatedTimers = currentSession.taskTimers.map((t, tIndex) => {
+                    if (t.taskId === timer.taskId) {
+                      return { ...t, hasFailed: true, isActive: false };
+                    }
+                    if (nextTaskIndex !== -1 && tIndex === nextTaskIndex) {
+                      return { ...t, isActive: true, startTime: Date.now() };
+                    }
+                    return t;
+                  });
+                  
+                  const newState = {
+                    ...currentSession,
+                    fighterHP: newFighterHP,
+                    failedTasks: newFailedTasks,
+                    taskTimers: updatedTimers,
+                    currentTaskIndex: nextTaskIndex !== -1 ? nextTaskIndex : currentSession.currentTaskIndex
+                  };
+                  
+                  // Check for defeat
+                  if (newFighterHP <= 0) {
+                    newState.gameState = 'defeat';
+                  }
+                  
+                  return newState;
+                });
+              }, 0);
+              
               return {
                 ...timer,
                 timeRemaining: 0,
-                isInGracePeriod: true
+                hasFailed: true,
+                isActive: false
               };
             }
 
@@ -487,17 +523,13 @@ const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
       
       const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
         if (timer.taskId === taskId) {
-          return { ...timer, isActive: false, isInGracePeriod: false };
+          return { ...timer, isActive: false };
         }
         if (index === taskIndex + 1) {
           return { ...timer, isActive: true, startTime: Date.now() };
         }
         return timer;
       });
-
-      const updatedGracePeriod = prev.gracePeriod.taskId === taskId 
-        ? { isActive: false, taskId: null, timeRemaining: 0 }
-        : prev.gracePeriod;
       
       const allTasksComplete = updatedTasks.every(task => task.completed);
       if (allTasksComplete || newOpponentHP <= 0) {
@@ -509,7 +541,6 @@ const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
           opponentHP: newOpponentHP,
           gameState: 'victory',
           taskTimers: updatedTaskTimers,
-          gracePeriod: updatedGracePeriod,
           currentTaskIndex: taskIndex + 1
         };
       }
@@ -519,7 +550,6 @@ const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
         tasks: updatedTasks,
         opponentHP: newOpponentHP,
         taskTimers: updatedTaskTimers,
-        gracePeriod: updatedGracePeriod,
         currentTaskIndex: taskIndex + 1
       };
     });
@@ -555,37 +585,37 @@ const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
   };
 
   // Skip intro phase - UPDATED LOGIC
-const skipIntroPhase = () => {
-  if (!canSkip || session.gameState !== 'intro') return;
-  
-  console.log(`⏭️ Skipping intro phase: ${introPhase}`);
-  
-  // Special handling for countdown phase - set skip flag instead of resolving
-  if (introPhase === 'countdown') {
-    console.log('🏃 Setting skip flag for countdown');
-    skipCountdownRef.current = true;
-    // Also resolve current promise to advance the sequence
+  const skipIntroPhase = () => {
+    if (!canSkip || session.gameState !== 'intro') return;
+    
+    console.log(`⏭️ Skipping intro phase: ${introPhase}`);
+    
+    // Special handling for countdown phase - set skip flag instead of resolving
+    if (introPhase === 'countdown') {
+      console.log('🏃 Setting skip flag for countdown');
+      skipCountdownRef.current = true;
+      // Also resolve current promise to advance the sequence
+      if (currentResolveRef.current) {
+        currentResolveRef.current();
+        currentResolveRef.current = null;
+      }
+      return;
+    }
+    
+    // For other phases, resolve current Promise immediately to advance sequence
     if (currentResolveRef.current) {
       currentResolveRef.current();
       currentResolveRef.current = null;
     }
-    return;
-  }
-  
-  // For other phases, resolve current Promise immediately to advance sequence
-  if (currentResolveRef.current) {
-    currentResolveRef.current();
-    currentResolveRef.current = null;
-  }
-};
+  };
 
-const handleScreenClick = () => {
-  if (canSkip && session.gameState === 'intro') {
-    skipIntroPhase();
-  } else {
-    handleFirstInteraction();
-  }
-};
+  const handleScreenClick = () => {
+    if (canSkip && session.gameState === 'intro') {
+      skipIntroPhase();
+    } else {
+      handleFirstInteraction();
+    }
+  };
 
   // Get currently active task
   const getCurrentTask = () => {
@@ -598,10 +628,10 @@ const handleScreenClick = () => {
 
   // Format time for task timer display
   const formatTaskTime = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-};
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Get fighter animation based on intro phase
   const getFighterAnimation = (isPlayer: boolean) => {
@@ -773,32 +803,46 @@ const handleScreenClick = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {session.tasks.map((task) => (
-                      <div key={task.id} className="flex items-center justify-between p-3 bg-gray-900 border border-gray-600 rounded">
-                        <div className="flex-1">
-                          <div className={`font-mono text-sm font-bold ${task.completed ? 'text-green-400 line-through' : 'text-white'}`}>
-                            {task.name}
+                    {session.tasks.map((task) => {
+                      const taskTimer = session.taskTimers.find(timer => timer.taskId === task.id);
+                      const isFailed = session.failedTasks.includes(task.id);
+                      
+                      return (
+                        <div key={task.id} className="flex items-center justify-between p-3 bg-gray-900 border border-gray-600 rounded">
+                          <div className="flex-1">
+                            <div className={`font-mono text-sm font-bold ${
+                              task.completed ? 'text-green-400 line-through' : 
+                              isFailed ? 'text-red-400 line-through' :
+                              'text-white'
+                            }`}>
+                              {task.name}
+                              {isFailed && ' (FAILED)'}
+                            </div>
+                            <div className="text-gray-400 text-xs">{task.estimatedTime} min ({task.estimatedTime * 4} damage)</div>
                           </div>
-                          <div className="text-gray-400 text-xs">{task.estimatedTime} min ({task.estimatedTime * 4} damage)</div>
+                          
+                          {!task.completed && !isFailed && session.gameState === 'fighting' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                completeTask(task.id);
+                              }}
+                              className="bg-red-600 text-white font-mono px-3 py-1 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors ml-2"
+                            >
+                              COMPLETE
+                            </button>
+                          )}
+                          
+                          {task.completed && (
+                            <div className="text-green-400 font-mono text-xs font-bold">✓ DONE</div>
+                          )}
+                          
+                          {isFailed && (
+                            <div className="text-red-400 font-mono text-xs font-bold">✗ FAILED</div>
+                          )}
                         </div>
-                        
-                        {!task.completed && session.gameState === 'fighting' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              completeTask(task.id);
-                            }}
-                            className="bg-red-600 text-white font-mono px-3 py-1 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors ml-2"
-                          >
-                            COMPLETE
-                          </button>
-                        )}
-                        
-                        {task.completed && (
-                          <div className="text-green-400 font-mono text-xs font-bold">✓ DONE</div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -909,7 +953,7 @@ const handleScreenClick = () => {
         {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat') && (
           <div className="bg-black bg-opacity-80 p-3 text-center border-t-2 border-cyan-400">
             <div className="text-yellow-400 font-mono text-sm">
-              Click anywhere to start audio • Complete tasks to deal damage • Don't let time run out!
+              Click anywhere to start audio • Complete tasks to deal damage • Don't let task timers run out!
             </div>
             <div className="text-cyan-400 font-mono text-xs mt-1">
               Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | Audio: {audioInitialized ? '✅' : '❌'}
