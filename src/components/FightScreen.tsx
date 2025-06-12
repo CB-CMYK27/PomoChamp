@@ -588,10 +588,10 @@ const FightScreen: React.FC = () => {
 
   // Format time for task timer display
   const formatTaskTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
 
   // Get fighter animation based on intro phase
   const getFighterAnimation = (isPlayer: boolean) => {
