@@ -271,8 +271,8 @@ await new Promise(resolve => {
           // Phase 2: Player quip (2.5 seconds)
 setIntroPhase('player-quip');
 await new Promise(resolve => {
-  const delay = skipRequested ? 50 : 2500;
-  introTimeoutRef.current = setTimeout(resolve, delay);
+  currentResolveRef.current = resolve;
+  introTimeoutRef.current = setTimeout(resolve, 2500);
 });
           
           // Phase 3: Opponent quip (2.5 seconds)  
