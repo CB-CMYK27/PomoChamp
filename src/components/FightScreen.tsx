@@ -35,7 +35,7 @@ interface TaskTimer {
 interface GracePeriodState {
   isActive: boolean;
   taskId: string | null;
-  timeRemaining: number; // seconds remaining in grace period
+  timeRemaining: number; // seconds
 }
 
 interface FightSession {
@@ -82,14 +82,14 @@ const AVAILABLE_STAGES = [
 ];
 
 /* ────────────────────────────────
- *  Speech bubble
+ *  Speech bubble (pixel‑art)
  * ────────────────────────────── */
 
 type BubbleSide = 'left' | 'right';
 
 const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side }) => {
-  // nudge horizontally so tail lines up with the fighter
-  const xOffset = side === 'left' ? -240 : 240; // tweak to taste
+  // nudge horizontally so the tail aligns with the speaker
+  const xOffset = side === 'left' ? -240 : 240;
 
   return (
     <div
@@ -257,78 +257,4 @@ const FightScreen: React.FC = () => {
 
   /* ═════════ Intro animation sequence ═════════ */
   useEffect(() => {
-    if (session.gameState !== 'intro') return;
-
-    const seq = async () => {
-      try {
-        // phase 1: bounce
-        setIntroPhase('intro');
-        await new Promise((r) => {
-          currentResolveRef.current = r;
-          introTimeoutRef.current = setTimeout(r, 2000);
-        });
-
-        // phase 2: player quip
-        setIntroPhase('player-quip');
-        await new Promise((r) => {
-          currentResolveRef.current = r;
-          introTimeoutRef.current = setTimeout(r, 2500);
-        });
-
-        // phase 3: opponent quip
-        setIntroPhase('opponent-quip');
-        await new Promise((r) => {
-          currentResolveRef.current = r;
-          introTimeoutRef.current = setTimeout(r, 2500);
-        });
-
-        // phase 4: countdown 5‒1
-        setIntroPhase('countdown');
-        for (let i = 5; i >= 1; i--) {
-          if (skipCountdownRef.current) break;
-          setCountdownNumber(i);
-          await new Promise((r) => {
-            currentResolveRef.current = r;
-            introTimeoutRef.current = setTimeout(r, 800);
-          });
-        }
-
-        // phase 5: on task
-        setIntroPhase('on-task');
-        await new Promise((r) => {
-          currentResolveRef.current = r;
-          introTimeoutRef.current = setTimeout(r, 4000);
-        });
-
-        // phase 6: fight!
-        setSession((prev) => ({ ...prev, gameState: 'fighting' }));
-        setIntroPhase('fighting');
-        setCanSkip(false);
-      } catch {
-        /* skipped */
-      }
-    };
-
-    seq();
-
-    return () => {
-      if (introTimeoutRef.current) clearTimeout(introTimeoutRef.current);
-    };
-  }, [session.gameState]);
-
-  /* ═════════ Audio helpers (unchanged) ═════════ */
-  useEffect(() => {
-    const sounds = ['punch', 'grunt', 'victory'];
-    sounds.forEach((s) => {
-      audioRef.current[s] = new Audio(`/sfx/${s}.wav`);
-      audioRef.current[s].preload = 'auto';
-      audioRef.current[s].volume = 0.7;
-    });
-    audioRef.current['bg-music'] = new Audio('/
-      </div>
-    </div>
-  );
-};                    
-
-export default FightScreen;   
-                             
+    if (
