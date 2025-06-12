@@ -542,10 +542,22 @@ const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
     }
   };
 
-  // Handle clicks during intro (skip) vs fighting (audio)
- const handleScreenClick = () => {
+  // Skip intro phase
+const skipIntroPhase = () => {
+  if (!canSkip || session.gameState !== 'intro') return;
+  
+  console.log(`⏭️ Skipping intro phase: ${introPhase}`);
+  
+  // Resolve current Promise immediately to advance sequence
+  if (currentResolveRef.current) {
+    currentResolveRef.current();
+    currentResolveRef.current = null;
+  }
+};
+
+const handleScreenClick = () => {
   if (canSkip && session.gameState === 'intro') {
-    setSkipRequested(true);
+    skipIntroPhase();
   } else {
     handleFirstInteraction();
   }
