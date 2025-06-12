@@ -75,14 +75,21 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-// Speech Bubble Component
+// Speech Bubble Component - REDESIGNED WITH LAYOUT-BASED POSITIONING
 const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
-<div className={`absolute z-40 animate-bounce max-w-xs`}
-     style={{ 
-       left: isLeft ? '35%' : '65%',  // Moved closer to center: Player 55% → 35%, Opponent 15% → 65%
-       top: '25%',                    // Moved down: 10% → 25% (more in the middle vertically)
-       transform: 'translateX(-50%)'
-     }}>
+  <div className={`absolute z-40 animate-bounce max-w-xs`}
+       style={{ 
+         // Position bubbles in the center conversation area
+         // Left fighter bubble: 30% from left (right edge of left fighter area)
+         // Right fighter bubble: 70% from left (left edge of right fighter area)
+         left: isLeft ? '30%' : '70%',
+         
+         // Position vertically in the upper-middle area, above task list
+         top: '20%',
+         
+         // Center the bubble on its anchor point
+         transform: 'translateX(-50%)'
+       }}>
     <div className="bg-white text-black p-4 rounded-lg border-4 border-gray-800 relative font-mono text-sm font-bold shadow-xl">
       "{text}"
       {/* Downward pointing tail */}
