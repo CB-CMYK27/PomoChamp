@@ -79,8 +79,8 @@ const AVAILABLE_STAGES = [
 const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
 <div className={`absolute z-40 animate-bounce max-w-xs`}
      style={{ 
-       left: isLeft ? '55%' : '15%',  // Player: 30% → 55% (right), Opponent: 70% → 15% (left)
-       top: '10%',                    // Both: top-32 → 10% (higher up)
+       left: isLeft ? '35%' : '65%',  // Moved closer to center: Player 55% → 35%, Opponent 15% → 65%
+       top: '25%',                    // Moved down: 10% → 25% (more in the middle vertically)
        transform: 'translateX(-50%)'
      }}>
     <div className="bg-white text-black p-4 rounded-lg border-4 border-gray-800 relative font-mono text-sm font-bold shadow-xl">
