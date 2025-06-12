@@ -278,8 +278,8 @@ await new Promise(resolve => {
           // Phase 3: Opponent quip (2.5 seconds)  
 setIntroPhase('opponent-quip');
 await new Promise(resolve => {
-  const delay = skipRequested ? 50 : 2500;
-  introTimeoutRef.current = setTimeout(resolve, delay);
+  currentResolveRef.current = resolve;
+  introTimeoutRef.current = setTimeout(resolve, 2500);
 });
           
  // Phase 4: Countdown 5→1 (ORIGINAL FOR LOOP + TIMEOUT FIX)
