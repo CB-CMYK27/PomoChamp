@@ -250,7 +250,7 @@ const FightScreen: React.FC = () => {
       isActive: index === 0,
       hasFailed: false,
       isInGracePeriod: false,
-      startTime: 0  // Will be set when session timer starts
+      startTime: index === 0 ? Date.now() : 0
     }));
   };
 
@@ -496,7 +496,7 @@ const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
         }
       };
     }
-  }, [session.gameState, session.timeRemaining, session.taskTimers.length]);
+  }, [session.gameState, session.taskTimers.length]);
 
   // Complete a task - ENHANCED WITH TASK TIMER LOGIC
   const completeTask = (taskId: string) => {
