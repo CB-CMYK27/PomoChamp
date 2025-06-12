@@ -261,46 +261,62 @@ const FightScreen: React.FC = () => {
     if (session.gameState === 'intro') {
       const sequence = async () => {
         try {
-// Phase 1: Players bounce (2 seconds)
-setIntroPhase('intro');
-await new Promise(resolve => {
-  currentResolveRef.current = resolve;
-  introTimeoutRef.current = setTimeout(resolve, 2000);
-});
+          // Phase 1: Players bounce (2 seconds)
+          setIntroPhase('intro');
+          await new Promise(resolve => {
+            currentResolveRef.current = resolve;
+            introTimeoutRef.current = setTimeout(resolve, 2000);
+          });
           
           // Phase 2: Player quip (2.5 seconds)
-setIntroPhase('player-quip');
-await new Promise(resolve => {
-  currentResolveRef.current = resolve;
-  introTimeoutRef.current = setTimeout(resolve, 2500);
-});
+          setIntroPhase('player-quip');
+          await new Promise(resolve => {
+            currentResolveRef.current = resolve;
+            introTimeoutRef.current = setTimeout(resolve, 2500);
+          });
           
           // Phase 3: Opponent quip (2.5 seconds)  
-setIntroPhase('opponent-quip');
-await new Promise(resolve => {
-  currentResolveRef.current = resolve;
-  introTimeoutRef.current = setTimeout(resolve, 2500);
-});
+          setIntroPhase('opponent-quip');
+          await new Promise(resolve => {
+            currentResolveRef.current = resolve;
+            introTimeoutRef.current = setTimeout(resolve, 2500);
+          });
           
-// Phase 4: Countdown 5→1 (ORIGINAL FOR LOOP + TIMEOUT FIX)
-setIntroPhase('countdown');
-for (let i = 5; i >= 1; i--) {
-  setCountdownNumber(i);
-  
-  // Use a local timeout variable to avoid reference conflicts
-  await new Promise(resolve => {
-    currentResolveRef.current = resolve;
-    const timeout = setTimeout(resolve, 800);
-    introTimeoutRef.current = timeout; // Only for cleanup reference
-  });
-}
+          // Phase 4: Countdown 5→1 (UPDATED WITH SKIP LOGIC)
+          setIntroPhase('countdown');
+          for (let i = 5; i >= 1; i--) {
+            // Check if skip was requested at the beginning of each iteration
+            if (skipRequested) {
+              console.log('🏃 Skip requested during countdown, breaking loop');
+              break;
+            }
+            
+            setCountdownNumber(i);
+            
+            await new Promise(resolve => {
+              currentResolveRef.current = resolve;
+              const timeout = setTimeout(resolve, 800);
+              introTimeoutRef.current = timeout;
+            });
+          }
           
-          // Phase 5: "ON TASK!" (4 seconds)
-setIntroPhase('on-task');
-await new Promise(resolve => {
-  currentResolveRef.current = resolve;
-  introTimeoutRef.current = setTimeout(resolve, 4000);
-});
+          // If skip was requested during countdown, jump directly to on-task
+          if (skipRequested) {
+            console.log('🏃 Skipping directly to ON TASK phase');
+            setSkipRequested(false); // Reset skip flag
+            setIntroPhase('on-task');
+            await new Promise(resolve => {
+              currentResolveRef.current = resolve;
+              introTimeoutRef.current = setTimeout(resolve, 4000);
+            });
+          } else {
+            // Phase 5: "ON TASK!" (4 seconds) - only if not skipped
+            setIntroPhase('on-task');
+            await new Promise(resolve => {
+              currentResolveRef.current = resolve;
+              introTimeoutRef.current = setTimeout(resolve, 4000);
+            });
+          }
           
           // Phase 6: Start fighting!
           setSession(prev => ({ ...prev, gameState: 'fighting' }));
@@ -321,7 +337,7 @@ await new Promise(resolve => {
         clearTimeout(introTimeoutRef.current);
       }
     };
-  }, [session.gameState]);
+  }, [session.gameState, skipRequested]); // Added skipRequested as dependency
 
   
 
@@ -542,13 +558,20 @@ const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
     }
   };
 
-  // Skip intro phase
+  // Skip intro phase - UPDATED LOGIC
 const skipIntroPhase = () => {
   if (!canSkip || session.gameState !== 'intro') return;
   
   console.log(`⏭️ Skipping intro phase: ${introPhase}`);
   
-  // Resolve current Promise immediately to advance sequence
+  // Special handling for countdown phase - set skip flag instead of resolving
+  if (introPhase === 'countdown') {
+    console.log('🏃 Setting skip flag for countdown');
+    setSkipRequested(true);
+    return;
+  }
+  
+  // For other phases, resolve current Promise immediately to advance sequence
   if (currentResolveRef.current) {
     currentResolveRef.current();
     currentResolveRef.current = null;
