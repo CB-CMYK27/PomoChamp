@@ -261,11 +261,11 @@ const FightScreen: React.FC = () => {
     if (session.gameState === 'intro') {
       const sequence = async () => {
         try {
-         // Phase 1: Players bounce (2 seconds)
+// Phase 1: Players bounce (2 seconds)
 setIntroPhase('intro');
 await new Promise(resolve => {
-  const delay = skipRequested ? 50 : 2000;
-  introTimeoutRef.current = setTimeout(resolve, delay);
+  currentResolveRef.current = resolve;
+  introTimeoutRef.current = setTimeout(resolve, 2000);
 });
           
           // Phase 2: Player quip (2.5 seconds)
