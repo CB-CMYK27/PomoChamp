@@ -162,6 +162,7 @@ const FightScreen: React.FC = () => {
   const [countdownNumber, setCountdownNumber] = useState(5);
   const [musicStarted, setMusicStarted] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
+  const [skipRequested, setSkipRequested] = useState(false);
   
   // Skip system
   const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -259,11 +260,12 @@ const FightScreen: React.FC = () => {
     if (session.gameState === 'intro') {
       const sequence = async () => {
         try {
-          // Phase 1: Players bounce (2 seconds)
-          setIntroPhase('intro');
-          await new Promise(resolve => {
-            introTimeoutRef.current = setTimeout(resolve, 2000);
-          });
+         // Phase 1: Players bounce (2 seconds)
+setIntroPhase('intro');
+await new Promise(resolve => {
+  const delay = skipRequested ? 50 : 2000;
+  introTimeoutRef.current = setTimeout(resolve, delay);
+});
           
           // Phase 2: Player quip (2.5 seconds)
           setIntroPhase('player-quip');
