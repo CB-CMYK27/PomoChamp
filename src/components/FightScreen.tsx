@@ -76,18 +76,12 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-/* ───────── Speech bubble (auto-grow, pixel-art) ───────── */
+/* ───────── Speech bubble (pixel-art, grows outward) ───────── */
 
 type BubbleSide = 'left' | 'right';
 
 const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side }) => {
-  /* ------------------------------------------------------------------
-   * Size rules
-   *   • Start at 320 px wide.
-   *   • After 40 characters, add 8 px per extra char.
-   *   • Never exceed 480 px (looks odd if too wide on mobile).
-   *   • Height is ½ the width so the graphic keeps its shape.
-   * ------------------------------------------------------------------ */
+  /* size rules */
   const baseW = 320;
   const growAfter = 40;
   const pxPerChar = 8;
@@ -96,11 +90,15 @@ const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side
   const extra = Math.max(0, text.length - growAfter) * pxPerChar;
   const bubbleW = Math.min(baseW + extra, maxW);
   const bubbleH = Math.round(bubbleW * 0.5);
-  const textMaxW = bubbleW - 80;          // 40 px padding either side
+  const textMaxW = bubbleW - 80; // 40 px padding either side
 
-  /* horizontal nudge so the tail points at the fighter
-     (0.6 × width felt balanced in tests; tweak to taste) */
-  const xOffset = side === 'left' ? -bubbleW * 0.6 : bubbleW * 0.6;
+  /* keep the tail fixed:                                          *
+   *  player (left)  → anchor LEFT edge (constant 100 px)          *
+   *  opponent (right) → anchor RIGHT edge (constant -400 px)      */
+  const xOffset =
+    side === 'left'
+      ? 100                            // fixed anchor
+      : -400 - (bubbleW - baseW);      // shift left as width grows
 
   return (
     <div
