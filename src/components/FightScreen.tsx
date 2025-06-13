@@ -82,7 +82,7 @@ const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLef
        style={{ 
          left: '50%',                 // anchor in the middle
           top:  '12%',                 // raise/lower as you like
-          transform: `translateX(${isLeft ? '-240px' : '240px'})`, // slide left/right
+          transform: `translateX(${isLeft ? '-300px' : '240px'})`, // slide left/right
        }}>
     <div
   className={`relative flex items-center justify-center ${
