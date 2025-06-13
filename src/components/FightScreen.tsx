@@ -82,7 +82,7 @@ const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLef
        style={{ 
          left: '50%',                 // anchor in the middle
           top:  '12%',                 // raise/lower as you like
-          transform: `translateX(${isLeft ? '-2000px' : '240px'})`, // slide left/right
+          transform: `translateX(${isLeft ? '-500px' : '240px'})`, // slide left/right
        }}>
     <div
   className={`relative flex items-center justify-center ${
@@ -921,7 +921,7 @@ const FightScreen: React.FC = () => {
             
             {/* Player speech bubble */}
             {introPhase === 'player-quip' && (
-              <SpeechBubble text={session.selectedFighter.quip} isLeft={true} />
+              <SpeechBubble text={session.selectedFighter.quip} side="left" />
             )}
           </div>
 
