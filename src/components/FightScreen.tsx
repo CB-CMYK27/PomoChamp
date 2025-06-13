@@ -1008,7 +1008,7 @@ const FightScreen: React.FC = () => {
             
             {/* Opponent speech bubble */}
             {introPhase === 'opponent-quip' && session.opponent && (
-              <SpeechBubble text={session.opponent.quip} isLeft={false} />
+              <SpeechBubble text={session.opponent.quip} side="right" />
             )}
           </div>
         </div>
