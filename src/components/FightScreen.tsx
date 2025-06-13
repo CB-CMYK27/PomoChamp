@@ -97,13 +97,13 @@ const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side
    *  opponent (right) → anchor RIGHT edge (constant -400 px)      */
   const xOffset =
     side === 'left'
-      ? 100                            // fixed anchor
-      : -400 - (bubbleW - baseW);      // shift left as width grows
+      ? 120                            // fixed anchor
+      : -420 - (bubbleW - baseW);      // shift left as width grows
 
   return (
     <div
       className="absolute z-40 pointer-events-none"
-      style={{ top: '7%', left: '50%', transform: `translateX(${xOffset}px)` }}
+      style={{ top: '5%', left: '50%', transform: `translateX(${xOffset}px)` }}
     >
       <div
         className="relative flex items-center justify-center"
