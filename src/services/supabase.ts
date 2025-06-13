@@ -31,26 +31,7 @@ export async function createOrFetchUserProfile() {
     return null;
   }
   
-  // First try to get existing user data
-  const { data: existingUser, error: fetchError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('auth0_id', session.user.id)
-    .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when no rows found
-    
-  if (fetchError) {
-    console.error('Error fetching user data:', fetchError);
-    return null;
-  }
-  
-  // If user exists, return it
-  if (existingUser) {
-    return existingUser;
-  }
-  
-  // If user doesn't exist, create a new profile
-  console.log('Creating new user profile for anonymous user');
-  
+  // Use upsert to handle both insert and update cases safely
   const newUserData = {
     auth0_id: session.user.id,
     email: session.user.email || null,
@@ -63,19 +44,22 @@ export async function createOrFetchUserProfile() {
     last_active: new Date().toISOString()
   };
   
-  const { data: newUser, error: createError } = await supabase
+  const { data: userData, error: upsertError } = await supabase
     .from('users')
-    .insert([newUserData])
+    .upsert(newUserData, { 
+      onConflict: 'auth0_id',
+      ignoreDuplicates: false 
+    })
     .select()
     .single();
     
-  if (createError) {
-    console.error('Error creating user profile:', createError);
+  if (upsertError) {
+    console.error('Error upserting user profile:', upsertError);
     return null;
   }
   
-  console.log('✅ New user profile created:', newUser);
-  return newUser;
+  console.log('✅ User profile created/updated:', userData);
+  return userData;
 }
 
 // Task related functions
