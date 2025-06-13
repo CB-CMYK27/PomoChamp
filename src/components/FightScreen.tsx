@@ -76,15 +76,31 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-/* ────────────────────────────────
- *  Speech bubble (pixel‑art)
- * ────────────────────────────── */
+/* ───────── Speech bubble (auto-grow, pixel-art) ───────── */
 
 type BubbleSide = 'left' | 'right';
 
 const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side }) => {
-  // horizontal nudge so the tail lines up with the speaker
-  const xOffset = side === 'left' ? 100 : -400; // tweak numbers whenever you like
+  /* ------------------------------------------------------------------
+   * Size rules
+   *   • Start at 320 px wide.
+   *   • After 40 characters, add 8 px per extra char.
+   *   • Never exceed 480 px (looks odd if too wide on mobile).
+   *   • Height is ½ the width so the graphic keeps its shape.
+   * ------------------------------------------------------------------ */
+  const baseW = 320;
+  const growAfter = 40;
+  const pxPerChar = 8;
+  const maxW = 480;
+
+  const extra = Math.max(0, text.length - growAfter) * pxPerChar;
+  const bubbleW = Math.min(baseW + extra, maxW);
+  const bubbleH = Math.round(bubbleW * 0.5);
+  const textMaxW = bubbleW - 80;          // 40 px padding either side
+
+  /* horizontal nudge so the tail points at the fighter
+     (0.6 × width felt balanced in tests; tweak to taste) */
+  const xOffset = side === 'left' ? -bubbleW * 0.6 : bubbleW * 0.6;
 
   return (
     <div
@@ -94,8 +110,8 @@ const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side
       <div
         className="relative flex items-center justify-center"
         style={{
-          width: 320,
-          height: 160,
+          width: bubbleW,
+          height: bubbleH,
           backgroundImage: "url('/images/pixel-speech-bubble.png')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
@@ -104,17 +120,19 @@ const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side
         }}
       >
         <span
-          className={`font-mono font-bold leading-snug text-black text-base px-6 pt-2 pb-6 text-center whitespace-pre-wrap break-words ${
-            side === 'right' ? 'scale-x-[-1]' : ''
-          }`}
-          style={{ maxWidth: 240 }}
+          className={`font-mono font-bold leading-snug text-black text-base
+                      px-6 pt-2 pb-6 text-center whitespace-pre-wrap break-words ${
+                        side === 'right' ? 'scale-x-[-1]' : ''
+                      }`}
+          style={{ maxWidth: textMaxW }}
         >
           {text}
         </span>
       </div>
     </div>
   );
-};;
+};
+
 
 
 // Countdown Overlay Component
