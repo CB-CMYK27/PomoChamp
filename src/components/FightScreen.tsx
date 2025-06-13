@@ -87,7 +87,7 @@ const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side
   return (
     <div
       className="absolute z-40 pointer-events-none"
-      style={{ top: '12%', left: '50%', transform: `translateX(${xOffset}px)` }}
+      style={{ top: '7%', left: '50%', transform: `translateX(${xOffset}px)` }}
     >
       <div
         className="relative flex items-center justify-center"
