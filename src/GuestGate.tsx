@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from './services/supabase';   // adjust the path if your supabaseClient.ts lives elsewhere
+import { supabase, createOrFetchUserProfile } from './services/supabase';   // adjust the path if your supabaseClient.ts lives elsewhere
 import { signInAsGuest } from './guestAuth';
 
 /**
@@ -11,16 +11,27 @@ export default function GuestGate({ children }: { children: JSX.Element }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Check if we already have a session stored in localStorage
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        // No session yet – sign in anonymously
-        signInAsGuest().then(() => setReady(true));
-      } else {
-        // Session already present
+    async function initializeUser() {
+      try {
+        // Check if we already have a session stored in localStorage
+        const { data } = await supabase.auth.getSession();
+        
+        if (!data.session) {
+          // No session yet – sign in anonymously
+          await signInAsGuest();
+        }
+        
+        // Ensure user profile exists in the database
+        await createOrFetchUserProfile();
+        
         setReady(true);
+      } catch (error) {
+        console.error('Error initializing user:', error);
+        setReady(true); // Still set ready to avoid infinite loading
       }
-    });
+    }
+
+    initializeUser();
   }, []);
 
   if (!ready) {

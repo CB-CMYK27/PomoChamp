@@ -7,6 +7,77 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Create the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Generate a random 3-character username
+function generateRandomUsername(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 3; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// Create or fetch user profile
+export async function createOrFetchUserProfile() {
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError) {
+    console.error('Error getting session:', sessionError);
+    return null;
+  }
+  
+  if (!session?.user) {
+    console.log('No authenticated user found');
+    return null;
+  }
+  
+  // First try to get existing user data
+  const { data: existingUser, error: fetchError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('auth0_id', session.user.id)
+    .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when no rows found
+    
+  if (fetchError) {
+    console.error('Error fetching user data:', fetchError);
+    return null;
+  }
+  
+  // If user exists, return it
+  if (existingUser) {
+    return existingUser;
+  }
+  
+  // If user doesn't exist, create a new profile
+  console.log('Creating new user profile for anonymous user');
+  
+  const newUserData = {
+    auth0_id: session.user.id,
+    email: session.user.email || null,
+    username: generateRandomUsername(),
+    subscription_status: 'guest',
+    guest_session_id: session.user.id,
+    total_score: 0,
+    tournaments_won: 0,
+    created_at: new Date().toISOString(),
+    last_active: new Date().toISOString()
+  };
+  
+  const { data: newUser, error: createError } = await supabase
+    .from('users')
+    .insert([newUserData])
+    .select()
+    .single();
+    
+  if (createError) {
+    console.error('Error creating user profile:', createError);
+    return null;
+  }
+  
+  console.log('✅ New user profile created:', newUser);
+  return newUser;
+}
+
 // Task related functions
 export async function fetchTasks() {
   const { data, error } = await supabase
@@ -214,16 +285,21 @@ export async function getCurrentUser() {
     return null;
   }
   
-  // Get user data from users table
+  // Get user data from users table using maybeSingle to avoid errors
   const { data: userData, error: userError } = await supabase
     .from('users')
     .select('*')
     .eq('auth0_id', session.user.id)
-    .single();
+    .maybeSingle();
     
   if (userError) {
     console.error('Error fetching user data:', userError);
     return null;
+  }
+  
+  // If no user data found, create profile
+  if (!userData) {
+    return await createOrFetchUserProfile();
   }
   
   return userData;
