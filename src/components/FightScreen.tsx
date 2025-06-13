@@ -84,18 +84,23 @@ const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLef
           top:  '12%',                 // raise/lower as you like
           transform: `translateX(${isLeft ? '-240px' : '240px'})`, // slide left/right
        }}>
-    <div 
-      className={`w-48 h-24 flex items-center justify-center relative ${isLeft ? '' : 'transform scale-x-[-1]'}`}
-      style={{
-        backgroundImage: "url('/images/pixel-speech-bubble.png')",
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat'
-      }}
-    >
-      <span className={`font-mono text-sm font-bold text-black px-4 py-2 text-center ${isLeft ? '' : 'transform scale-x-[-1]'}`}>
-        "{text}"
-      </span>
-    </div>
+    <div
+  className={`relative flex items-center justify-center ${
+    isLeft ? '' : 'transform scale-x-[-1]'
+  }`}
+  /* width / height = size of the drawn bubble — adjust if needed */
+  style={{ width: 320, height: 160, backgroundImage: "url('/images/pixel-speech-bubble.png')", backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', imageRendering: 'pixelated' }}
+>
+  <span
+    className={`font-mono font-bold text-base leading-snug text-black px-6 text-center ${
+      isLeft ? '' : 'transform scale-x-[-1]'
+    } whitespace-pre-wrap break-words`}
+    style={{ maxWidth: 240 }}   /* keep long text inside */
+  >
+    {text}
+  </span>
+</div>
+
   </div>
 );
 
