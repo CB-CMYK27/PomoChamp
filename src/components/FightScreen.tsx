@@ -80,9 +80,9 @@ const AVAILABLE_STAGES = [
 const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
   <div className={`absolute z-40 animate-bounce`}
        style={{ 
-    left: '50%',                 // anchor in the middle
-top:  '12%',                 // raise/lower as you like
-transform: `translateX(${isLeft ? '-240px' : '240px'})`, // slide left/right
+         left: '50%',                 // anchor in the middle
+          top:  '12%',                 // raise/lower as you like
+          transform: `translateX(${isLeft ? '-240px' : '240px'})`, // slide left/right
        }}>
     <div 
       className={`w-48 h-24 flex items-center justify-center relative ${isLeft ? '' : 'transform scale-x-[-1]'}`}
