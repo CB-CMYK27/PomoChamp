@@ -334,12 +334,12 @@ export async function fetchLeaderboard() {
 export async function updateLeaderboard(entry: { user_id: string; username: string; score: number }) {
   console.log('🏆 Updating leaderboard:', entry);
   
-  // First check if user exists
+  // First check if user exists - use maybeSingle to handle zero rows
   const { data: existingEntry } = await supabase
     .from('leaderboard')
     .select('*')
     .eq('user_id', entry.user_id)
-    .single();
+    .maybeSingle();
     
   if (existingEntry) {
     // Update if new score is higher

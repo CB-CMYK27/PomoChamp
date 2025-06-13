@@ -325,19 +325,44 @@ const FightScreen: React.FC = () => {
             setGameSessionId(sessionData.session_id);
             console.log('✅ Game session created with ID:', sessionData.session_id);
             
-            // Add tasks to the session
+            // Add tasks to the session and update task IDs with database UUIDs
+            const updatedTasks = [];
             for (let i = 0; i < session.tasks.length; i++) {
               const task = session.tasks[i];
-              await addTaskToSession({
+              const dbTask = await addTaskToSession({
                 title: task.name,
                 estimated_minutes: task.estimatedTime,
                 user_id: currentUser.user_id,
                 session_id: sessionData.session_id,
                 round_number: session.currentRound
               });
+              
+              if (dbTask) {
+                // Update the task with the database-generated UUID
+                updatedTasks.push({
+                  ...task,
+                  id: dbTask.task_id // Use the UUID from database
+                });
+              } else {
+                updatedTasks.push(task);
+              }
             }
             
-            console.log('✅ All tasks added to session');
+            // Update session with tasks that have proper database UUIDs
+            setSession(prev => {
+              const newSession = {
+                ...prev,
+                tasks: updatedTasks
+              };
+              
+              // Re-initialize task timers with updated task IDs
+              const newTaskTimers = initializeTaskTimers(updatedTasks);
+              newSession.taskTimers = newTaskTimers;
+              
+              return newSession;
+            });
+            
+            console.log('✅ All tasks added to session with database UUIDs');
           }
         } catch (error) {
           console.error('Error creating game session:', error);
