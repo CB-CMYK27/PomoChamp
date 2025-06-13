@@ -102,13 +102,15 @@ const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side
         }}
       >
         <span
-          className={`font-mono font-bold leading-snug text-black text-base px-6 text-center whitespace-pre-wrap break-words ${
-            side === 'right' ? 'scale-x-[-1]' : ''
-          }`}
-          style={{ maxWidth: 240 }}
-        >
-          {text}
-        </span>
+  className={`font-mono font-bold leading-snug text-black text-base
+              px-6 pt-2 pb-4 text-center whitespace-pre-wrap break-words ${
+                side === 'right' ? 'scale-x-[-1]' : ''
+              }`}
+  style={{ maxWidth: 240 }}
+>
+  {text}
+</span>
+
       </div>
     </div>
   );
