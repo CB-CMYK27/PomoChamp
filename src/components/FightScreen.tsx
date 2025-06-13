@@ -76,25 +76,45 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-/* ───────── Speech bubble (pixel-art) ───────── */
+/* ────────────────────────────────
+ *  Speech bubble (pixel‑art)
+ *  Dynamically grows for long quips while keeping font size.
+ * ────────────────────────────── */
 
 type BubbleSide = 'left' | 'right';
 
 const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side }) => {
-  // horizontal nudge so the tail lines up with the speaker
-  const xOffset = side === 'left' ? 100 : -400;   // tweak numbers whenever you like
+  /*
+   * 1. Simple heuristic: start at 320 px wide; after 40 characters, add 8 px per extra char.
+   * 2. Cap width so it never looks ridiculous (480 px).
+   * 3. Height is half the width for a roughly square pixel bubble.
+   */
+  const baseWidth = 320;
+  const growAfter = 40;
+  const extraPerChar = 8;
+  const maxWidth = 480;
+
+  const bubbleWidth = Math.min(
+    baseWidth + Math.max(0, text.length - growAfter) * extraPerChar,
+    maxWidth,
+  );
+  const bubbleHeight = Math.round(bubbleWidth * 0.5);
+  const textMaxWidth = bubbleWidth - 80; // leave 40 px padding either side
+
+  // horizontal nudge so the tail aligns with the speaker (scaled with bubble size)
+  const xOffset = side === 'left' ? -bubbleWidth * 0.75 : bubbleWidth * 0.75;
 
   return (
     <div
       className="absolute z-40 pointer-events-none"
-      style={{ top: '7%', left: '50%', transform: `translateX(${xOffset}px)` }}
+      style={{ top: '12%', left: '50%', transform: `translateX(${xOffset}px)` }}
     >
       <div
         className="relative flex items-center justify-center"
         style={{
-          width: 320,
-          height: 160,
-          backgroundImage: "url('/images/pixel-speech-bubble.png')",
+          width: bubbleWidth,
+          height: bubbleHeight,
+          backgroundImage: "url('/images/—Pngtree—pixel speech bubble_8533530.png')",
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
@@ -102,15 +122,13 @@ const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side
         }}
       >
         <span
-  className={`font-mono font-bold leading-snug text-black text-base
-              px-6 pt-2 pb-6 text-center whitespace-pre-wrap break-words ${
-                side === 'right' ? 'scale-x-[-1]' : ''
-              }`}
-  style={{ maxWidth: 240 }}
->
-  {text}
-</span>
-
+          className={`font-mono font-bold leading-snug text-black text-base px-6 pt-2 pb-4 text-center whitespace-pre-wrap break-words ${
+            side === 'right' ? 'scale-x-[-1]' : ''
+          }`}
+          style={{ maxWidth: textMaxWidth }}
+        >
+          {text}
+        </span>
       </div>
     </div>
   );
