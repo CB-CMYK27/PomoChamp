@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fighters from '../data/fighters.json';
+import { 
+  createGameSession, 
+  updateGameSession, 
+  addTaskToSession, 
+  updateTaskStatus, 
+  getCurrentUser, 
+  updateUserStats, 
+  updateLeaderboard 
+} from '../services/supabase';
 
 interface Fighter {
   id: string;
@@ -157,6 +166,11 @@ const FightScreen: React.FC = () => {
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [canSkip, setCanSkip] = useState(true);
 
+  // Database integration states
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [gameSessionId, setGameSessionId] = useState<string | null>(null);
+  const [isInitializingSession, setIsInitializingSession] = useState(false);
+
   // Skip system using useRef to avoid re-renders
   const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentResolveRef = useRef<(() => void) | null>(null);
@@ -242,6 +256,112 @@ const FightScreen: React.FC = () => {
       startTime: index === 0 ? Date.now() : 0
     }));
   };
+
+  // Load current user on component mount
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+        console.log('👤 Current user loaded:', user);
+      } catch (error) {
+        console.error('Error loading user:', error);
+      }
+    };
+    
+    loadUser();
+  }, []);
+
+  // Create game session when transitioning from intro to fighting
+  useEffect(() => {
+    const createSession = async () => {
+      if (session.gameState === 'fighting' && !gameSessionId && !isInitializingSession && currentUser) {
+        setIsInitializingSession(true);
+        
+        try {
+          console.log('🎮 Creating game session for user:', currentUser.user_id);
+          
+          const sessionData = await createGameSession({
+            user_id: currentUser.user_id,
+            fighter_id: session.selectedFighter.id,
+            session_type: session.gameMode === 'tournament' ? 'tournament' : 'standard'
+          });
+          
+          if (sessionData) {
+            setGameSessionId(sessionData.session_id);
+            console.log('✅ Game session created with ID:', sessionData.session_id);
+            
+            // Add tasks to the session
+            for (let i = 0; i < session.tasks.length; i++) {
+              const task = session.tasks[i];
+              await addTaskToSession({
+                title: task.name,
+                estimated_minutes: task.estimatedTime,
+                user_id: currentUser.user_id,
+                session_id: sessionData.session_id,
+                round_number: session.currentRound
+              });
+            }
+            
+            console.log('✅ All tasks added to session');
+          }
+        } catch (error) {
+          console.error('Error creating game session:', error);
+        } finally {
+          setIsInitializingSession(false);
+        }
+      }
+    };
+    
+    createSession();
+  }, [session.gameState, gameSessionId, isInitializingSession, currentUser, session.selectedFighter, session.tasks, session.gameMode, session.currentRound]);
+
+  // Update game session when game ends
+  useEffect(() => {
+    const updateSession = async () => {
+      if ((session.gameState === 'victory' || session.gameState === 'defeat') && gameSessionId && currentUser) {
+        try {
+          console.log('🎮 Updating game session on game end');
+          
+          // Calculate final score
+          const completedTasks = session.tasks.filter(task => task.completed);
+          const totalScore = completedTasks.reduce((sum, task) => sum + (task.estimatedTime * 4), 0);
+          
+          // Update game session
+          await updateGameSession(gameSessionId, {
+            total_score: totalScore,
+            rounds_completed: 1,
+            tournament_won: session.gameState === 'victory',
+            ended_at: new Date().toISOString()
+          });
+          
+          // Update user stats
+          const newTotalScore = (currentUser.total_score || 0) + totalScore;
+          const newTournamentsWon = (currentUser.tournaments_won || 0) + (session.gameState === 'victory' ? 1 : 0);
+          
+          await updateUserStats(currentUser.user_id, {
+            total_score: newTotalScore,
+            tournaments_won: newTournamentsWon
+          });
+          
+          // Update leaderboard if we have a good score
+          if (totalScore > 0) {
+            await updateLeaderboard({
+              user_id: currentUser.user_id,
+              username: currentUser.username || 'PLR',
+              score: totalScore
+            });
+          }
+          
+          console.log('✅ Game session and user stats updated');
+        } catch (error) {
+          console.error('Error updating game session:', error);
+        }
+      }
+    };
+    
+    updateSession();
+  }, [session.gameState, gameSessionId, currentUser, session.tasks]);
 
   // Intro Animation Sequence
   useEffect(() => {
@@ -435,6 +555,14 @@ const FightScreen: React.FC = () => {
               // Add to failed tasks
               const newFailedTasks = [...prev.failedTasks, timer.taskId];
               
+              // Update task status in database
+              if (gameSessionId) {
+                updateTaskStatus(timer.taskId, {
+                  completed: false,
+                  points_earned: 0
+                }).catch(error => console.error('Error updating failed task:', error));
+              }
+              
               // Find next uncompleted and unfailed task
               const nextTaskIndex = prev.tasks.findIndex((task, taskIndex) => 
                 !task.completed && 
@@ -500,10 +628,10 @@ const FightScreen: React.FC = () => {
         }
       };
     }
-  }, [session.gameState, session.taskTimers.length]);
+  }, [session.gameState, session.taskTimers.length, gameSessionId]);
 
-  // Complete a task - ENHANCED WITH TASK TIMER LOGIC
-  const completeTask = (taskId: string) => {
+  // Complete a task - ENHANCED WITH DATABASE INTEGRATION
+  const completeTask = async (taskId: string) => {
     console.log(`⚔️ Completing task: ${taskId}`);
     
     setSession(prev => {
@@ -520,6 +648,14 @@ const FightScreen: React.FC = () => {
       console.log(`💥 Dealing ${damagePerTask} damage (${completedTask?.estimatedTime} min task). Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
       
       playSound('punch');
+      
+      // Update task status in database
+      if (gameSessionId && completedTask) {
+        updateTaskStatus(taskId, {
+          completed: true,
+          points_earned: damagePerTask
+        }).catch(error => console.error('Error updating completed task:', error));
+      }
       
       const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
         if (timer.taskId === taskId) {
@@ -956,7 +1092,8 @@ const FightScreen: React.FC = () => {
               Click anywhere to start audio • Complete tasks to deal damage • Don't let task timers run out!
             </div>
             <div className="text-cyan-400 font-mono text-xs mt-1">
-              Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | Audio: {audioInitialized ? '✅' : '❌'}
+              Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | 
+              Session: {gameSessionId ? '✅' : '❌'} | User: {currentUser?.username || 'Guest'}
             </div>
           </div>
         )}

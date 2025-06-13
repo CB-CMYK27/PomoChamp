@@ -72,6 +72,189 @@ export async function deleteTask(id: string) {
   return true;
 }
 
+// Game Session related functions
+export async function createGameSession(sessionData: {
+  user_id: string;
+  fighter_id: string;
+  session_type: 'standard' | 'training' | 'tournament';
+}) {
+  console.log('🎮 Creating game session:', sessionData);
+  
+  const { data, error } = await supabase
+    .from('game_sessions')
+    .insert([{
+      user_id: sessionData.user_id,
+      fighter_id: sessionData.fighter_id,
+      session_type: sessionData.session_type,
+      total_score: 0,
+      rounds_completed: 0,
+      tournament_won: false,
+      grudge_match_attempted: false,
+      created_at: new Date().toISOString()
+    }])
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Error creating game session:', error);
+    return null;
+  }
+  
+  console.log('✅ Game session created:', data);
+  return data;
+}
+
+export async function updateGameSession(sessionId: string, updates: {
+  total_score?: number;
+  rounds_completed?: number;
+  tournament_won?: boolean;
+  grudge_match_attempted?: boolean;
+  ended_at?: string;
+}) {
+  console.log('🎮 Updating game session:', sessionId, updates);
+  
+  const { data, error } = await supabase
+    .from('game_sessions')
+    .update(updates)
+    .eq('session_id', sessionId)
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Error updating game session:', error);
+    return null;
+  }
+  
+  console.log('✅ Game session updated:', data);
+  return data;
+}
+
+// Enhanced task functions for game sessions
+export async function addTaskToSession(task: {
+  title: string;
+  estimated_minutes: number;
+  user_id: string;
+  session_id: string;
+  round_number: number;
+}) {
+  console.log('📝 Adding task to session:', task);
+  
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert([{
+      title: task.title,
+      estimated_minutes: task.estimated_minutes,
+      user_id: task.user_id,
+      session_id: task.session_id,
+      round_number: task.round_number,
+      completed: false,
+      points_earned: 0,
+      created_at: new Date().toISOString()
+    }])
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Error adding task to session:', error);
+    return null;
+  }
+  
+  console.log('✅ Task added to session:', data);
+  return data;
+}
+
+export async function updateTaskStatus(taskId: string, updates: {
+  completed: boolean;
+  points_earned: number;
+  completed_at?: string;
+  actual_minutes?: number;
+}) {
+  console.log('📝 Updating task status:', taskId, updates);
+  
+  const updateData: any = {
+    completed: updates.completed,
+    points_earned: updates.points_earned
+  };
+  
+  if (updates.completed) {
+    updateData.completed_at = new Date().toISOString();
+  }
+  
+  if (updates.actual_minutes !== undefined) {
+    updateData.actual_minutes = updates.actual_minutes;
+  }
+  
+  const { data, error } = await supabase
+    .from('tasks')
+    .update(updateData)
+    .eq('task_id', taskId)
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Error updating task status:', error);
+    return null;
+  }
+  
+  console.log('✅ Task status updated:', data);
+  return data;
+}
+
+// User related functions
+export async function getCurrentUser() {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  
+  if (error) {
+    console.error('Error getting session:', error);
+    return null;
+  }
+  
+  if (!session?.user) {
+    console.log('No authenticated user found');
+    return null;
+  }
+  
+  // Get user data from users table
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('auth0_id', session.user.id)
+    .single();
+    
+  if (userError) {
+    console.error('Error fetching user data:', userError);
+    return null;
+  }
+  
+  return userData;
+}
+
+export async function updateUserStats(userId: string, updates: {
+  total_score?: number;
+  tournaments_won?: number;
+  last_active?: string;
+}) {
+  console.log('👤 Updating user stats:', userId, updates);
+  
+  const { data, error } = await supabase
+    .from('users')
+    .update({
+      ...updates,
+      last_active: new Date().toISOString()
+    })
+    .eq('user_id', userId)
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Error updating user stats:', error);
+    return null;
+  }
+  
+  console.log('✅ User stats updated:', data);
+  return data;
+}
+
 // Leaderboard related functions
 export async function fetchLeaderboard() {
   const { data, error } = await supabase
@@ -89,6 +272,8 @@ export async function fetchLeaderboard() {
 }
 
 export async function updateLeaderboard(entry: { user_id: string; username: string; score: number }) {
+  console.log('🏆 Updating leaderboard:', entry);
+  
   // First check if user exists
   const { data: existingEntry } = await supabase
     .from('leaderboard')
@@ -106,6 +291,8 @@ export async function updateLeaderboard(entry: { user_id: string; username: stri
         
       if (error) {
         console.error('Error updating leaderboard:', error);
+      } else {
+        console.log('✅ Leaderboard updated with new high score');
       }
     }
   } else {
@@ -115,7 +302,9 @@ export async function updateLeaderboard(entry: { user_id: string; username: stri
       .insert([entry]);
       
     if (error) {
-        console.error('Error adding to leaderboard:', error);
-      }
+      console.error('Error adding to leaderboard:', error);
+    } else {
+      console.log('✅ New leaderboard entry created');
     }
+  }
 }
