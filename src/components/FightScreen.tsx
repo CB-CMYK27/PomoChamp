@@ -82,7 +82,7 @@ type BubbleSide = 'left' | 'right';
 
 const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side }) => {
   // horizontal nudge so the tail lines up with the speaker
-  const xOffset = side === 'left' ? -540 : 240;   // tweak numbers whenever you like
+  const xOffset = side === 'left' ? -140 : 240;   // tweak numbers whenever you like
 
   return (
     <div
