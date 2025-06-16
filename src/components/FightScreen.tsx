@@ -31,9 +31,9 @@ interface TaskTimer {
   taskId: string;
   estimatedTime: number; // minutes
   timeRemaining: number; // seconds
-  isActive: boolean;
-  hasFailed: boolean;
+  status: 'active' | 'pending' | 'completed' | 'failed' | 'expired-pending-decision';
   startTime: number; // when this task timer started (for accuracy)
+  decisionTimeoutId?: NodeJS.Timeout;
 }
 
 interface FightSession {
@@ -285,8 +285,7 @@ const FightScreen: React.FC = () => {
       taskId: task.id,
       estimatedTime: task.estimatedTime,
       timeRemaining: task.estimatedTime * 60,
-      isActive: index === 0,
-      hasFailed: false,
+      status: index === 0 ? 'active' : 'pending',
       startTime: index === 0 ? Date.now() : 0
     }));
   };
@@ -556,6 +555,106 @@ const FightScreen: React.FC = () => {
     }
   };
 
+  // Handle task decision (extend or fail)
+  const handleTaskDecision = async (taskId: string, decision: 'extend' | 'fail') => {
+    console.log(`🎯 Task decision for ${taskId}: ${decision}`);
+    
+    setSession(prev => {
+      const updatedTaskTimers = prev.taskTimers.map(timer => {
+        if (timer.taskId === taskId) {
+          // Clear any pending timeout
+          if (timer.decisionTimeoutId) {
+            clearTimeout(timer.decisionTimeoutId);
+          }
+          
+          if (decision === 'extend') {
+            // Extend task: reset timer, small HP penalty
+            const newFighterHP = Math.max(0, prev.fighterHP - 10);
+            console.log(`⏰ Extending task, player takes 10 damage. HP: ${prev.fighterHP} → ${newFighterHP}`);
+            
+            return {
+              ...timer,
+              timeRemaining: timer.estimatedTime * 60, // Reset to full time
+              status: 'active' as const,
+              startTime: Date.now(),
+              decisionTimeoutId: undefined
+            };
+          } else {
+            // Fail task: apply damage, mark as failed
+            const damageTaken = timer.estimatedTime * 4;
+            const newFighterHP = Math.max(0, prev.fighterHP - damageTaken);
+            console.log(`💥 Failing task, player takes ${damageTaken} damage. HP: ${prev.fighterHP} → ${newFighterHP}`);
+            
+            // Update task status in database
+            if (gameSessionId) {
+              updateTaskStatus(taskId, {
+                completed: false,
+                points_earned: 0
+              }).catch(error => console.error('Error updating failed task:', error));
+            }
+            
+            return {
+              ...timer,
+              status: 'failed' as const,
+              decisionTimeoutId: undefined
+            };
+          }
+        }
+        return timer;
+      });
+      
+      // Calculate HP changes
+      const extendDamage = decision === 'extend' ? 10 : 0;
+      const failDamage = decision === 'fail' ? prev.taskTimers.find(t => t.taskId === taskId)?.estimatedTime * 4 || 0 : 0;
+      const totalDamage = extendDamage + failDamage;
+      const newFighterHP = Math.max(0, prev.fighterHP - totalDamage);
+      
+      // Add to failed tasks if failing
+      const newFailedTasks = decision === 'fail' ? [...prev.failedTasks, taskId] : prev.failedTasks;
+      
+      // Find next task to activate if current task failed
+      let nextTaskIndex = prev.currentTaskIndex;
+      if (decision === 'fail') {
+        nextTaskIndex = prev.tasks.findIndex((task, taskIndex) => 
+          !task.completed && 
+          !newFailedTasks.includes(task.id) && 
+          taskIndex > prev.currentTaskIndex
+        );
+        
+        if (nextTaskIndex !== -1) {
+          // Activate next task
+          updatedTaskTimers[nextTaskIndex] = {
+            ...updatedTaskTimers[nextTaskIndex],
+            status: 'active',
+            startTime: Date.now()
+          };
+        }
+      }
+      
+      // Play appropriate sound
+      if (decision === 'extend') {
+        playSound('grunt'); // Small penalty sound
+      } else {
+        playSound('grunt'); // Failure sound
+      }
+      
+      const newState = {
+        ...prev,
+        fighterHP: newFighterHP,
+        taskTimers: updatedTaskTimers,
+        failedTasks: newFailedTasks,
+        currentTaskIndex: nextTaskIndex !== -1 ? nextTaskIndex : prev.currentTaskIndex
+      };
+      
+      // Check for defeat
+      if (newFighterHP <= 0) {
+        newState.gameState = 'defeat';
+      }
+      
+      return newState;
+    });
+  };
+
   // Dual timer logic - session timer + individual task timers
   useEffect(() => {
     if (session.gameState === 'fighting' && session.timeRemaining > 0) {
@@ -590,80 +689,28 @@ const FightScreen: React.FC = () => {
 
           // Update individual task timers
           const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
-            if (!timer.isActive || timer.hasFailed) return timer;
+            if (timer.status !== 'active') return timer;
 
             const taskElapsed = Date.now() - timer.startTime;
             const totalTaskTime = timer.estimatedTime * 60 * 1000; // total time in milliseconds  
             const taskRemaining = Math.max(0, totalTaskTime - taskElapsed);
             const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
 
-            // CRITICAL FIX: Check if task time expired - IMMEDIATE DAMAGE
+            // Check if task time expired
             if (taskRemainingSeconds <= 0) {
-              console.log(`⚔️ Task timer expired for task: ${timer.taskId}`);
+              console.log(`⚔️ Task timer expired for task: ${timer.taskId} - Starting decision period`);
               
-              // Calculate damage based on task's estimated time
-              const damageTaken = timer.estimatedTime * 4;
-              console.log(`💥 Player takes ${damageTaken} damage for failed task`);
-              
-              // Update player HP
-              const newFighterHP = Math.max(0, prev.fighterHP - damageTaken);
-              
-              // Play grunt sound
-              playSound('grunt');
-              
-              // Add to failed tasks
-              const newFailedTasks = [...prev.failedTasks, timer.taskId];
-              
-              // Update task status in database
-              if (gameSessionId) {
-                updateTaskStatus(timer.taskId, {
-                  completed: false,
-                  points_earned: 0
-                }).catch(error => console.error('Error updating failed task:', error));
-              }
-              
-              // Find next uncompleted and unfailed task
-              const nextTaskIndex = prev.tasks.findIndex((task, taskIndex) => 
-                !task.completed && 
-                !newFailedTasks.includes(task.id) && 
-                taskIndex > prev.currentTaskIndex
-              );
-              
-              // Update session state with damage and next task
-              setTimeout(() => {
-                setSession(currentSession => {
-                  const updatedTimers = currentSession.taskTimers.map((t, tIndex) => {
-                    if (t.taskId === timer.taskId) {
-                      return { ...t, hasFailed: true, isActive: false };
-                    }
-                    if (nextTaskIndex !== -1 && tIndex === nextTaskIndex) {
-                      return { ...t, isActive: true, startTime: Date.now() };
-                    }
-                    return t;
-                  });
-                  
-                  const newState = {
-                    ...currentSession,
-                    fighterHP: newFighterHP,
-                    failedTasks: newFailedTasks,
-                    taskTimers: updatedTimers,
-                    currentTaskIndex: nextTaskIndex !== -1 ? nextTaskIndex : currentSession.currentTaskIndex
-                  };
-                  
-                  // Check for defeat
-                  if (newFighterHP <= 0) {
-                    newState.gameState = 'defeat';
-                  }
-                  
-                  return newState;
-                });
-              }, 0);
+              // Start 10-second decision period
+              const decisionTimeoutId = setTimeout(() => {
+                console.log(`⏰ Decision timeout for task: ${timer.taskId} - Auto-failing`);
+                handleTaskDecision(timer.taskId, 'fail');
+              }, 10000); // 10 seconds to decide
               
               return {
                 ...timer,
                 timeRemaining: 0,
-                hasFailed: true,
-                isActive: false
+                status: 'expired-pending-decision' as const,
+                decisionTimeoutId
               };
             }
 
@@ -694,6 +741,13 @@ const FightScreen: React.FC = () => {
     console.log(`⚔️ Completing task: ${taskId}`);
     
     setSession(prev => {
+      // Check if task can be completed (must be active)
+      const taskTimer = prev.taskTimers.find(timer => timer.taskId === taskId);
+      if (!taskTimer || taskTimer.status !== 'active') {
+        console.log(`❌ Cannot complete task ${taskId} - not active`);
+        return prev;
+      }
+      
       const updatedTasks = prev.tasks.map(task => 
         task.id === taskId ? { ...task, completed: true } : task
       );
@@ -718,10 +772,11 @@ const FightScreen: React.FC = () => {
       
       const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
         if (timer.taskId === taskId) {
-          return { ...timer, isActive: false };
+          return { ...timer, status: 'completed' as const };
         }
-        if (index === taskIndex + 1) {
-          return { ...timer, isActive: true, startTime: Date.now() };
+        // Activate next pending task
+        if (timer.status === 'pending' && index === taskIndex + 1) {
+          return { ...timer, status: 'active' as const, startTime: Date.now() };
         }
         return timer;
       });
@@ -978,57 +1033,99 @@ const FightScreen: React.FC = () => {
                     {session.tasks.map((task) => {
                       const taskTimer = session.taskTimers.find(timer => timer.taskId === task.id);
                       const isFailed = session.failedTasks.includes(task.id);
-                      const isActive = taskTimer?.isActive || false;
+                      const isActive = taskTimer?.status === 'active';
+                      const isExpiredPendingDecision = taskTimer?.status === 'expired-pending-decision';
                       
                       return (
-                        <div key={task.id} className={`flex items-center justify-between p-3 bg-gray-900 border rounded ${
-                          isActive ? 'border-yellow-400 bg-yellow-400/10' : 'border-gray-600'
+                        <div key={task.id} className={`flex flex-col p-3 bg-gray-900 border rounded ${
+                          isExpiredPendingDecision ? 'border-red-500 bg-red-500/20 animate-pulse' :
+                          isActive ? 'border-yellow-400 bg-yellow-400/10' : 
+                          'border-gray-600'
                         }`}>
-                          <div className="flex-1">
-                            <div className={`font-mono text-sm font-bold ${
-                              task.completed ? 'text-green-400 line-through' : 
-                              isFailed ? 'text-red-400 line-through' :
-                              'text-white'
-                            }`}>
-                              {task.name}
-                              {isFailed && ' (FAILED)'}
-                            </div>
-                            
-                            {/* Inline Task Timer - Digital Clock Style */}
-                            {isActive && taskTimer && !task.completed && !isFailed && (
-                              <div className="mt-2 flex items-center gap-2">
-                                <div className="bg-black border-2 border-cyan-400 px-3 py-1 rounded">
-                                  <div className={`font-mono text-lg font-bold ${
-                                    taskTimer.timeRemaining <= 30 ? 'text-red-400 animate-pulse' : 'text-cyan-400'
-                                  }`}>
-                                    {formatTaskTime(taskTimer.timeRemaining)}
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className={`font-mono text-sm font-bold ${
+                                task.completed ? 'text-green-400 line-through' : 
+                                isFailed ? 'text-red-400 line-through' :
+                                'text-white'
+                              }`}>
+                                {task.name}
+                                {isFailed && ' (FAILED)'}
+                              </div>
+                              
+                              {/* Inline Task Timer - Digital Clock Style */}
+                              {isActive && taskTimer && !task.completed && !isFailed && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <div className="bg-black border-2 border-cyan-400 px-3 py-1 rounded">
+                                    <div className={`font-mono text-lg font-bold ${
+                                      taskTimer.timeRemaining <= 30 ? 'text-red-400 animate-pulse' : 'text-cyan-400'
+                                    }`}>
+                                      {formatTaskTime(taskTimer.timeRemaining)}
+                                    </div>
+                                  </div>
+                                  <div className="text-cyan-400 text-xs font-mono">
+                                    ACTIVE
                                   </div>
                                 </div>
-                                <div className="text-cyan-400 text-xs font-mono">
-                                  ACTIVE
-                                </div>
-                              </div>
+                              )}
+                            </div>
+                            
+                            {!task.completed && !isFailed && !isExpiredPendingDecision && session.gameState === 'fighting' && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  completeTask(task.id);
+                                }}
+                                disabled={!isActive}
+                                className={`font-mono px-3 py-1 text-xs border-2 transition-colors ml-2 ${
+                                  isActive 
+                                    ? 'bg-red-600 text-white border-red-400 hover:bg-red-500' 
+                                    : 'bg-gray-600 text-gray-400 border-gray-500 cursor-not-allowed'
+                                }`}
+                              >
+                                COMPLETE
+                              </button>
+                            )}
+                            
+                            {task.completed && (
+                              <div className="text-green-400 font-mono text-xs font-bold">✓ DONE</div>
+                            )}
+                            
+                            {isFailed && (
+                              <div className="text-red-400 font-mono text-xs font-bold">✗ FAILED</div>
                             )}
                           </div>
                           
-                          {!task.completed && !isFailed && session.gameState === 'fighting' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                completeTask(task.id);
-                              }}
-                              className="bg-red-600 text-white font-mono px-3 py-1 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors ml-2"
-                            >
-                              COMPLETE
-                            </button>
-                          )}
-                          
-                          {task.completed && (
-                            <div className="text-green-400 font-mono text-xs font-bold">✓ DONE</div>
-                          )}
-                          
-                          {isFailed && (
-                            <div className="text-red-400 font-mono text-xs font-bold">✗ FAILED</div>
+                          {/* Extend or Fail Decision Prompt */}
+                          {isExpiredPendingDecision && session.gameState === 'fighting' && (
+                            <div className="mt-3 p-3 bg-red-900/50 border border-red-500 rounded">
+                              <div className="text-red-400 font-mono text-sm font-bold mb-2 text-center">
+                                ⚠️ TIME'S UP! EXTEND OR FAIL?
+                              </div>
+                              <div className="flex gap-2 justify-center">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTaskDecision(task.id, 'extend');
+                                  }}
+                                  className="bg-yellow-600 text-white font-mono px-3 py-1 text-xs border-2 border-yellow-400 hover:bg-yellow-500 transition-colors"
+                                >
+                                  EXTEND (-10 HP)
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTaskDecision(task.id, 'fail');
+                                  }}
+                                  className="bg-red-600 text-white font-mono px-3 py-1 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors"
+                                >
+                                  FAIL (-{task.estimatedTime * 4} HP)
+                                </button>
+                              </div>
+                              <div className="text-red-300 font-mono text-xs text-center mt-1">
+                                Auto-fails in 10 seconds
+                              </div>
+                            </div>
                           )}
                         </div>
                       );
