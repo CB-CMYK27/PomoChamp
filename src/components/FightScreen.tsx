@@ -11,6 +11,9 @@ import {
   updateLeaderboard 
 } from '../services/supabase';
 
+// TEST MODE SPEED MULTIPLIER - Change this value to speed up timers for testing
+const TEST_MODE_SPEED_MULTIPLIER = 60; // Set to 1 for normal speed, 60 for 60x speed, etc.
+
 interface Fighter {
   id: string;
   name: string;
@@ -669,7 +672,8 @@ const FightScreen: React.FC = () => {
       const expectedTime = session.timeRemaining * 1000;
 
       timerRef.current = setInterval(() => {
-        const elapsedTime = Date.now() - startTime;
+        const rawElapsedTime = Date.now() - startTime;
+        const elapsedTime = rawElapsedTime * TEST_MODE_SPEED_MULTIPLIER; // Apply multiplier here
         const remainingTime = Math.max(0, expectedTime - elapsedTime);
         const remainingSeconds = Math.ceil(remainingTime / 1000);
 
@@ -691,7 +695,8 @@ const FightScreen: React.FC = () => {
           const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
             if (timer.status !== 'active') return timer;
 
-            const taskElapsed = Date.now() - timer.startTime;
+            const rawTaskElapsed = Date.now() - timer.startTime;
+            const taskElapsed = rawTaskElapsed * TEST_MODE_SPEED_MULTIPLIER; // Apply multiplier here
             const totalTaskTime = timer.estimatedTime * 60 * 1000; // total time in milliseconds  
             const taskRemaining = Math.max(0, totalTaskTime - taskElapsed);
             const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
@@ -1167,6 +1172,15 @@ const FightScreen: React.FC = () => {
           <div className="absolute top-4 right-4 z-50">
             <div className="bg-black bg-opacity-80 text-yellow-400 font-mono text-sm px-3 py-2 rounded border border-yellow-400 animate-pulse">
               Click to skip ⏭️
+            </div>
+          </div>
+        )}
+
+        {/* Test Mode Indicator */}
+        {TEST_MODE_SPEED_MULTIPLIER > 1 && (
+          <div className="absolute top-4 left-4 z-50">
+            <div className="bg-red-600 text-white font-mono text-sm px-3 py-2 rounded border border-red-400 font-bold">
+              🚀 TEST MODE: {TEST_MODE_SPEED_MULTIPLIER}x SPEED
             </div>
           </div>
         )}
