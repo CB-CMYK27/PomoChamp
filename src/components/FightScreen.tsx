@@ -36,7 +36,6 @@ interface TaskTimer {
   timeRemaining: number; // seconds
   status: 'active' | 'pending' | 'completed' | 'failed' | 'expired-pending-decision';
   startTime: number; // when this task timer started (for accuracy)
-  decisionTimeoutId?: NodeJS.Timeout;
 }
 
 interface FightSession {
@@ -212,6 +211,9 @@ const FightScreen: React.FC = () => {
   const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentResolveRef = useRef<(() => void) | null>(null);
   const skipCountdownRef = useRef(false);
+
+  // Auto-fail timeout management using useRef
+  const autoFailTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   // Helper function to get opponent
   const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
@@ -562,14 +564,17 @@ const FightScreen: React.FC = () => {
   const handleTaskDecision = async (taskId: string, decision: 'extend' | 'fail') => {
     console.log(`🎯 Task decision for ${taskId}: ${decision}`);
     
+    // Clear any existing auto-fail timeout for this task
+    const existingTimeout = autoFailTimeoutsRef.current.get(taskId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      autoFailTimeoutsRef.current.delete(taskId);
+      console.log(`🧹 Cleared auto-fail timeout for task: ${taskId}`);
+    }
+    
     setSession(prev => {
       const updatedTaskTimers = prev.taskTimers.map(timer => {
         if (timer.taskId === taskId) {
-          // Clear any pending timeout
-          if (timer.decisionTimeoutId) {
-            clearTimeout(timer.decisionTimeoutId);
-          }
-          
           if (decision === 'extend') {
             // Extend task: reset timer, NO HP penalty
             console.log(`⏰ Extending task - no penalty applied`);
@@ -578,8 +583,7 @@ const FightScreen: React.FC = () => {
               ...timer,
               timeRemaining: timer.estimatedTime * 60, // Reset to full time
               status: 'active' as const,
-              startTime: Date.now(),
-              decisionTimeoutId: undefined
+              startTime: Date.now()
             };
           } else {
             // Fail task: apply damage, mark as failed
@@ -596,8 +600,7 @@ const FightScreen: React.FC = () => {
             
             return {
               ...timer,
-              status: 'failed' as const,
-              decisionTimeoutId: undefined
+              status: 'failed' as const
             };
           }
         }
@@ -605,10 +608,8 @@ const FightScreen: React.FC = () => {
       });
       
       // Calculate HP changes - NO damage for extend, only for fail
-      const extendDamage = 0; // REMOVED: No penalty for extending
       const failDamage = decision === 'fail' ? prev.taskTimers.find(t => t.taskId === taskId)?.estimatedTime * 4 || 0 : 0;
-      const totalDamage = extendDamage + failDamage;
-      const newFighterHP = Math.max(0, prev.fighterHP - totalDamage);
+      const newFighterHP = Math.max(0, prev.fighterHP - failDamage);
       
       // Add to failed tasks if failing
       const newFailedTasks = decision === 'fail' ? [...prev.failedTasks, taskId] : prev.failedTasks;
@@ -703,17 +704,19 @@ const FightScreen: React.FC = () => {
             if (taskRemainingSeconds <= 0) {
               console.log(`⚔️ Task timer expired for task: ${timer.taskId} - Starting decision period`);
               
-              // Start 10-second decision period
-              const decisionTimeoutId = setTimeout(() => {
+              // Start 10-second decision period with speed multiplier
+              const decisionTimeout = setTimeout(() => {
                 console.log(`⏰ Decision timeout for task: ${timer.taskId} - Auto-failing`);
                 handleTaskDecision(timer.taskId, 'fail');
-              }, 10000); // 10 seconds to decide
+              }, 10000 / TEST_MODE_SPEED_MULTIPLIER); // Apply speed multiplier to decision period
+              
+              // Store the timeout in our ref map
+              autoFailTimeoutsRef.current.set(timer.taskId, decisionTimeout);
               
               return {
                 ...timer,
                 timeRemaining: 0,
-                status: 'expired-pending-decision' as const,
-                decisionTimeoutId
+                status: 'expired-pending-decision' as const
               };
             }
 
@@ -739,9 +742,28 @@ const FightScreen: React.FC = () => {
     }
   }, [session.gameState, session.taskTimers.length, gameSessionId]);
 
+  // Cleanup auto-fail timeouts on component unmount
+  useEffect(() => {
+    return () => {
+      // Clear all auto-fail timeouts when component unmounts
+      autoFailTimeoutsRef.current.forEach((timeout) => {
+        clearTimeout(timeout);
+      });
+      autoFailTimeoutsRef.current.clear();
+    };
+  }, []);
+
   // Complete a task - ENHANCED WITH DATABASE INTEGRATION
   const completeTask = async (taskId: string) => {
     console.log(`⚔️ Completing task: ${taskId}`);
+    
+    // Clear any existing auto-fail timeout for this task
+    const existingTimeout = autoFailTimeoutsRef.current.get(taskId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      autoFailTimeoutsRef.current.delete(taskId);
+      console.log(`🧹 Cleared auto-fail timeout for completed task: ${taskId}`);
+    }
     
     setSession(prev => {
       // Check if task can be completed (must be active)
