@@ -12,7 +12,7 @@ import {
 } from '../services/supabase';
 
 // TEST MODE SPEED MULTIPLIER - Change this value to speed up timers for testing
-const TEST_MODE_SPEED_MULTIPLIER = 30; // Set to 1 for normal speed, 60 for 60x speed, etc.
+const TEST_MODE_SPEED_MULTIPLIER = 10; // Set to 1 for normal speed, 60 for 60x speed, etc.
 
 interface Fighter {
   id: string;
