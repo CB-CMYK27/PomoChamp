@@ -993,7 +993,6 @@ const FightScreen: React.FC = () => {
                               {task.name}
                               {isFailed && ' (FAILED)'}
                             </div>
-                            <div className="text-gray-400 text-xs">{task.estimatedTime} min ({task.estimatedTime * 4} damage)</div>
                             
                             {/* Inline Task Timer - Digital Clock Style */}
                             {isActive && taskTimer && !task.completed && !isFailed && (
