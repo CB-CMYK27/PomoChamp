@@ -571,9 +571,8 @@ const FightScreen: React.FC = () => {
           }
           
           if (decision === 'extend') {
-            // Extend task: reset timer, small HP penalty
-            const newFighterHP = Math.max(0, prev.fighterHP - 10);
-            console.log(`⏰ Extending task, player takes 10 damage. HP: ${prev.fighterHP} → ${newFighterHP}`);
+            // Extend task: reset timer, NO HP penalty
+            console.log(`⏰ Extending task - no penalty applied`);
             
             return {
               ...timer,
@@ -585,8 +584,7 @@ const FightScreen: React.FC = () => {
           } else {
             // Fail task: apply damage, mark as failed
             const damageTaken = timer.estimatedTime * 4;
-            const newFighterHP = Math.max(0, prev.fighterHP - damageTaken);
-            console.log(`💥 Failing task, player takes ${damageTaken} damage. HP: ${prev.fighterHP} → ${newFighterHP}`);
+            console.log(`💥 Failing task, player takes ${damageTaken} damage`);
             
             // Update task status in database
             if (gameSessionId) {
@@ -606,8 +604,8 @@ const FightScreen: React.FC = () => {
         return timer;
       });
       
-      // Calculate HP changes
-      const extendDamage = decision === 'extend' ? 10 : 0;
+      // Calculate HP changes - NO damage for extend, only for fail
+      const extendDamage = 0; // REMOVED: No penalty for extending
       const failDamage = decision === 'fail' ? prev.taskTimers.find(t => t.taskId === taskId)?.estimatedTime * 4 || 0 : 0;
       const totalDamage = extendDamage + failDamage;
       const newFighterHP = Math.max(0, prev.fighterHP - totalDamage);
@@ -636,7 +634,7 @@ const FightScreen: React.FC = () => {
       
       // Play appropriate sound
       if (decision === 'extend') {
-        playSound('grunt'); // Small penalty sound
+        // No sound for extend since there's no penalty
       } else {
         playSound('grunt'); // Failure sound
       }
@@ -1115,7 +1113,7 @@ const FightScreen: React.FC = () => {
                                   }}
                                   className="bg-yellow-600 text-white font-mono px-3 py-1 text-xs border-2 border-yellow-400 hover:bg-yellow-500 transition-colors"
                                 >
-                                  EXTEND (-10 HP)
+                                  EXTEND
                                 </button>
                                 <button
                                   onClick={(e) => {
