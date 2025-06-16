@@ -1,18 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fighters from '../data/fighters.json';
-import { 
-  createGameSession, 
-  updateGameSession, 
-  addTaskToSession, 
-  updateTaskStatus, 
-  getCurrentUser, 
-  updateUserStats, 
-  updateLeaderboard 
-} from '../services/supabase';
-
-// TEST MODE SPEED MULTIPLIER - Change this value to speed up timers for testing
-const TEST_MODE_SPEED_MULTIPLIER = 10; // Set to 1 for normal speed, 60 for 60x speed, etc.
 
 interface Fighter {
   id: string;
@@ -34,8 +22,16 @@ interface TaskTimer {
   taskId: string;
   estimatedTime: number; // minutes
   timeRemaining: number; // seconds
-  status: 'active' | 'pending' | 'completed' | 'failed' | 'expired-pending-decision';
+  isActive: boolean;
+  hasFailed: boolean;
+  isInGracePeriod: boolean;
   startTime: number; // when this task timer started (for accuracy)
+}
+
+interface GracePeriodState {
+  isActive: boolean;
+  taskId: string | null;
+  timeRemaining: number; // 10 seconds
 }
 
 interface FightSession {
@@ -52,6 +48,7 @@ interface FightSession {
   currentTaskIndex: number;
   taskTimers: TaskTimer[];
   failedTasks: string[];
+  gracePeriod: GracePeriodState;
 }
 
 // Character counterpart mappings
@@ -78,62 +75,27 @@ const AVAILABLE_STAGES = [
   'alien-hive.webp',
 ];
 
-/* ───────── Speech bubble (pixel-art, grows outward) ───────── */
-
-type BubbleSide = 'left' | 'right';
-
-const SpeechBubble: React.FC<{ text: string; side: BubbleSide }> = ({ text, side }) => {
-  /* size rules */
-  const baseW = 320;
-  const growAfter = 40;
-  const pxPerChar = 8;
-  const maxW = 480;
-
-  const extra = Math.max(0, text.length - growAfter) * pxPerChar;
-  const bubbleW = Math.min(baseW + extra, maxW);
-  const bubbleH = Math.round(bubbleW * 0.5);
-  const textMaxW = bubbleW - 80; // 40 px padding either side
-
-  /* keep the tail fixed:                                          *
-   *  player (left)  → anchor LEFT edge (constant 100 px)          *
-   *  opponent (right) → anchor RIGHT edge (constant -400 px)      */
-  const xOffset =
-    side === 'left'
-      ? 120                            // fixed anchor
-      : -420 - (bubbleW - baseW);      // shift left as width grows
-
-  return (
-    <div
-      className="absolute z-40 pointer-events-none"
-      style={{ top: '-5%', left: '50%', transform: `translateX(${xOffset}px)` }}
-    >
-      <div
-        className="relative flex items-center justify-center"
-        style={{
-          width: bubbleW,
-          height: bubbleH,
-          backgroundImage: "url('/images/pixel-speech-bubble.png')",
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          imageRendering: 'pixelated',
-          transform: side === 'right' ? 'scaleX(-1)' : undefined,
-        }}
-      >
-        <span
-          className={`font-mono font-bold leading-snug text-black text-base
-                      px-6 pt-2 pb-6 text-center whitespace-pre-wrap break-words ${
-                        side === 'right' ? 'scale-x-[-1]' : ''
-                      }`}
-          style={{ maxWidth: textMaxW }}
-        >
-          {text}
-        </span>
-      </div>
+// Speech Bubble Component
+const SpeechBubble: React.FC<{ text: string; isLeft: boolean }> = ({ text, isLeft }) => (
+<div className={`absolute z-40 animate-bounce max-w-xs`}
+     style={{ 
+       left: isLeft ? '55%' : '15%',  // Player: 30% → 55% (right), Opponent: 70% → 15% (left)
+       top: '10%',                    // Both: top-32 → 10% (higher up)
+       transform: 'translateX(-50%)'
+     }}>
+    <div className="bg-white text-black p-4 rounded-lg border-4 border-gray-800 relative font-mono text-sm font-bold shadow-xl">
+      "{text}"
+      {/* Downward pointing tail */}
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 
+                      border-l-[12px] border-r-[12px] border-t-[15px] 
+                      border-l-transparent border-r-transparent border-t-white"></div>
+      <div className="absolute left-1/2 transform -translate-x-1/2 w-0 h-0 
+                      border-l-[15px] border-r-[15px] border-t-[18px] 
+                      border-l-transparent border-r-transparent border-t-gray-800"
+           style={{ top: 'calc(100% - 3px)' }}></div>
     </div>
-  );
-};
-
-
+  </div>
+);
 
 // Countdown Overlay Component
 const CountdownOverlay: React.FC<{ number: number; phase: string }> = ({ number, phase }) => {
@@ -191,6 +153,7 @@ const FightScreen: React.FC = () => {
   const navigate = useNavigate();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<{ [key: string]: HTMLAudioElement }>({});
+  const autoFailTimeoutsRef = useRef<{ [taskId: string]: NodeJS.Timeout }>({});
 
   // Get data from navigation state
   const { selectedFighter, tasks: initialTasks, gameMode = 'quick-battle', currentRound = 1 } = location.state || {};
@@ -200,20 +163,12 @@ const FightScreen: React.FC = () => {
   const [countdownNumber, setCountdownNumber] = useState(5);
   const [musicStarted, setMusicStarted] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
-  const [canSkip, setCanSkip] = useState(true);
-
-  // Database integration states
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [gameSessionId, setGameSessionId] = useState<string | null>(null);
-  const [isInitializingSession, setIsInitializingSession] = useState(false);
-
-  // Skip system using useRef to avoid re-renders
+  const [skipRequested, setSkipRequested] = useState(false);
+  
+  // Skip system
   const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentResolveRef = useRef<(() => void) | null>(null);
-  const skipCountdownRef = useRef(false);
-
-  // Auto-fail timeout management using useRef
-  const autoFailTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const [canSkip, setCanSkip] = useState(true);
 
   // Helper function to get opponent
   const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
@@ -282,7 +237,12 @@ const FightScreen: React.FC = () => {
     stage: stageBackground,
     currentTaskIndex: 0,
     taskTimers: [],
-    failedTasks: []
+    failedTasks: [],
+    gracePeriod: {
+      isActive: false,
+      taskId: null,
+      timeRemaining: 0
+    }
   });
 
   const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
@@ -290,198 +250,148 @@ const FightScreen: React.FC = () => {
       taskId: task.id,
       estimatedTime: task.estimatedTime,
       timeRemaining: task.estimatedTime * 60,
-      status: index === 0 ? 'active' : 'pending',
+      isActive: index === 0,
+      hasFailed: false,
+      isInGracePeriod: false,
       startTime: index === 0 ? Date.now() : 0
     }));
   };
 
-  // Load current user on component mount
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await getCurrentUser();
-        setCurrentUser(user);
-        console.log('👤 Current user loaded:', user);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      }
-    };
+  // Handle task decision (extend or fail)
+  const handleTaskDecision = (taskId: string, decision: 'extend' | 'fail') => {
+    console.log(`🎯 Task decision: ${decision} for task ${taskId}`);
     
-    loadUser();
-  }, []);
-
-  // Create game session when transitioning from intro to fighting
-  useEffect(() => {
-    const createSession = async () => {
-      if (session.gameState === 'fighting' && !gameSessionId && !isInitializingSession && currentUser) {
-        setIsInitializingSession(true);
+    // Clear any pending auto-fail timeout for this task
+    if (autoFailTimeoutsRef.current[taskId]) {
+      clearTimeout(autoFailTimeoutsRef.current[taskId]);
+      delete autoFailTimeoutsRef.current[taskId];
+    }
+    
+    setSession(prev => {
+      if (decision === 'extend') {
+        // Extend task: add 5 minutes to estimated time and reset timer
+        const updatedTaskTimers = prev.taskTimers.map(timer => {
+          if (timer.taskId === taskId) {
+            const newEstimatedTime = timer.estimatedTime + 5; // Add 5 minutes
+            const newTimeRemaining = 5 * 60; // 5 minutes in seconds
+            console.log(`⏰ Extending task: ${timer.estimatedTime}min → ${newEstimatedTime}min`);
+            
+            return {
+              ...timer,
+              estimatedTime: newEstimatedTime,
+              timeRemaining: newTimeRemaining,
+              isInGracePeriod: false,
+              startTime: Date.now() // Reset start time for the extension
+            };
+          }
+          return timer;
+        });
         
-        try {
-          console.log('🎮 Creating game session for user:', currentUser.user_id);
-          
-          const sessionData = await createGameSession({
-            user_id: currentUser.user_id,
-            fighter_id: session.selectedFighter.id,
-            session_type: session.gameMode === 'tournament' ? 'tournament' : 'standard'
-          });
-          
-          if (sessionData) {
-            setGameSessionId(sessionData.session_id);
-            console.log('✅ Game session created with ID:', sessionData.session_id);
-            
-            // Add tasks to the session and update task IDs with database UUIDs
-            const updatedTasks = [];
-            for (let i = 0; i < session.tasks.length; i++) {
-              const task = session.tasks[i];
-              const dbTask = await addTaskToSession({
-                title: task.name,
-                estimated_minutes: task.estimatedTime,
-                user_id: currentUser.user_id,
-                session_id: sessionData.session_id,
-                round_number: session.currentRound
-              });
-              
-              if (dbTask) {
-                // Update the task with the database-generated UUID
-                updatedTasks.push({
-                  ...task,
-                  id: dbTask.task_id // Use the UUID from database
-                });
-              } else {
-                updatedTasks.push(task);
-              }
-            }
-            
-            // Update session with tasks that have proper database UUIDs
-            setSession(prev => {
-              const newSession = {
-                ...prev,
-                tasks: updatedTasks
-              };
-              
-              // Re-initialize task timers with updated task IDs
-              const newTaskTimers = initializeTaskTimers(updatedTasks);
-              newSession.taskTimers = newTaskTimers;
-              
-              return newSession;
-            });
-            
-            console.log('✅ All tasks added to session with database UUIDs');
+        return {
+          ...prev,
+          taskTimers: updatedTaskTimers,
+          gracePeriod: {
+            isActive: false,
+            taskId: null,
+            timeRemaining: 0
           }
-        } catch (error) {
-          console.error('Error creating game session:', error);
-        } finally {
-          setIsInitializingSession(false);
-        }
-      }
-    };
-    
-    createSession();
-  }, [session.gameState, gameSessionId, isInitializingSession, currentUser, session.selectedFighter, session.tasks, session.gameMode, session.currentRound]);
-
-  // Update game session when game ends
-  useEffect(() => {
-    const updateSession = async () => {
-      if ((session.gameState === 'victory' || session.gameState === 'defeat') && gameSessionId && currentUser) {
-        try {
-          console.log('🎮 Updating game session on game end');
-          
-          // Calculate final score
-          const completedTasks = session.tasks.filter(task => task.completed);
-          const totalScore = completedTasks.reduce((sum, task) => sum + (task.estimatedTime * 4), 0);
-          
-          // Update game session
-          await updateGameSession(gameSessionId, {
-            total_score: totalScore,
-            rounds_completed: 1,
-            tournament_won: session.gameState === 'victory',
-            ended_at: new Date().toISOString()
-          });
-          
-          // Update user stats
-          const newTotalScore = (currentUser.total_score || 0) + totalScore;
-          const newTournamentsWon = (currentUser.tournaments_won || 0) + (session.gameState === 'victory' ? 1 : 0);
-          
-          await updateUserStats(currentUser.user_id, {
-            total_score: newTotalScore,
-            tournaments_won: newTournamentsWon
-          });
-          
-          // Update leaderboard if we have a good score
-          if (totalScore > 0) {
-            await updateLeaderboard({
-              user_id: currentUser.user_id,
-              username: currentUser.username || 'PLR',
-              score: totalScore
-            });
+        };
+      } else {
+        // Fail task: mark as failed, apply HP penalty, move to next task
+        const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
+          if (timer.taskId === taskId) {
+            return { ...timer, hasFailed: true, isActive: false, isInGracePeriod: false };
           }
-          
-          console.log('✅ Game session and user stats updated');
-        } catch (error) {
-          console.error('Error updating game session:', error);
+          // Activate next task
+          if (index === prev.currentTaskIndex + 1) {
+            return { ...timer, isActive: true, startTime: Date.now() };
+          }
+          return timer;
+        });
+        
+        const newFighterHP = Math.max(0, prev.fighterHP - 15); // HP penalty for failing task
+        console.log(`💔 Task failed, player takes 15 damage. HP: ${prev.fighterHP} → ${newFighterHP}`);
+        
+        playSound('grunt');
+        
+        // Check for defeat
+        if (newFighterHP <= 0) {
+          return {
+            ...prev,
+            fighterHP: 0,
+            gameState: 'defeat',
+            taskTimers: updatedTaskTimers,
+            failedTasks: [...prev.failedTasks, taskId],
+            gracePeriod: {
+              isActive: false,
+              taskId: null,
+              timeRemaining: 0
+            },
+            currentTaskIndex: prev.currentTaskIndex + 1
+          };
         }
+        
+        return {
+          ...prev,
+          fighterHP: newFighterHP,
+          taskTimers: updatedTaskTimers,
+          failedTasks: [...prev.failedTasks, taskId],
+          gracePeriod: {
+            isActive: false,
+            taskId: null,
+            timeRemaining: 0
+          },
+          currentTaskIndex: prev.currentTaskIndex + 1
+        };
       }
-    };
-    
-    updateSession();
-  }, [session.gameState, gameSessionId, currentUser, session.tasks]);
+    });
+  };
 
   // Intro Animation Sequence
   useEffect(() => {
     if (session.gameState === 'intro') {
       const sequence = async () => {
         try {
-          // Phase 1: Players bounce (2 seconds)
-          setIntroPhase('intro');
-          await new Promise(resolve => {
-            currentResolveRef.current = resolve;
-            introTimeoutRef.current = setTimeout(resolve, 2000);
-          });
+// Phase 1: Players bounce (2 seconds)
+setIntroPhase('intro');
+await new Promise(resolve => {
+  currentResolveRef.current = resolve;
+  introTimeoutRef.current = setTimeout(resolve, 2000);
+});
           
           // Phase 2: Player quip (2.5 seconds)
-          setIntroPhase('player-quip');
-          await new Promise(resolve => {
-            currentResolveRef.current = resolve;
-            introTimeoutRef.current = setTimeout(resolve, 2500);
-          });
+setIntroPhase('player-quip');
+await new Promise(resolve => {
+  currentResolveRef.current = resolve;
+  introTimeoutRef.current = setTimeout(resolve, 2500);
+});
           
           // Phase 3: Opponent quip (2.5 seconds)  
-          setIntroPhase('opponent-quip');
-          await new Promise(resolve => {
-            currentResolveRef.current = resolve;
-            introTimeoutRef.current = setTimeout(resolve, 2500);
-          });
+setIntroPhase('opponent-quip');
+await new Promise(resolve => {
+  currentResolveRef.current = resolve;
+  introTimeoutRef.current = setTimeout(resolve, 2500);
+});
           
-          // Phase 4: Countdown 5→1 (UPDATED WITH SKIP LOGIC)
-          setIntroPhase('countdown');
-          for (let i = 5; i >= 1; i--) {
-            // Check if skip was requested at the beginning of each iteration
-            if (skipCountdownRef.current) {
-              console.log('🏃 Skip requested during countdown, breaking loop');
-              break;
-            }
-            
-            setCountdownNumber(i);
-            
-            await new Promise(resolve => {
-              currentResolveRef.current = resolve;
-              const timeout = setTimeout(resolve, 800);
-              introTimeoutRef.current = timeout;
-            });
-          }
-          
-          // If skip was requested during countdown, jump directly to on-task
-          if (skipCountdownRef.current) {
-            console.log('🏃 Skipping directly to ON TASK phase');
-            skipCountdownRef.current = false; // Reset skip flag
-          }
+// Phase 4: Countdown 5→1 (ORIGINAL FOR LOOP + TIMEOUT FIX)
+setIntroPhase('countdown');
+for (let i = 5; i >= 1; i--) {
+  setCountdownNumber(i);
+  
+  // Use a local timeout variable to avoid reference conflicts
+  await new Promise(resolve => {
+    currentResolveRef.current = resolve;
+    const timeout = setTimeout(resolve, 800);
+    introTimeoutRef.current = timeout; // Only for cleanup reference
+  });
+}
           
           // Phase 5: "ON TASK!" (4 seconds)
-          setIntroPhase('on-task');
-          await new Promise(resolve => {
-            currentResolveRef.current = resolve;
-            introTimeoutRef.current = setTimeout(resolve, 4000);
-          });
+setIntroPhase('on-task');
+await new Promise(resolve => {
+  currentResolveRef.current = resolve;
+  introTimeoutRef.current = setTimeout(resolve, 4000);
+});
           
           // Phase 6: Start fighting!
           setSession(prev => ({ ...prev, gameState: 'fighting' }));
@@ -503,6 +413,8 @@ const FightScreen: React.FC = () => {
       }
     };
   }, [session.gameState]);
+
+  
 
   // Audio setup
   useEffect(() => {
@@ -560,104 +472,7 @@ const FightScreen: React.FC = () => {
     }
   };
 
-  // Handle task decision (extend or fail)
-  const handleTaskDecision = async (taskId: string, decision: 'extend' | 'fail') => {
-    console.log(`🎯 Task decision for ${taskId}: ${decision}`);
-    
-    // Clear any existing auto-fail timeout for this task
-    const existingTimeout = autoFailTimeoutsRef.current.get(taskId);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
-      autoFailTimeoutsRef.current.delete(taskId);
-      console.log(`🧹 Cleared auto-fail timeout for task: ${taskId}`);
-    }
-    
-    setSession(prev => {
-      const updatedTaskTimers = prev.taskTimers.map(timer => {
-        if (timer.taskId === taskId) {
-          if (decision === 'extend') {
-            // Extend task: reset timer, NO HP penalty
-            console.log(`⏰ Extending task - no penalty applied`);
-            
-            return {
-              ...timer,
-              timeRemaining: timer.estimatedTime * 60, // Reset to full time
-              status: 'active' as const,
-              startTime: Date.now()
-            };
-          } else {
-            // Fail task: apply damage, mark as failed
-            const damageTaken = timer.estimatedTime * 4;
-            console.log(`💥 Failing task, player takes ${damageTaken} damage`);
-            
-            // Update task status in database
-            if (gameSessionId) {
-              updateTaskStatus(taskId, {
-                completed: false,
-                points_earned: 0
-              }).catch(error => console.error('Error updating failed task:', error));
-            }
-            
-            return {
-              ...timer,
-              status: 'failed' as const
-            };
-          }
-        }
-        return timer;
-      });
-      
-      // Calculate HP changes - NO damage for extend, only for fail
-      const failDamage = decision === 'fail' ? prev.taskTimers.find(t => t.taskId === taskId)?.estimatedTime * 4 || 0 : 0;
-      const newFighterHP = Math.max(0, prev.fighterHP - failDamage);
-      
-      // Add to failed tasks if failing
-      const newFailedTasks = decision === 'fail' ? [...prev.failedTasks, taskId] : prev.failedTasks;
-      
-      // Find next task to activate if current task failed
-      let nextTaskIndex = prev.currentTaskIndex;
-      if (decision === 'fail') {
-        nextTaskIndex = prev.tasks.findIndex((task, taskIndex) => 
-          !task.completed && 
-          !newFailedTasks.includes(task.id) && 
-          taskIndex > prev.currentTaskIndex
-        );
-        
-        if (nextTaskIndex !== -1) {
-          // Activate next task
-          updatedTaskTimers[nextTaskIndex] = {
-            ...updatedTaskTimers[nextTaskIndex],
-            status: 'active',
-            startTime: Date.now()
-          };
-        }
-      }
-      
-      // Play appropriate sound
-      if (decision === 'extend') {
-        // No sound for extend since there's no penalty
-      } else {
-        playSound('grunt'); // Failure sound
-      }
-      
-      const newState = {
-        ...prev,
-        fighterHP: newFighterHP,
-        taskTimers: updatedTaskTimers,
-        failedTasks: newFailedTasks,
-        currentTaskIndex: nextTaskIndex !== -1 ? nextTaskIndex : prev.currentTaskIndex
-      };
-      
-      // Check for defeat
-      if (newFighterHP <= 0) {
-        newState.gameState = 'defeat';
-      }
-      
-      return newState;
-    });
-  };
-
-  // Dual timer logic - session timer + individual task timers
+  // Dual timer logic - session timer + individual task timers + grace period
   useEffect(() => {
     if (session.gameState === 'fighting' && session.timeRemaining > 0) {
       // Initialize task timers on first run
@@ -671,8 +486,7 @@ const FightScreen: React.FC = () => {
       const expectedTime = session.timeRemaining * 1000;
 
       timerRef.current = setInterval(() => {
-        const rawElapsedTime = Date.now() - startTime;
-        const elapsedTime = rawElapsedTime * TEST_MODE_SPEED_MULTIPLIER; // Apply multiplier here
+        const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, expectedTime - elapsedTime);
         const remainingSeconds = Math.ceil(remainingTime / 1000);
 
@@ -690,33 +504,68 @@ const FightScreen: React.FC = () => {
             return { ...prev, timeRemaining: 0, fighterHP: newFighterHP };
           }
 
+          // Update grace period timer if active
+          let updatedGracePeriod = prev.gracePeriod;
+          if (prev.gracePeriod.isActive) {
+            const newGraceTime = Math.max(0, prev.gracePeriod.timeRemaining - 1);
+            updatedGracePeriod = {
+              ...prev.gracePeriod,
+              timeRemaining: newGraceTime
+            };
+            
+            // Auto-fail task if grace period expires
+            if (newGraceTime <= 0 && prev.gracePeriod.taskId) {
+              console.log('⏰ Grace period expired, auto-failing task:', prev.gracePeriod.taskId);
+              // Use setTimeout to avoid state update during render
+              setTimeout(() => handleTaskDecision(prev.gracePeriod.taskId!, 'fail'), 0);
+            }
+          }
+
           // Update individual task timers
           const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
-            if (timer.status !== 'active') return timer;
+            if (!timer.isActive || timer.hasFailed) return timer;
 
-            const rawTaskElapsed = Date.now() - timer.startTime;
-            const taskElapsed = rawTaskElapsed * TEST_MODE_SPEED_MULTIPLIER; // Apply multiplier here
-            const totalTaskTime = timer.estimatedTime * 60 * 1000; // total time in milliseconds  
-            const taskRemaining = Math.max(0, totalTaskTime - taskElapsed);
-            const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
+const taskElapsed = Date.now() - timer.startTime;
+const totalTaskTime = timer.estimatedTime * 60 * 1000; // total time in milliseconds  
+const taskRemaining = Math.max(0, totalTaskTime - taskElapsed);
+const taskRemainingSeconds = Math.ceil(taskRemaining / 1000);
 
-            // Check if task time expired
-            if (taskRemainingSeconds <= 0) {
-              console.log(`⚔️ Task timer expired for task: ${timer.taskId} - Starting decision period`);
+            // Check if task time expired and not already in grace period
+            if (taskRemainingSeconds <= 0 && !timer.isInGracePeriod && !prev.gracePeriod.isActive) {
+              console.log(`⏰ Task ${timer.taskId} time expired, starting grace period`);
               
-              // Start 10-second decision period with speed multiplier
-              const decisionTimeout = setTimeout(() => {
-                console.log(`⏰ Decision timeout for task: ${timer.taskId} - Auto-failing`);
+              // Start grace period
+              const newGracePeriod = {
+                isActive: true,
+                taskId: timer.taskId,
+                timeRemaining: 10 // 10 seconds grace period
+              };
+              
+              // Set auto-fail timeout
+              const autoFailTimeout = setTimeout(() => {
+                console.log('⏰ Auto-failing task after grace period:', timer.taskId);
                 handleTaskDecision(timer.taskId, 'fail');
-              }, 10000 / TEST_MODE_SPEED_MULTIPLIER); // Apply speed multiplier to decision period
+              }, 10000);
               
-              // Store the timeout in our ref map
-              autoFailTimeoutsRef.current.set(timer.taskId, decisionTimeout);
+              autoFailTimeoutsRef.current[timer.taskId] = autoFailTimeout;
+              
+              // Update session state with grace period
+              setTimeout(() => {
+                setSession(prevSession => ({
+                  ...prevSession,
+                  gracePeriod: newGracePeriod,
+                  taskTimers: prevSession.taskTimers.map(t => 
+                    t.taskId === timer.taskId 
+                      ? { ...t, timeRemaining: 0, isInGracePeriod: true }
+                      : t
+                  )
+                }));
+              }, 0);
               
               return {
                 ...timer,
                 timeRemaining: 0,
-                status: 'expired-pending-decision' as const
+                isInGracePeriod: true
               };
             }
 
@@ -729,50 +578,36 @@ const FightScreen: React.FC = () => {
           return {
             ...prev,
             timeRemaining: remainingSeconds,
-            taskTimers: updatedTaskTimers
+            taskTimers: updatedTaskTimers,
+            gracePeriod: updatedGracePeriod
           };
         });
-      }, 100);
+      }, 1000); // Run every second for accurate grace period countdown
 
       return () => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
+        // Clear all auto-fail timeouts
+        Object.values(autoFailTimeoutsRef.current).forEach(timeout => {
+          clearTimeout(timeout);
+        });
+        autoFailTimeoutsRef.current = {};
       };
     }
-  }, [session.gameState, session.taskTimers.length, gameSessionId]);
+  }, [session.gameState, session.taskTimers.length, session.gracePeriod.isActive]);
 
-  // Cleanup auto-fail timeouts on component unmount
-  useEffect(() => {
-    return () => {
-      // Clear all auto-fail timeouts when component unmounts
-      autoFailTimeoutsRef.current.forEach((timeout) => {
-        clearTimeout(timeout);
-      });
-      autoFailTimeoutsRef.current.clear();
-    };
-  }, []);
-
-  // Complete a task - ENHANCED WITH DATABASE INTEGRATION
-  const completeTask = async (taskId: string) => {
+  // Complete a task - ENHANCED WITH TASK TIMER LOGIC
+  const completeTask = (taskId: string) => {
     console.log(`⚔️ Completing task: ${taskId}`);
     
-    // Clear any existing auto-fail timeout for this task
-    const existingTimeout = autoFailTimeoutsRef.current.get(taskId);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
-      autoFailTimeoutsRef.current.delete(taskId);
-      console.log(`🧹 Cleared auto-fail timeout for completed task: ${taskId}`);
+    // Clear any pending auto-fail timeout for this task
+    if (autoFailTimeoutsRef.current[taskId]) {
+      clearTimeout(autoFailTimeoutsRef.current[taskId]);
+      delete autoFailTimeoutsRef.current[taskId];
     }
     
     setSession(prev => {
-      // Check if task can be completed (must be active)
-      const taskTimer = prev.taskTimers.find(timer => timer.taskId === taskId);
-      if (!taskTimer || taskTimer.status !== 'active') {
-        console.log(`❌ Cannot complete task ${taskId} - not active`);
-        return prev;
-      }
-      
       const updatedTasks = prev.tasks.map(task => 
         task.id === taskId ? { ...task, completed: true } : task
       );
@@ -787,24 +622,19 @@ const FightScreen: React.FC = () => {
       
       playSound('punch');
       
-      // Update task status in database
-      if (gameSessionId && completedTask) {
-        updateTaskStatus(taskId, {
-          completed: true,
-          points_earned: damagePerTask
-        }).catch(error => console.error('Error updating completed task:', error));
-      }
-      
       const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
         if (timer.taskId === taskId) {
-          return { ...timer, status: 'completed' as const };
+          return { ...timer, isActive: false, isInGracePeriod: false };
         }
-        // Activate next pending task
-        if (timer.status === 'pending' && index === taskIndex + 1) {
-          return { ...timer, status: 'active' as const, startTime: Date.now() };
+        if (index === taskIndex + 1) {
+          return { ...timer, isActive: true, startTime: Date.now() };
         }
         return timer;
       });
+
+      const updatedGracePeriod = prev.gracePeriod.taskId === taskId 
+        ? { isActive: false, taskId: null, timeRemaining: 0 }
+        : prev.gracePeriod;
       
       const allTasksComplete = updatedTasks.every(task => task.completed);
       if (allTasksComplete || newOpponentHP <= 0) {
@@ -816,6 +646,7 @@ const FightScreen: React.FC = () => {
           opponentHP: newOpponentHP,
           gameState: 'victory',
           taskTimers: updatedTaskTimers,
+          gracePeriod: updatedGracePeriod,
           currentTaskIndex: taskIndex + 1
         };
       }
@@ -825,6 +656,7 @@ const FightScreen: React.FC = () => {
         tasks: updatedTasks,
         opponentHP: newOpponentHP,
         taskTimers: updatedTaskTimers,
+        gracePeriod: updatedGracePeriod,
         currentTaskIndex: taskIndex + 1
       };
     });
@@ -859,45 +691,42 @@ const FightScreen: React.FC = () => {
     }
   };
 
-  // Skip intro phase - UPDATED LOGIC
-  const skipIntroPhase = () => {
-    if (!canSkip || session.gameState !== 'intro') return;
-    
-    console.log(`⏭️ Skipping intro phase: ${introPhase}`);
-    
-    // Special handling for countdown phase - set skip flag instead of resolving
-    if (introPhase === 'countdown') {
-      console.log('🏃 Setting skip flag for countdown');
-      skipCountdownRef.current = true;
-      // Also resolve current promise to advance the sequence
-      if (currentResolveRef.current) {
-        currentResolveRef.current();
-        currentResolveRef.current = null;
-      }
-      return;
-    }
-    
-    // For other phases, resolve current Promise immediately to advance sequence
-    if (currentResolveRef.current) {
-      currentResolveRef.current();
-      currentResolveRef.current = null;
-    }
-  };
+  // Skip intro phase
+const skipIntroPhase = () => {
+  if (!canSkip || session.gameState !== 'intro') return;
+  
+  console.log(`⏭️ Skipping intro phase: ${introPhase}`);
+  
+  // Resolve current Promise immediately to advance sequence
+  if (currentResolveRef.current) {
+    currentResolveRef.current();
+    currentResolveRef.current = null;
+  }
+};
 
-  const handleScreenClick = () => {
-    if (canSkip && session.gameState === 'intro') {
-      skipIntroPhase();
-    } else {
-      handleFirstInteraction();
-    }
+const handleScreenClick = () => {
+  if (canSkip && session.gameState === 'intro') {
+    skipIntroPhase();
+  } else {
+    handleFirstInteraction();
+  }
+};
+
+  // Get currently active task
+  const getCurrentTask = () => {
+    const activeTimer = session.taskTimers.find(timer => timer.isActive);
+    if (!activeTimer) return null;
+    
+    const task = session.tasks.find(task => task.id === activeTimer.taskId);
+    return { task, timer: activeTimer };
   };
 
   // Format time for task timer display
   const formatTaskTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
 
   // Get fighter animation based on intro phase
   const getFighterAnimation = (isPlayer: boolean) => {
@@ -988,6 +817,32 @@ const FightScreen: React.FC = () => {
                 {formatTime(session.timeRemaining)}
               </div>
               
+              {/* Current Task Timer */}
+              {getCurrentTask() && (
+                <div className="mt-2">
+                  <div className="text-cyan-400 font-mono text-sm">
+                    Task {session.currentTaskIndex + 1}: {getCurrentTask()?.task?.name}
+                  </div>
+                  <div className={`font-mono text-lg font-bold ${
+                    getCurrentTask()?.timer?.timeRemaining <= 30 ? 'text-red-400 animate-pulse' : 'text-cyan-400'
+                  }`}>
+                    {formatTaskTime(getCurrentTask()?.timer?.timeRemaining || 0)}
+                  </div>
+                </div>
+              )}
+              
+              {/* Grace Period Display */}
+              {session.gracePeriod.isActive && (
+                <div className="mt-2 p-2 bg-red-900 border border-red-500 rounded">
+                  <div className="text-red-400 font-mono text-sm font-bold">
+                    TASK TIME EXPIRED!
+                  </div>
+                  <div className="text-red-300 font-mono text-xs">
+                    Grace Period: {session.gracePeriod.timeRemaining}s
+                  </div>
+                </div>
+              )}
+              
               <button 
                 onClick={togglePause}
                 className="mt-2 bg-blue-600 text-white font-mono px-4 py-1 text-sm border-2 border-blue-400 hover:bg-blue-500 transition-colors"
@@ -1032,7 +887,7 @@ const FightScreen: React.FC = () => {
             
             {/* Player speech bubble */}
             {introPhase === 'player-quip' && (
-              <SpeechBubble text={session.selectedFighter.quip} side="left" />
+              <SpeechBubble text={session.selectedFighter.quip} isLeft={true} />
             )}
           </div>
 
@@ -1057,56 +912,33 @@ const FightScreen: React.FC = () => {
                   <div className="space-y-3">
                     {session.tasks.map((task) => {
                       const taskTimer = session.taskTimers.find(timer => timer.taskId === task.id);
-                      const isFailed = session.failedTasks.includes(task.id);
-                      const isActive = taskTimer?.status === 'active';
-                      const isExpiredPendingDecision = taskTimer?.status === 'expired-pending-decision';
+                      const isCurrentTask = getCurrentTask()?.task?.id === task.id;
+                      const isInGracePeriod = session.gracePeriod.isActive && session.gracePeriod.taskId === task.id;
                       
                       return (
-                        <div key={task.id} className={`flex flex-col p-3 bg-gray-900 border rounded ${
-                          isExpiredPendingDecision ? 'border-red-500 bg-red-500/20 animate-pulse' :
-                          isActive ? 'border-yellow-400 bg-yellow-400/10' : 
-                          'border-gray-600'
-                        }`}>
+                        <div key={task.id} className="flex flex-col p-3 bg-gray-900 border border-gray-600 rounded">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <div className={`font-mono text-sm font-bold ${
                                 task.completed ? 'text-green-400 line-through' : 
-                                isFailed ? 'text-red-400 line-through' :
-                                'text-white'
+                                taskTimer?.hasFailed ? 'text-red-400 line-through' :
+                                isCurrentTask ? 'text-cyan-400' : 'text-white'
                               }`}>
                                 {task.name}
-                                {isFailed && ' (FAILED)'}
                               </div>
-                              
-                              {/* Inline Task Timer - Digital Clock Style */}
-                              {isActive && taskTimer && !task.completed && !isFailed && (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <div className="bg-black border-2 border-cyan-400 px-3 py-1 rounded">
-                                    <div className={`font-mono text-lg font-bold ${
-                                      taskTimer.timeRemaining <= 30 ? 'text-red-400 animate-pulse' : 'text-cyan-400'
-                                    }`}>
-                                      {formatTaskTime(taskTimer.timeRemaining)}
-                                    </div>
-                                  </div>
-                                  <div className="text-cyan-400 text-xs font-mono">
-                                    ACTIVE
-                                  </div>
-                                </div>
-                              )}
+                              <div className="text-gray-400 text-xs">
+                                {taskTimer?.estimatedTime || task.estimatedTime} min ({(taskTimer?.estimatedTime || task.estimatedTime) * 4} damage)
+                                {taskTimer?.hasFailed && <span className="text-red-400 ml-2">FAILED</span>}
+                              </div>
                             </div>
                             
-                            {!task.completed && !isFailed && !isExpiredPendingDecision && session.gameState === 'fighting' && (
+                            {!task.completed && !taskTimer?.hasFailed && session.gameState === 'fighting' && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   completeTask(task.id);
                                 }}
-                                disabled={!isActive}
-                                className={`font-mono px-3 py-1 text-xs border-2 transition-colors ml-2 ${
-                                  isActive 
-                                    ? 'bg-red-600 text-white border-red-400 hover:bg-red-500' 
-                                    : 'bg-gray-600 text-gray-400 border-gray-500 cursor-not-allowed'
-                                }`}
+                                className="bg-red-600 text-white font-mono px-3 py-1 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors ml-2"
                               >
                                 COMPLETE
                               </button>
@@ -1115,41 +947,29 @@ const FightScreen: React.FC = () => {
                             {task.completed && (
                               <div className="text-green-400 font-mono text-xs font-bold">✓ DONE</div>
                             )}
-                            
-                            {isFailed && (
-                              <div className="text-red-400 font-mono text-xs font-bold">✗ FAILED</div>
-                            )}
                           </div>
                           
-                          {/* Extend or Fail Decision Prompt */}
-                          {isExpiredPendingDecision && session.gameState === 'fighting' && (
-                            <div className="mt-3 p-3 bg-red-900/50 border border-red-500 rounded">
-                              <div className="text-red-400 font-mono text-sm font-bold mb-2 text-center">
-                                ⚠️ TIME'S UP! EXTEND OR FAIL?
-                              </div>
-                              <div className="flex gap-2 justify-center">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleTaskDecision(task.id, 'extend');
-                                  }}
-                                  className="bg-yellow-600 text-white font-mono px-3 py-1 text-xs border-2 border-yellow-400 hover:bg-yellow-500 transition-colors"
-                                >
-                                  EXTEND
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleTaskDecision(task.id, 'fail');
-                                  }}
-                                  className="bg-red-600 text-white font-mono px-3 py-1 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors"
-                                >
-                                  FAIL (-{task.estimatedTime * 4} HP)
-                                </button>
-                              </div>
-                              <div className="text-red-300 font-mono text-xs text-center mt-1">
-                                Auto-fails in 10 seconds
-                              </div>
+                          {/* Grace Period Decision Buttons */}
+                          {isInGracePeriod && (
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTaskDecision(task.id, 'extend');
+                                }}
+                                className="flex-1 bg-yellow-600 text-white font-mono px-3 py-2 text-xs border-2 border-yellow-400 hover:bg-yellow-500 transition-colors"
+                              >
+                                EXTEND (+5 MIN)
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTaskDecision(task.id, 'fail');
+                                }}
+                                className="flex-1 bg-red-600 text-white font-mono px-3 py-2 text-xs border-2 border-red-400 hover:bg-red-500 transition-colors"
+                              >
+                                FAIL TASK
+                              </button>
                             </div>
                           )}
                         </div>
@@ -1179,7 +999,7 @@ const FightScreen: React.FC = () => {
             
             {/* Opponent speech bubble */}
             {introPhase === 'opponent-quip' && session.opponent && (
-              <SpeechBubble text={session.opponent.quip} side="right" />
+              <SpeechBubble text={session.opponent.quip} isLeft={false} />
             )}
           </div>
         </div>
@@ -1192,15 +1012,6 @@ const FightScreen: React.FC = () => {
           <div className="absolute top-4 right-4 z-50">
             <div className="bg-black bg-opacity-80 text-yellow-400 font-mono text-sm px-3 py-2 rounded border border-yellow-400 animate-pulse">
               Click to skip ⏭️
-            </div>
-          </div>
-        )}
-
-        {/* Test Mode Indicator */}
-        {TEST_MODE_SPEED_MULTIPLIER > 1 && (
-          <div className="absolute top-4 left-4 z-50">
-            <div className="bg-red-600 text-white font-mono text-sm px-3 py-2 rounded border border-red-400 font-bold">
-              🚀 TEST MODE: {TEST_MODE_SPEED_MULTIPLIER}x SPEED
             </div>
           </div>
         )}
@@ -1274,11 +1085,10 @@ const FightScreen: React.FC = () => {
         {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat') && (
           <div className="bg-black bg-opacity-80 p-3 text-center border-t-2 border-cyan-400">
             <div className="text-yellow-400 font-mono text-sm">
-              Click anywhere to start audio • Complete tasks to deal damage • Don't let task timers run out!
+              Click anywhere to start audio • Complete tasks to deal damage • Don't let time run out!
             </div>
             <div className="text-cyan-400 font-mono text-xs mt-1">
-              Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | 
-              Session: {gameSessionId ? '✅' : '❌'} | User: {currentUser?.username || 'Guest'}
+              Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | Audio: {audioInitialized ? '✅' : '❌'}
             </div>
           </div>
         )}
