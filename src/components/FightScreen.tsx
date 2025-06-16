@@ -812,15 +812,6 @@ const FightScreen: React.FC = () => {
     }
   };
 
-  // Get currently active task
-  const getCurrentTask = () => {
-    const activeTimer = session.taskTimers.find(timer => timer.isActive);
-    if (!activeTimer) return null;
-    
-    const task = session.tasks.find(task => task.id === activeTimer.taskId);
-    return { task, timer: activeTimer };
-  };
-
   // Format time for task timer display
   const formatTaskTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -917,20 +908,6 @@ const FightScreen: React.FC = () => {
                 {formatTime(session.timeRemaining)}
               </div>
               
-              {/* Current Task Timer */}
-              {getCurrentTask() && (
-                <div className="mt-2">
-                  <div className="text-cyan-400 font-mono text-sm">
-                    Task {session.currentTaskIndex + 1}: {getCurrentTask()?.task?.name}
-                  </div>
-                  <div className={`font-mono text-lg font-bold ${
-                    getCurrentTask()?.timer?.timeRemaining <= 30 ? 'text-red-400 animate-pulse' : 'text-cyan-400'
-                  }`}>
-                    {formatTaskTime(getCurrentTask()?.timer?.timeRemaining || 0)}
-                  </div>
-                </div>
-              )}
-              
               <button 
                 onClick={togglePause}
                 className="mt-2 bg-blue-600 text-white font-mono px-4 py-1 text-sm border-2 border-blue-400 hover:bg-blue-500 transition-colors"
@@ -1001,9 +978,12 @@ const FightScreen: React.FC = () => {
                     {session.tasks.map((task) => {
                       const taskTimer = session.taskTimers.find(timer => timer.taskId === task.id);
                       const isFailed = session.failedTasks.includes(task.id);
+                      const isActive = taskTimer?.isActive || false;
                       
                       return (
-                        <div key={task.id} className="flex items-center justify-between p-3 bg-gray-900 border border-gray-600 rounded">
+                        <div key={task.id} className={`flex items-center justify-between p-3 bg-gray-900 border rounded ${
+                          isActive ? 'border-yellow-400 bg-yellow-400/10' : 'border-gray-600'
+                        }`}>
                           <div className="flex-1">
                             <div className={`font-mono text-sm font-bold ${
                               task.completed ? 'text-green-400 line-through' : 
@@ -1014,6 +994,22 @@ const FightScreen: React.FC = () => {
                               {isFailed && ' (FAILED)'}
                             </div>
                             <div className="text-gray-400 text-xs">{task.estimatedTime} min ({task.estimatedTime * 4} damage)</div>
+                            
+                            {/* Inline Task Timer - Digital Clock Style */}
+                            {isActive && taskTimer && !task.completed && !isFailed && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <div className="bg-black border-2 border-cyan-400 px-3 py-1 rounded">
+                                  <div className={`font-mono text-lg font-bold ${
+                                    taskTimer.timeRemaining <= 30 ? 'text-red-400 animate-pulse' : 'text-cyan-400'
+                                  }`}>
+                                    {formatTaskTime(taskTimer.timeRemaining)}
+                                  </div>
+                                </div>
+                                <div className="text-cyan-400 text-xs font-mono">
+                                  ACTIVE
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
                           {!task.completed && !isFailed && session.gameState === 'fighting' && (
