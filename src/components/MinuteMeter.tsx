@@ -1,23 +1,24 @@
 import React from 'react';
 
-/**
- * 25-segment 16-bit “fuel bar”.
- *  0-4   min  = pure red
- *  5-9   min  = red-orange
- * 10-14  min  = deep orange
- * 15-24  min  = yellow
- * 25/25  min  = success green
- */
-interface Props { minutesFilled: number }
+interface Props { 
+  minutesFilled: number; 
+}
 
 const MinuteMeter: React.FC<Props> = ({ minutesFilled }) => {
-  /** decide colour for each slot */
+  /**
+   * Colour lookup
+   *  • 0-4  ➜ danger  (pure red)
+   *  • 5-9  ➜ redOrange
+   *  • 10-14 ➜ deepOrange
+   *  • 15-19 ➜ primary  (FFC300 – golden yellow)
+   *  • 20-24 ➜ successGreen
+   */
   const colourFor = (i: number) => {
-    if (i < 5)   return 'bg-danger';      // #FE1C06  🔴
-    if (i < 10)  return 'bg-redOrange';   // #FF3A08  🟥🟧
-    if (i < 15)  return 'bg-deepOrange';  // #FF7300  🟧
-    if (i < 25)  return 'bg-accent';      // #FFE56A  🟨
-    return 'bg-successGreen';            // #2ECC40  🟩
+    if (i >= 20) return 'bg-successGreen';
+    if (i >= 15) return 'bg-primary';
+    if (i >= 10) return 'bg-deepOrange';
+    if (i >= 5)  return 'bg-redOrange';
+    return 'bg-danger';
   };
 
   return (
@@ -34,5 +35,10 @@ const MinuteMeter: React.FC<Props> = ({ minutesFilled }) => {
     </div>
   );
 };
+
+/**
+ * ↕️  HIDDEN SAFELIST  — ensures Tailwind never purges these colours
+ * bg-danger bg-redOrange bg-deepOrange bg-primary bg-successGreen
+ */
 
 export default MinuteMeter;
