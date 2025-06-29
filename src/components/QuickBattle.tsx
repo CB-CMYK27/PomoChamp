@@ -27,10 +27,14 @@ const QuickBattle: React.FC = () => {
   const ready  = total === 25;
   const canAdd = title.trim() !== '' && remain > 0;
 
-  const barColour =
-    total < 25 ? 'bg-secondary/60'
-    : total === 25 ? 'bg-primary'
-    : 'bg-danger';
+  /* prettier progress colours */
+const ratio = total / 25;          // 0 → 1
+const barColour =
+  ratio < 0.20 ? 'bg-danger'    /* 0-4 min   → red        */
+: ratio < 0.60 ? 'bg-warning'   /* 5-14 min  → orange     */
+: ratio < 1    ? 'bg-accent'    /* 15-24 min → yellow     */
+:                'bg-success';  /* 25/25     → green 💚   */
+
 
   const status =
     total === 0  ? 'ADD AT LEAST ONE TASK'
