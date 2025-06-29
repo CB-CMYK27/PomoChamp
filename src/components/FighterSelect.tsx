@@ -133,7 +133,7 @@ export default function FighterSelect() {
                 {activeFighter.name}
               </h2>
 
-              <p className="text-center text-base truncate max-w-[16rem]">
+              <p className="text-center text-base italic mx-[-224px] px-4">
                 {activeFighter.quip}
               </p>
 
