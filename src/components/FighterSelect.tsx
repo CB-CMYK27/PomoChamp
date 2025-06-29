@@ -3,214 +3,153 @@ import { useState } from 'react';
 import fighters from '../data/fighters.json';
 import { useGameStore } from '../store/gameStore';
 
+/* ---------- tiny helper for re-using the arcade header ---------- */
+const SectionHeader: React.FC<{ label: string; colour: string }> = ({ label, colour }) => (
+  <div className="flex items-center gap-3 mb-3">
+    <span className={`w-7 h-7 grid place-content-center ${colour} text-bezel`}>3</span>
+    <h3 className="text-primary">{label}</h3>
+  </div>
+);
+
 export default function FighterSelect() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { tasks, breakDuration } = location.state || { tasks: [], breakDuration: 5 };
+  const nav = useNavigate();
+  const { state } = useLocation();
+  const { tasks, breakDuration } = state || { tasks: [], breakDuration: 5 };
 
   /* state */
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [imgBroken, setImgBroken] = useState(false);
+  const setFighter = useGameStore(s => s.setFighter);
 
-  const setFighter = useGameStore((s) => s.setFighter);
-
-  // Character arrangement - Heroes left, Villains right
-  const heroCharacters = [
-    // Heroes - Left side (3x2)
-    'jack-tower',
-    'ellen-ryker', 
-    'raging-stallion',
-    'beach-belle',
-    'bond-sterling',
-    'waves-mcrad'        // Inactive
+  /* hero / villain ids */
+  const heroes = [
+    'jack-tower','ellen-ryker','raging-stallion',
+    'beach-belle','bond-sterling','waves-mcrad'
+  ];
+  const villains = [
+    'prof-kruber','queen-chroma','iron-titan',
+    'jawsome','dr-whiskers','gen-buzzkill'
   ];
 
-  const villainCharacters = [
-    // Villains - Right side (3x2)
-    'prof-kruber',
-    'queen-chroma',
-    'iron-titan',
-    'jawsome',
-    'dr-whiskers',
-    'gen-buzzkill'       // Inactive
-  ];
+  const heroRows    = [heroes.slice(0,3), heroes.slice(3)];
+  const villainRows = [villains.slice(0,3), villains.slice(3)];
 
-  // Inactive characters (currently none - all are active!)
-  const inactiveCharacters: string[] = [];
+  /* derived */
+  const activeId       = hoveredId || selectedId;
+  const activeFighter  = fighters.find(f => f.id === activeId) || null;
 
-  // Split heroes and villains into top/bottom rows
-  const heroesTopRow = heroCharacters.slice(0, 3);
-  const heroesBottomRow = heroCharacters.slice(3, 6);
-  const villainsTopRow = villainCharacters.slice(0, 3);
-  const villainsBottomRow = villainCharacters.slice(3, 6);
-
-  // Get fighter data for each section
-  const topLeftFighters = heroesTopRow.map(id => fighters.find(f => f.id === id)).filter(f => f !== undefined);
-  const bottomLeftFighters = heroesBottomRow.map(id => fighters.find(f => f.id === id)).filter(f => f !== undefined);
-  const topRightFighters = villainsTopRow.map(id => fighters.find(f => f.id === id)).filter(f => f !== undefined);
-  const bottomRightFighters = villainsBottomRow.map(id => fighters.find(f => f.id === id)).filter(f => f !== undefined);
-
-  const activeId = hoveredId || selectedId;
-  const activeFighter = fighters.find((f) => f.id === activeId) || null;
-
-  const handleConfirm = () => {
+  /* helpers */
+  const handleConfirm  = () => {
     if (!selectedId) return;
-    
-    const selectedFighter = fighters.find(f => f.id === selectedId);
-    if (!selectedFighter) return;
-    
-    setFighter(selectedId);  // Keep your existing game store logic
-    
-    // Navigate to fight screen with fighter, tasks, and break duration data
-    navigate('/fight', {
-      state: {
-        selectedFighter: selectedFighter,
-        tasks: tasks || [],
-        breakDuration: breakDuration  // Pass break duration forward
-      }
-    });
+    const f = fighters.find(x => x.id === selectedId);
+    if (!f) return;
+    setFighter(selectedId);
+    nav('/fight', { state: { selectedFighter: f, tasks, breakDuration } });
   };
 
-  const handleCharacterClick = (characterId: string) => {
-    setSelectedId(characterId);
-  };
-
-  const handleCharacterHover = (characterId: string) => {
-    setHoveredId(characterId);
-    setImgBroken(false);
-  };
-
-  const handleCharacterLeave = () => {
-    setHoveredId(null);
-  };
-
-  const renderCharacterButton = (fighter: any) => {
-    const isSelected = selectedId === fighter.id;
-    const isHovered = hoveredId === fighter.id;
-
+  const renderButton = (f: any) => {
+    const isSelected = selectedId === f.id;
+    const isHovered  = hoveredId === f.id;
     return (
       <button
-        key={fighter.id}
-        onMouseEnter={() => handleCharacterHover(fighter.id)}
-        onMouseLeave={handleCharacterLeave}
-        onClick={() => handleCharacterClick(fighter.id)}
-        className={`w-32 h-32 flex items-center justify-center relative
-                    ring-2 ring-offset-2 ring-offset-gray-800
-                    ${isSelected
-                      ? 'ring-neonYel'
-                      : isHovered
-                      ? 'ring-crtBlue' 
-                      : 'ring-transparent'}
-                    bg-gray-900 hover:bg-gray-800 cursor-pointer
-                    transition-all duration-100`}
+        key={f.id}
+        onMouseEnter={() => { setHoveredId(f.id); setImgBroken(false); }}
+        onMouseLeave={() => setHoveredId(null)}
+        onClick={() => setSelectedId(f.id)}
+        className={`w-44 h-44 flex items-center justify-center relative
+                    ring-2 ring-offset-2 ring-offset-bezel
+                    ${isSelected ? 'ring-neonYel'
+                     : isHovered ? 'ring-crtBlue'
+                     : 'ring-transparent'}
+                    bg-bezel hover:bg-bezel/80 transition`}
       >
-        <img
-          src={fighter.portrait}
-          alt={fighter.name}
-          className="w-full h-full object-contain pointer-events-none"
-        />
+        <img src={f.portrait} alt={f.name} className="w-full h-full object-contain pointer-events-none" />
       </button>
     );
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-black text-neonYel font-arcade p-4">
-      {/* Heading */}
-      <h1 className="text-3xl mb-12 mt-6">CHOOSE&nbsp;YOUR&nbsp;FIGHTER</h1>
+    <div className="min-h-screen bg-bezel text-accent font-arcade flex flex-col items-center py-6 px-4">
 
-      {/* Main Grid Layout */}
-      <div className="flex flex-col items-center max-w-6xl w-full">
-        
-        {/* Character Grid Layout - Heroes vs Villains */}
-        <div className="flex items-start gap-4 mb-8">
-          {/* Heroes - Left Side (Unified 3x2 Grid) */}
+      {/* neon title */}
+      <h1
+        className="text-6xl text-primary mb-10"
+        style={{ textShadow:'-3px 3px 0 #07399D, 3px -3px 0 #FF3A08, 0 0 12px rgba(255,255,255,.35)' }}
+      >
+        CHOOSE&nbsp;YOUR&nbsp;FIGHTER
+      </h1>
+
+      {/* whole board */}
+      <div className="max-w-6xl w-full flex flex-col items-center gap-8">
+
+        {/* row with hero grid • preview • villain grid */}
+        <div className="flex gap-10">
+          {/* HEROES */}
           <div className="flex flex-col items-center">
-            <h3 className="text-lg text-crtBlue/80 mb-2 font-bold">HEROES</h3>
-            <div className="border-4 border-crtBlue p-4 bg-gray-800">
-              {/* Top Row Heroes */}
-              <div className="grid grid-cols-3 gap-2 mb-2">
-                {topLeftFighters.map(renderCharacterButton)}
-              </div>
-              {/* Bottom Row Heroes */}
-              <div className="grid grid-cols-3 gap-2">
-                {bottomLeftFighters.map(renderCharacterButton)}
-              </div>
+            <SectionHeader label="HEROES" colour="bg-primary" />
+            <div className="border-4 border-crtBlue p-3 bg-bezel/70">
+              {heroRows.map((row, r) => (
+                <div key={r} className="grid grid-cols-3 gap-3 mb-3 last:mb-0">
+                  {row.map(id => renderButton(fighters.find(f => f.id === id)))}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Center Preview Area */}
-          <div className="flex flex-col items-center min-w-[200px] max-w-[250px] justify-start mt-16">
+          {/* PREVIEW */}
+          <div className="flex flex-col items-center pt-10">
             {activeFighter ? (
-              <>
-                {!imgBroken ? (
-                  <img
-                    src={activeFighter.full}
-                    alt={activeFighter.name}
-                    className="w-48 h-64 object-contain"
-                    onError={() => setImgBroken(true)}
-                  />
-                ) : (
-                  <div className="w-48 h-64 flex items-center justify-center bg-gray-700 rounded">
-                    <span className="text-gray-400">No Image</span>
-                  </div>
-                )}
-              </>
+              !imgBroken ? (
+                <img
+                  src={activeFighter.full}
+                  onError={() => setImgBroken(true)}
+                  alt={activeFighter.name}
+                  className="w-48 h-64 object-contain"
+                />
+              ) : (
+                <div className="w-48 h-64 flex items-center justify-center bg-bezel/50 text-slate-500">
+                  No Image
+                </div>
+              )
             ) : (
-              <div className="w-48 h-64 flex items-center justify-center border-2 border-dashed border-gray-600 rounded">
-                <span className="text-gray-500 text-center">
-                  Hover over<br/>a fighter
-                </span>
+              <div className="w-48 h-64 flex items-center justify-center border-2 border-dashed border-crtBlue text-xs text-crtBlue/60 text-center">
+                Hover over a fighter
               </div>
             )}
           </div>
 
-          {/* Villains - Right Side (Unified 3x2 Grid) */}
+          {/* VILLAINS */}
           <div className="flex flex-col items-center">
-            <h3 className="text-lg text-neonRed/80 mb-2 font-bold">VILLAINS</h3>
-            <div className="border-4 border-neonRed p-4 bg-gray-800">
-              {/* Top Row Villains */}
-              <div className="grid grid-cols-3 gap-2 mb-2">
-                {topRightFighters.map(renderCharacterButton)}
-              </div>
-              {/* Bottom Row Villains */}
-              <div className="grid grid-cols-3 gap-2">
-                {bottomRightFighters.map(renderCharacterButton)}
-              </div>
+            <SectionHeader label="VILLAINS" colour="bg-danger" />
+            <div className="border-4 border-danger p-3 bg-bezel/70">
+              {villainRows.map((row, r) => (
+                <div key={r} className="grid grid-cols-3 gap-3 mb-3 last:mb-0">
+                  {row.map(id => renderButton(fighters.find(f => f.id === id)))}
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom Info Area */}
-        <div className="flex flex-col items-center min-h-[100px] max-w-4xl">
-          {activeFighter && (
-            <>
-              <h2 className="text-2xl font-bold text-neonYel text-center mb-3">
-                {activeFighter.name}
-              </h2>
-
-              <p className="text-lg text-center mb-4 leading-relaxed max-w-xl px-4">
-                {activeFighter.quip}
-              </p>
-
-              {/* Show break duration info */}
-              <div className="text-cyan-400 font-mono text-sm mb-4">
-                🏖️ Break Duration: {breakDuration} minutes
-              </div>
-
-              <button
-                disabled={!selectedId}
-                onClick={handleConfirm}
-                className={`px-6 py-3 bg-neonYel text-black font-bold rounded-lg text-lg transition-all
-                            ${!selectedId
-                              ? 'opacity-50 cursor-not-allowed' 
-                              : 'hover:bg-neonYel/80 hover:scale-105'}`}
-              >
-                {selectedId ? `FIGHT AS ${activeFighter.name.toUpperCase()}!` : 'SELECT A FIGHTER!'}
-              </button>
-            </>
-          )}
-        </div>
+        {/* fighter bio + confirm */}
+        {activeFighter && (
+          <div className="text-center max-w-2xl mt-6 flex flex-col items-center gap-4">
+            <h2 className="text-2xl text-neonYel">{activeFighter.name}</h2>
+            <p className="text-base leading-relaxed mx-auto px-2">{activeFighter.quip}</p>
+            <div className="text-cyan-400 text-sm font-mono">🏖 Break Duration: {breakDuration} min</div>
+            <button
+              onClick={handleConfirm}
+              disabled={!selectedId}
+              className={`px-8 py-4 text-lg font-bold border-4 rounded-sm transition
+                ${selectedId
+                  ? 'bg-primary text-bezel border-primary hover:bg-transparent hover:text-primary shadow-goldenGlow'
+                  : 'border-crtBlue text-crtBlue/40 cursor-not-allowed bg-transparent'}`}
+            >
+              {selectedId ? `FIGHT AS ${activeFighter.name.toUpperCase()}` : 'SELECT A FIGHTER!'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
