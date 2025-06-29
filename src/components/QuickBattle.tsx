@@ -217,23 +217,32 @@ const Review:React.FC<{
       )}
 
       {tasks.map((t,i)=>(
-        <li key={t.id}
-          draggable
-          onDragStart={e=>dragStart(e,t.id)}
-          onDragOver={e=>dragOver(e,i)}
-          onDrop={e=>drop(e,i)}
-          className="relative flex items-center gap-2 bg-bezel border border-crtBlue px-3 py-2 rounded-sm cursor-move transition"
-        >
-          {hoverIx===i && <div className="absolute -top-1 left-0 right-0 h-1 bg-neonYel animate-pulse rounded"/>}
+        <li
+  key={t.id}
+  draggable
+  onDragStart={e => dragStart(e, t.id)}
+  onDragOver={e => e.preventDefault()}
+  onDrop={e => drop(e, i)}
+  className="flex items-center gap-2 bg-bezel border border-crtBlue
+             px-3 py-2 rounded-sm cursor-move hover:border-primary transition"
+>
+  {/* 6-dot drag handle in yellow */}
+  <GripVertical size={14} className="text-primary" />
 
-          <GripVertical size={14} className="text-crtBlue/60"/>
-          <span className="bg-primary text-bezel text-xs px-2 rounded-sm">{i+1}</span>
-          <span className="flex-1 truncate">{t.title}</span>
-          <span className="text-primary">{t.estimated}m</span>
-          <button onClick={()=>del(t.id)} className="text-danger hover:text-danger/80">
-            <Trash2 size={14}/>
-          </button>
-        </li>
+  {/* Task title (wraps up to 2 lines then shows …) */}
+  <span className="flex-1 overflow-hidden line-clamp-2 leading-tight">
+    {t.title}
+  </span>
+
+  {/* Minutes */}
+  <span className="text-primary">{t.estimated}m</span>
+
+  {/* delete icon */}
+  <button onClick={() => delTask(t.id)} className="text-danger hover:text-danger/80">
+    <Trash2 size={14} />
+  </button>
+</li>
+
       ))}
 
       {/* drop-at-end ghost line */}
