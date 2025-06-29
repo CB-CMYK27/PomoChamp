@@ -173,7 +173,6 @@ function addTask() {
 
           {/* Start button on mobile */}
         
-/>
         </section>
 
         {/* RIGHT COLUMN */}
