@@ -119,7 +119,7 @@ export default function FighterSelect() {
         </div>
 
         {/* ---------- PREVIEW / BIO / CONFIRM ---------- */}
-        <div className="flex flex-col items-center w-72 gap-4 self-center">
+        <div className="flex flex-col items-center **w-[28rem] max-w-full** gap-4 self-center">
           {activeFighter ? (
             <>
               {/* sprite: 192 px wide, auto height; no shifting */}
