@@ -81,8 +81,8 @@ export default function ModeSelect() {
             <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
 
             <p className="text-base leading-relaxed">
-              1&nbsp;+&nbsp;tasks totalling&nbsp;25 min.<br />
-              Perfect focus sprint.
+              25 minutes<br />
+              No excuses
             </p>
 
             <button
