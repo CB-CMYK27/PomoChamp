@@ -49,7 +49,7 @@ export default function ModeSelect() {
               textShadow: '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)'
             }}
           >
-            POMOCHAMP
+            CHOOSE&nbsp;YOUR&nbsp;BATTLE
           </h1>
           
           {/* Settings Button */}
