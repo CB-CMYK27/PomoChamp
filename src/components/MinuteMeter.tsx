@@ -1,26 +1,29 @@
 import React from 'react';
 
-interface Props { minutesFilled: number; }  // 0-25
+/** 25 chunks, 1 chunk = 1 minute */
+interface Props { minutesFilled: number }
 
-const colourFor = (idx: number) => {
-  if (idx < 5)  return 'bg-danger';        // 1-5   red
-  if (idx < 15) return 'bg-warning';       // 6-15  orange
-  if (idx < 20) return 'bg-accent';        // 16-20 yellow
-  return 'bg-successGreen';                // 21-25 green
-};
+const MinuteMeter: React.FC<Props> = ({ minutesFilled }) => {
+  /** colour bands: 0-4 red, 5-14 orange, 15-24 yellow, 25 green */
+  const getColour = (i: number) => {
+    if (i < 5)  return 'bg-danger';      // pureRed
+    if (i < 15) return 'bg-warning';     // deepOrange
+    if (i < 25) return 'bg-accent';      // lightYellow
+    return 'bg-success';                 // goldenYellow (greenish)
+  };
 
-export default function MinuteMeter({ minutesFilled }: Props) {
   return (
-    <div className="flex gap-[2px]">
+    <div className="flex gap-[2px] pt-4">
       {Array.from({ length: 25 }).map((_, i) => (
-        <div
-          key={i}
+        <div key={i}
           className={
-            'w-[10px] h-[10px] skew-x-[-20deg] ' +
-            (i < minutesFilled ? colourFor(i) : 'bg-gray-700/40')
+            `h-[10px] flex-1 skew-x-[-20deg] 
+             ${i < minutesFilled ? getColour(i) : 'bg-bezel/30'}`
           }
         />
       ))}
     </div>
   );
-}
+};
+
+export default MinuteMeter;
