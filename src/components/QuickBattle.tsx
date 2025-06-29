@@ -200,4 +200,54 @@ const Review:React.FC<{
 
     <ul className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
       {tasks.length===0 && (
-        <li classN
+        <li className="text-xs text-accent/70 text-center">
+          Tasks show up here as you add them ↑
+        </li>
+      )}
+
+      {tasks.map((t,i)=>(
+        <li key={t.id}
+          draggable
+          onDragStart={e=>dragStart(e,t.id)}
+          onDragOver={e=>dragOver(e,i)}
+          onDrop={e=>drop(e,i)}
+          className="relative flex items-center gap-2 bg-bezel border border-crtBlue px-3 py-2 rounded-sm cursor-move transition"
+        >
+          {hoverIx===i && <div className="absolute -top-1 left-0 right-0 h-1 bg-neonYel animate-pulse rounded"/>}
+
+          <GripVertical size={14} className="text-crtBlue/60"/>
+          <span className="bg-primary text-bezel text-xs px-2 rounded-sm">{i+1}</span>
+          <span className="flex-1 truncate">{t.title}</span>
+          <span className="text-primary">{t.estimated}m</span>
+          <button onClick={()=>del(t.id)} className="text-danger hover:text-danger/80">
+            <Trash2 size={14}/>
+          </button>
+        </li>
+      ))}
+
+      {/* drop-at-end ghost line */}
+      <li onDragOver={e=>dragOver(e,tasks.length)} onDrop={e=>drop(e,tasks.length)} className="h-4">
+        {hoverIx===tasks.length && <div className="h-1 bg-neonYel animate-pulse rounded"/>}
+      </li>
+    </ul>
+  </div>
+);
+
+/* -------- Start button -------- */
+const Start:React.FC<{ready:boolean;total:number;launch:()=>void;className?:string}> =
+({ ready,total,launch,className='' })=>(
+  <div className={`text-center ${className}`}>
+    <button
+      onClick={launch}
+      disabled={!ready}
+      className={`w-full font-bold text-lg px-8 py-4 border-4 rounded-sm transition
+        ${ready
+          ? 'bg-primary text-bezel border-primary hover:bg-transparent hover:text-primary shadow-goldenGlow'
+          : 'border-crtBlue text-accent/40 cursor-not-allowed bg-transparent animate-pulse'}`}
+    >
+      {ready ? '⚔︎ CHOOSE YOUR FIGHTER' : `${25-total} MIN STILL NEEDED`}
+    </button>
+  </div>
+);
+
+export default QuickBattle;
