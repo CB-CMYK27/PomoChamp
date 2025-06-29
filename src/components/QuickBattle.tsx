@@ -220,35 +220,39 @@ const Review:React.FC<{
         <li
   key={t.id}
   draggable
-  onDragStart={e => dragStart(e, t.id)}
-  onDragOver={e => e.preventDefault()}
-  onDrop={e => drop(e, i)}
-  className="flex items-center gap-2 bg-bezel border border-crtBlue
-             px-3 py-2 rounded-sm cursor-move hover:border-primary transition"
+  /* ----- drag events ----- */
+  onDragStart={e => { dragStart(e, t.id); }}            // start dragging
+  onDragEnter={e => { e.preventDefault(); setHover(i); }}// record hover index
+  onDragOver={e => e.preventDefault()}                  // allow drop
+  onDragLeave={() => setHover(null)}                    // clear when leaving
+  onDrop={e => drop(e, i)}                              // drop handler
+  /* ----- styling (adds yellow outline when hover) ----- */
+  className={
+    `flex items-center gap-2 bg-bezel border border-crtBlue
+     px-3 py-2 rounded-sm cursor-move hover:border-primary transition
+     ${hoverIx === i ? 'border-neonYel shadow-goldenGlow' : ''}`
+  }
 >
-  {/* 6-dot drag handle in yellow */}
-  <GripVertical size={14} className="text-primary" />
+  {/* 6-dot handle in YELLOW so it’s obvious */}
+  <GripVertical size={14} className="text-neonYel" />
 
-  {/* Task title (wraps up to 2 lines then shows …) */}
-  <span className="flex-1 overflow-hidden line-clamp-2 leading-tight">
+  {/* task title (slightly smaller so longer text fits) */}
+  <span className="flex-1 text-sm overflow-hidden line-clamp-2 leading-tight">
     {t.title}
   </span>
 
-  {/* Minutes */}
-  <span className="text-primary">{t.estimated}m</span>
+  {/* minutes */}
+  <span className="text-primary text-sm">{t.estimated}m</span>
 
-  {/* delete icon */}
- <button
-  onClick={(e) => {
-    e.stopPropagation();   // keep the drag from triggering
-    del(t.id);             // ← this line actually removes the task
-  }}
-  className="text-danger hover:text-danger/80"
->
-  <Trash2 size={14} />
-</button>
-
+  {/* trash icon (still stops drag) */}
+  <button
+    onClick={e => { e.stopPropagation(); del(t.id); }}
+    className="text-danger hover:text-danger/80"
+  >
+    <Trash2 size={14} />
+  </button>
 </li>
+
 
       ))}
 
