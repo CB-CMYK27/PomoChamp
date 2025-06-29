@@ -104,8 +104,9 @@ export default function ModeSelect() {
             <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
 
             <p className="text-base leading-relaxed">
-              Brain-dump → 4 rounds.<br />
-              Organize & conquer.
+              4 sessions<br />
+              2 hours<br />
+              No mercy
             </p>
 
             <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative">
