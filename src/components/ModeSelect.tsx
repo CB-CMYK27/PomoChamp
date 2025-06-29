@@ -71,10 +71,10 @@ export default function ModeSelect() {
       </header>
 
       {/* ─────────── Cards ─────────── */}
-      <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16">
+      <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16 px-8">
 
         {/* ---------- QUICK BATTLE ---------- */}
-        <SteelFrame className="w-full md:w-[480px] h-[400px]">
+        <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px]">
           <div className="flex flex-col items-center text-center space-y-6 h-full justify-center">
             <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
 
@@ -97,7 +97,7 @@ export default function ModeSelect() {
         </SteelFrame>
 
         {/* ---------- TOURNAMENT (disabled) ---------- */}
-        <SteelFrame disabled className="w-full md:w-[480px] h-[400px] relative">
+        <SteelFrame disabled className="w-full md:flex-1 max-w-lg h-[400px] relative">
           <div className="flex flex-col items-center text-center space-y-6 h-full justify-center">
             <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
 
