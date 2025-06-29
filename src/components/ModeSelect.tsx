@@ -71,19 +71,21 @@ export default function ModeSelect() {
       </header>
 
       {/* ─────────── Cards ─────────── */}
-      <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16 px-8">
+      <div className="flex flex-col md:flex-row gap-12 items-stretch justify-center flex-1 pb-16 px-8">
 
         {/* ---------- QUICK BATTLE ---------- */}
         <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px]">
-          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center">
-            <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
+          <div className="flex flex-col items-center text-center space-y-6 h-full justify-between py-4">
+            <div className="flex flex-col items-center space-y-6">
+              <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
 
-            <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
+              <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
 
-            <p className="text-base leading-relaxed">
-              25 minutes<br />
-              No excuses
-            </p>
+              <p className="text-base leading-relaxed">
+                25 minutes<br />
+                No excuses
+              </p>
+            </div>
 
             <button
               onClick={() => nav('/quick-battle')}
@@ -98,18 +100,20 @@ export default function ModeSelect() {
 
         {/* ---------- TOURNAMENT (visually enabled but functionally disabled) ---------- */}
         <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px] relative">
-          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center">
-            <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
+          <div className="flex flex-col items-center text-center space-y-6 h-full justify-between py-4">
+            <div className="flex flex-col items-center space-y-6">
+              <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
 
-            <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
+              <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
 
-            <p className="text-base leading-relaxed">
-              4 sessions<br />
-              2 hours<br />
-              No mercy
-            </p>
+              <p className="text-base leading-relaxed">
+                4 sessions<br />
+                2 hours<br />
+                No mercy
+              </p>
+            </div>
 
-            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed">
+            <div className="px-10 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed text-lg tracking-wider">
               COMING&nbsp;SOON
             </div>
           </div>
