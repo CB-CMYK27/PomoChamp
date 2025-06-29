@@ -238,9 +238,15 @@ const Review:React.FC<{
   <span className="text-primary">{t.estimated}m</span>
 
   {/* delete icon */}
-  <button onClick={() => delTask(t.id)} className="text-danger hover:text-danger/80">
-    <Trash2 size={14} />
-  </button>
+ <button
+  onClick={(e) => {           // NEW
+    e.stopPropagation();       // NEW – stop the drag
+
+  }}
+  className="text-danger hover:text-danger/80"
+>
+  <Trash2 size={14} />
+</button>
 </li>
 
       ))}
