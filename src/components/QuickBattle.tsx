@@ -256,7 +256,16 @@ const Start:React.FC<{ready:boolean;total:number;launch:()=>void;className?:stri
           ? 'bg-primary text-bezel border-primary hover:bg-transparent hover:text-primary shadow-goldenGlow'
           : 'border-crtBlue text-accent/40 cursor-not-allowed bg-transparent animate-pulse'}`}
     >
-      {ready ? '⚔︎ CHOOSE YOUR FIGHTER' : `${25-total} MIN STILL NEEDED`}
+      {ready ? (
+  <>
+    {/* BIG crossed swords */}
+    <span className="mr-2 text-2xl md:text-3xl leading-none">⚔︎</span>
+    CHOOSE&nbsp;YOUR&nbsp;FIGHTER
+  </>
+) : (
+  `${25 - total} MIN STILL NEEDED`
+)}
+
     </button>
   </div>
 );
