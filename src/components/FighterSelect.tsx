@@ -129,13 +129,16 @@ export default function FighterSelect() {
                 className="w-48 sm:w-56 md:w-64 h-auto object-contain"
               />
 
-              <h2 className="text-primary text-2xl text-center">
-                {activeFighter.name}
-              </h2>
+              {/* Fixed height container for name and quip to prevent layout shifts */}
+              <div className="h-[100px] flex flex-col items-center justify-center">
+                <h2 className="text-primary text-2xl text-center">
+                  {activeFighter.name}
+                </h2>
 
-              <p className="text-center text-base italic mx-[-224px] px-4">
-                {activeFighter.quip}
-              </p>
+                <p className="text-center text-base italic mx-[-224px] px-4">
+                  {activeFighter.quip}
+                </p>
+              </div>
 
               <button
                 onClick={confirmChoice}
