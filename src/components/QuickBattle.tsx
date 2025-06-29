@@ -64,7 +64,13 @@ function addTask() {
   const del = (id:string) => setTasks(t => t.filter(x=>x.id!==id));
 
   /* DnD */
-  const dragStart = (e:React.DragEvent,id:string)=>{ setDrag(id); e.dataTransfer.effectAllowed='move'; };
+  const dragStart = (e: React.DragEvent, id: string) => {
+  setDrag(id);
+  e.dataTransfer.effectAllowed = 'move';
+  /* 👇 KEY LINE — give the browser any payload so it honours the drop */
+  e.dataTransfer.setData('text/plain', id);
+};
+
   const dragOver  = (e:React.DragEvent,ix:number)=>{ e.preventDefault(); setHover(ix); };
   const drop      = (e:React.DragEvent,ix:number)=>{
     e.preventDefault();
