@@ -1,134 +1,132 @@
-//  src/pages/ModeSelect.tsx
+// ----------------  src/pages/ModeSelect.tsx  ----------------
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
-/* ――― Re-usable bits ――― */
+/* ————————————————————————————————————————————————————————
+   1. Decorative helpers
+   ———————————————————————————————————————————————————————— */
 
-/* 8-pixel corner squares in CRT blue */
-const CornerAccent = () => (
-  <>
-    {['top-0 left-0', 'top-0 right-0', 'bottom-0 left-0', 'bottom-0 right-0'].map(
+/** steel plate + four “rivets” (8×8 pixel squares) */
+const ChromePlate: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div
+    className="relative bg-gradient-to-br from-gray-400 via-gray-500 to-gray-700
+               border border-gray-200/40 rounded-md shadow-inner overflow-hidden
+               ring-2 ring-gray-50/5 hover:ring-neonYel transition"
+  >
+    {/* rivets */}
+    {['top-1 left-1', 'top-1 right-1', 'bottom-1 left-1', 'bottom-1 right-1'].map(
       pos => (
-        <div key={pos} className={`absolute w-5 h-5 bg-crtBlue ${pos}`} />
+        <div
+          key={pos}
+          className={`absolute w-2 h-2 bg-gray-200/80 ${pos} rounded-[1px]`}
+        />
       )
     )}
-  </>
-);
-
-/* Pulsing CTA bar */
-const NeonCTA = ({ label }: { label: string }) => (
-  <div className="mt-6 px-9 py-3 rounded shadow-lg relative overflow-hidden">
-    {/* animated gradient sweep */}
-    <span className="absolute inset-0 bg-gradient-to-r from-red-500 via-yellow-400 to-red-500 animate-shine pointer-events-none" />
-    <span className="relative z-10 text-bezel font-arcade text-xl">{label}</span>
+    <div className="p-10 flex flex-col items-center gap-6">{children}</div>
   </div>
 );
 
-/* Golden-chain lock */
-const LockedOverlay = () => (
-  <div className="absolute inset-0 bg-bezel/80 flex flex-col items-center justify-center z-20">
-    <div className="text-5xl text-warning drop-shadow-[0_0_4px_#FFC300]">⛓️⛓️⛓️</div>
-    <p className="mt-2 font-arcade text-warning text-lg">Coming&nbsp;Soon</p>
-  </div>
+/** yellow → red arcade gradient button  */
+const CTA: React.FC<{ label: string }> = ({ label }) => (
+  <button
+    className="px-10 py-2 font-arcade text-lg rounded
+               bg-gradient-to-r from-warning via-orangeYellow to-danger
+               text-bezel hover:scale-105 transition"
+  >
+    {label}
+  </button>
 );
 
+/* ————————————————————————————————————————————————————————
+   2. Page
+   ———————————————————————————————————————————————————————— */
 export default function ModeSelect() {
   const nav = useNavigate();
 
   return (
-    <div
-      className="min-h-screen bg-bezel text-neonYel font-arcade flex flex-col
-                 items-center px-6 pt-16 pb-24
-                 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_0%,transparent_70%)]"
-    >
-      {/* Settings button (top-right) */}
-      <button
-        onClick={() => nav('/settings/audio')}
-        title="Audio Settings"
-        className="fixed top-5 right-6 bg-bezel w-14 h-14 rounded-full border-4 border-crtBlue
-                   flex items-center justify-center text-neonYel
-                   hover:bg-crtBlue/40 hover:rotate-12 transition"
-      >
-        <Settings size={28} strokeWidth={3} />
-      </button>
+    <main className="min-h-screen bg-bezel font-arcade flex flex-col items-center py-12 px-6">
+      {/* title + settings */}
+      <header className="flex w-full max-w-7xl justify-between items-start mb-14">
+        <h1
+          className="text-primary text-6xl md:text-7xl text-center flex-1"
+          style={{
+            textShadow:
+              '-3px 3px #07399D, 3px -3px #FE1C06,0 0 12px rgba(255,255,255,.4)',
+          }}
+        >
+          CHOOSE&nbsp;YOUR&nbsp;BATTLE
+        </h1>
 
-      {/* Title */}
-      <h1
-        className="text-primary text-6xl md:text-7xl mb-16 text-center"
-        style={{
-          textShadow:
-            '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)',
-        }}
-      >
-        CHOOSE&nbsp;YOUR&nbsp;BATTLE
-      </h1>
-
-      {/* Cartridges */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-        {/* ─── QUICK BATTLE ───────────────────────────────────────── */}
         <button
-          onClick={() => nav('/quick-battle')}
-          className="group relative rounded-lg p-10 bg-bezel/90 border-4 border-crtBlue
-                     shadow-[0_0_0_4px_#000_inset] hover:scale-105 hover:shadow-blueGlow
-                     transition-transform duration-300 w-[22rem] md:w-[24rem]"
+          onClick={() => nav('/settings/audio')}
+          title="Audio Settings"
+          className="bg-crtBlue p-3 rounded-full ring-2 ring-crtBlue/60 hover:ring-accent transition"
         >
-          <CornerAccent />
-
-          <div className="flex flex-col items-center gap-6">
-            {/* boxing-glove icon (pixel art) */}
-            <img
-              src="/images/gloves.png"
-              alt="Boxing gloves"
-              className="w-20 h-20 object-contain [image-rendering:pixelated]"
-            />
-
-            <h2 className="text-3xl text-neonYel">QUICK&nbsp;BATTLE</h2>
-
-            <p className="text-crtBlue font-bold leading-tight text-center">
-              1 + tasks totalling 25 min<br />Perfect focus sprint
-            </p>
-
-            <NeonCTA label="FIGHT!" />
-          </div>
+          <Settings size={24} className="text-accent" />
         </button>
+      </header>
 
-        {/* ─── TOURNAMENT (locked) ────────────────────────────────── */}
-        <div
-          className="relative rounded-lg p-10 bg-bezel/70 border-4 border-neonRed
-                     shadow-[0_0_0_4px_#000_inset] w-[22rem] md:w-[24rem]
-                     cursor-not-allowed select-none"
-        >
-          <CornerAccent />
+      {/* mode cards */}
+      <section
+        className="grid gap-10 w-full max-w-7xl
+                   md:grid-cols-2
+                   [&>*]:flex-1"   /* force equal width */
+      >
+        {/* ▼ QUICK BATTLE ———————————————————————————————— */}
+        <ChromePlate>
+          {/* icon */}
+          <img
+            src="/images/gloves-clash.png"
+            alt=""
+            className="w-24 h-24 select-none pointer-events-none"
+          />
 
-          <div className="flex flex-col items-center gap-6 opacity-40">
-            <Trophy
-              className="w-20 h-20 text-neonRed [image-rendering:pixelated]"
-            />
+          <h2 className="text-neonYel text-3xl text-center">QUICK&nbsp;BATTLE</h2>
 
-            <h2 className="text-2xl text-neonRed text-center">
-              TOURNAMENT&nbsp;MODE
-            </h2>
+          {/* description in white now */}
+          <p className="text-white text-center leading-snug">
+            1+ tasks totalling&nbsp;25&nbsp;min. <br />
+            Perfect focus sprint.
+          </p>
 
-            <p className="text-neonRed font-bold leading-tight text-center">
-              Brain-dump tasks → 4 rounds<br />Organize & conquer
-            </p>
+          <CTA label="FIGHT!" onClick={() => nav('/quick-battle')} />
+        </ChromePlate>
 
-            <NeonCTA label="COMING SOON" />
+        {/* ▼ TOURNAMENT MODE (locked) ——————————— */}
+        <ChromePlate>
+          <img
+            src="/images/trophy-outline.png"
+            alt=""
+            className="w-24 h-24 opacity-50"
+          />
+
+          <h2 className="text-gray-400 text-2xl text-center">TOURNAMENT MODE</h2>
+
+          <p className="text-gray-400 text-center leading-snug">
+            Brain-dump → 4 rounds. <br /> Organize &amp; conquer.
+          </p>
+
+          {/* padlock overlay */}
+          <div className="absolute inset-0 bg-black/60 grid place-content-center">
+            {/* simple chain effect - four links */}
+            <div className="flex gap-0.5 scale-105">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="w-4 h-6 border-2 border-goldenYellow rounded-sm"
+                  style={{
+                    transform: idx % 2 ? 'rotate(15deg)' : 'rotate(-15deg)',
+                  }}
+                />
+              ))}
+            </div>
+            <span className="text-goldenYellow mt-2 font-arcade text-xl">
+              Coming&nbsp;Soon
+            </span>
           </div>
-
-          {/* lock */}
-          <LockedOverlay />
-        </div>
-      </div>
-
-      {/* faint scan-lines overlay */}
-      <img
-        src="/assets/scanline.png"
-        className="pointer-events-none fixed inset-0 opacity-10 mix-blend-soft-light
-                   w-full h-full object-cover"
-        alt=""
-      />
-    </div>
+        </ChromePlate>
+      </section>
+    </main>
   );
 }
