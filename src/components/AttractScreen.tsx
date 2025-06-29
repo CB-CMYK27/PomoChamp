@@ -47,7 +47,7 @@ export default function AttractScreen() {
       {/* Insert Coin Image - Pulsing slowly */}
       <div className="animate-slow-pulse">
         <img 
-          src="/images/ChatGPT Image Jun 29, 2025, 07_19_07 PM.png" 
+          src="/images/insert-coin.png" 
           alt="Insert Coin"
           className="w-48 h-48 object-contain"
         />
