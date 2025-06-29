@@ -113,7 +113,7 @@ setTimeout(() => inputRef.current?.focus(), 0);
               Each task should be 5-25 minutes. Drag to reorder later.
             </p>
 
-            <div className="flex gap-3 items-stretch">
+            <div className="flex gap-3 items-stretch w-full">
               <input
                 ref={inputRef}
                 className="flex-1 bg-bezel border-2 border-crtBlue px-3 text-sm focus:border-primary outline-none"
