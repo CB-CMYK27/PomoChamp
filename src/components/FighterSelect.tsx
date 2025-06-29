@@ -1,4 +1,3 @@
-// ----------------  src/pages/FighterSelect.tsx  -----------------
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import fighters from '../data/fighters.json';
