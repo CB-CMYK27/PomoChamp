@@ -39,16 +39,27 @@ const QuickBattle: React.FC = () => {
     : 'PERFECT – LOCK & LOAD!';
 
   /* -------------- handlers ------------- */
-  function addTask() {
-    if (!canAdd) return;
-    setTasks(t => [
-      ...t,
-      { id: crypto.randomUUID(), title: title.trim(), estimated: mins }
-    ]);
-    setTitle('');
-    setMins(remain - mins >= 5 ? mins : Math.max(remain,5));
-    setTimeout(() => inputRef.current?.focus(), 0);
-  }
+  /* ---- NEW addTask ---- */
+function addTask() {
+  if (!canAdd) return;
+
+  /** Reset the dropdown FIRST so mins won’t be stale */
+  setMins(5);
+
+  /** Capture the minutes we just had before React re-renders */
+  const minutes = mins;          // ← always correct
+
+  const newTask: Task = {
+    id: crypto.randomUUID(),
+    title: title.trim(),
+    estimated: minutes
+  };
+
+  setTasks(prev => [...prev, newTask]);
+  setTitle('');
+  /* no need to setTimeout focus here, but keep if you like */
+}
+
 
   const del = (id:string) => setTasks(t => t.filter(x=>x.id!==id));
 
