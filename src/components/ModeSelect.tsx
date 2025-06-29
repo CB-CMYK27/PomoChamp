@@ -70,63 +70,66 @@ export default function ModeSelect() {
         </button>
       </header>
 
-      {/* ─────────── Cards ─────────── */}
-      <div className="flex flex-col md:flex-row gap-12 items-stretch justify-center flex-1 pb-16 px-8">
+      {/* 👇 NEW wrapper that fills the remaining height and centres its children */}
+      <div className="flex-1 flex flex-col justify-center">
+        {/* ─────────── Cards ─────────── */}
+        <div className="flex flex-col md:flex-row gap-12 items-stretch justify-center pb-16 px-8">
 
-        {/* ---------- QUICK BATTLE ---------- */}
-        <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px]">
-          <div className="flex flex-col items-center text-center space-y-6 h-full justify-between py-4">
-            <div className="flex flex-col items-center space-y-6">
-              <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
+          {/* ---------- QUICK BATTLE ---------- */}
+          <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px]">
+            <div className="flex flex-col items-center text-center space-y-6 h-full justify-between py-4">
+              <div className="flex flex-col items-center space-y-6">
+                <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
 
-              <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
+                <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
 
-              <p className="text-base leading-relaxed">
-                25 minutes<br />
-                No excuses
-              </p>
+                <p className="text-base leading-relaxed">
+                  25 minutes<br />
+                  No excuses
+                </p>
+              </div>
+
+              <button
+                onClick={() => nav('/quick-battle')}
+                className="bg-gradient-to-r from-orange-600 to-red-600
+                           hover:to-red-500 px-10 py-3 text-lg rounded font-bold
+                           tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
+              >
+                FIGHT!
+              </button>
+            </div>
+          </SteelFrame>
+
+          {/* ---------- TOURNAMENT (visually enabled but functionally disabled) ---------- */}
+          <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px] relative">
+            <div className="flex flex-col items-center text-center space-y-6 h-full justify-between py-4">
+              <div className="flex flex-col items-center space-y-6">
+                <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
+
+                <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
+
+                <p className="text-base leading-relaxed">
+                  4 sessions<br />
+                  2 hours<br />
+                  No mercy
+                </p>
+              </div>
+
+              <div className="px-10 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed text-lg tracking-wider">
+                COMING&nbsp;SOON
+              </div>
             </div>
 
-            <button
-              onClick={() => nav('/quick-battle')}
-              className="bg-gradient-to-r from-orange-600 to-red-600
-                         hover:to-red-500 px-10 py-3 text-lg rounded font-bold
-                         tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
-            >
-              FIGHT!
-            </button>
-          </div>
-        </SteelFrame>
-
-        {/* ---------- TOURNAMENT (visually enabled but functionally disabled) ---------- */}
-        <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px] relative">
-          <div className="flex flex-col items-center text-center space-y-6 h-full justify-between py-4">
-            <div className="flex flex-col items-center space-y-6">
-              <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
-
-              <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
-
-              <p className="text-base leading-relaxed">
-                4 sessions<br />
-                2 hours<br />
-                No mercy
-              </p>
-            </div>
-
-            <div className="px-10 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed text-lg tracking-wider">
-              COMING&nbsp;SOON
-            </div>
-          </div>
-
-          {/* Caution strip overlay positioned over the button */}
-          <div
-            className="absolute left-0 right-0 bottom-6 h-8 opacity-70 pointer-events-none"
-            style={{
-              backgroundImage:
-                'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
-            }}
-          />
-        </SteelFrame>
+            {/* Caution strip overlay positioned over the button */}
+            <div
+              className="absolute left-0 right-0 bottom-6 h-8 opacity-70 pointer-events-none"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
+              }}
+            />
+          </SteelFrame>
+        </div>
       </div>
     </div>
   );
