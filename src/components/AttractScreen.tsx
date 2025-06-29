@@ -27,7 +27,12 @@ export default function AttractScreen() {
       
       {/* Value Proposition - Subtitle on one line */}
       <div className="text-center mb-8 max-w-4xl">
-        <h2 className="text-accent text-xl font-bold mb-4 whitespace-nowrap">
+        <h2 
+          className="text-accent text-xl font-bold mb-4 whitespace-nowrap"
+          style={{
+            textShadow: '0 0 8px rgba(255,255,255,0.3), 2px 2px 4px rgba(0,0,0,0.8)'
+          }}
+        >
           THE POMODORO TIMER THAT DOESN'T SUCK
         </h2>
         <p className="text-white text-lg leading-relaxed">
