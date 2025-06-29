@@ -56,8 +56,11 @@ function addTask() {
   };
 
   setTasks(prev => [...prev, newTask]);
-  setTitle('');
-  /* no need to setTimeout focus here, but keep if you like */
+setTitle('');
+
+/* ⌨️  make the cursor jump straight back to the input every time */
+setTimeout(() => inputRef.current?.focus(), 0);
+
 }
 
 
