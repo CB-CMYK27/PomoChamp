@@ -44,7 +44,7 @@ export default function ModeSelect() {
         {/* ----------  Title  ---------- */}
         <div className="flex items-center justify-between mb-12">
           <h1 
-            className="text-neonYel font-arcade text-5xl md:text-6xl text-center uppercase flex-1"
+            className="text-primary font-arcade text-5xl md:text-6xl text-center uppercase flex-1"
             style={{
               textShadow: '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)'
             }}

@@ -95,7 +95,7 @@ setTimeout(() => inputRef.current?.focus(), 0);
         <h1
           className="row-start-1 col-span-2 text-6xl text-primary text-center"
           style={{
-            textShadow: '-3px 3px #07399D, 3px -3px #FF3A08, 0 0 12px rgba(255,255,255,.35)'
+            textShadow: '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.40)'
           }}
         >
           QUICK&nbsp;BATTLE
