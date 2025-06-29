@@ -155,7 +155,7 @@ setTimeout(() => inputRef.current?.focus(), 0);
               <Clock size={12}/> {total}/25 MIN
             </div>
            <MinuteMeter minutesFilled={total} />
-
+</div>
 
           {/* STEP 2 */}
           <div className="bg-crtBlue/30 border-4 border-crtBlue rounded-lg p-6 space-y-4">
