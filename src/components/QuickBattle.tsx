@@ -4,6 +4,8 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, GripVertical, Clock } from 'lucide-react';
+import MinuteMeter from './MinuteMeter';
+
 
 interface Task { id: string; title: string; estimated: number; }
 
