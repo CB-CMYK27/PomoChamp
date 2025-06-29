@@ -1,3 +1,4 @@
+// ----------------  src/pages/FighterSelect.tsx  -----------------
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import fighters from '../data/fighters.json';
@@ -7,8 +8,8 @@ import { useGameStore } from '../store/gameStore';
 const Frame: React.FC<{ side: 'hero' | 'villain'; children: React.ReactNode }> =
   ({ side, children }) => (
     <div
-      className={border-4 p-3 bg-bezel
-        ${side === 'hero' ? 'border-crtBlue' : 'border-neonRed'}}
+      className={`border-4 p-3 bg-bezel
+        ${side === 'hero' ? 'border-crtBlue' : 'border-neonRed'}`}
     >
       {children}
     </div>
@@ -71,10 +72,10 @@ export default function FighterSelect() {
         onMouseEnter={() => setHover(f.id)}
         onMouseLeave={() => setHover(null)}
         onClick={() => setSelect(f.id)}
-        className={w-36 h-36 ring-offset-0 transition
-          ${sel ? ${ring} ring-4
-               : hov ? ${ring}/60 ring-4
-               : 'ring-0'}}
+        className={`w-36 h-36 ring-offset-0 transition
+          ${sel ? `${ring} ring-4`
+               : hov ? `${ring}/60 ring-4`
+               : 'ring-0'}`}
       >
         <img
           src={f.portrait}
@@ -139,14 +140,14 @@ export default function FighterSelect() {
               <button
                 onClick={confirmChoice}
                 disabled={!selectedId}
-                className={px-6 py-3 bg-neonYel text-bezel font-bold rounded
+                className={`px-6 py-3 bg-neonYel text-bezel font-bold rounded
                             transition
                   ${selectedId
                     ? 'hover:bg-neonYel/80 hover:scale-105'
-                    : 'opacity-40 cursor-not-allowed'}}
+                    : 'opacity-40 cursor-not-allowed'}`}
               >
                 {selectedId
-                  ? FIGHT AS ${activeFighter.name.toUpperCase()}!
+                  ? `FIGHT AS ${activeFighter.name.toUpperCase()}!`
                   : 'SELECT A FIGHTER!'}
               </button>
             </>
