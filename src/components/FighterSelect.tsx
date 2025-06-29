@@ -131,7 +131,7 @@ export default function FighterSelect() {
 
               {/* Fixed height container for name and quip to prevent layout shifts */}
               <div className="h-[100px] flex flex-col items-center justify-center">
-                <h2 className="text-primary text-2xl text-center">
+                <h2 className="text-primary text-2xl text-center mb-3">
                   {activeFighter.name}
                 </h2>
 
