@@ -256,10 +256,18 @@ const Review:React.FC<{
 
       ))}
 
-      {/* drop-at-end ghost line */}
-      <li onDragOver={e=>dragOver(e,tasks.length)} onDrop={e=>drop(e,tasks.length)} className="h-4">
-        {hoverIx===tasks.length && <div className="h-1 bg-neonYel animate-pulse rounded"/>}
-      </li>
+      {/* drop-after-last ghost slot */}
+<li
+  onDragEnter={e => { e.preventDefault(); setHover(tasks.length); }}
+  onDragOver={e => e.preventDefault()}
+  onDrop={e => drop(e, tasks.length)}
+  className="h-4"
+>
+  {hoverIx === tasks.length && (
+    <div className="h-1 bg-neonYel animate-pulse rounded" />
+  )}
+</li>
+
     </ul>
   </div>
 );
