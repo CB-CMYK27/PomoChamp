@@ -39,7 +39,7 @@ export default function AttractScreen() {
       
       {/* Description text */}
       <div className="text-center mb-8 max-w-4xl">
-        <p className="text-white text-lg leading-relaxed">
+        <p className="text-white text-lg leading-relaxed italic">
           Brain dump your tasks, pick your fighter, and punch procrastination in the face.
         </p>
       </div>
