@@ -172,7 +172,7 @@ function addTask() {
           </div>
 
           {/* Start button on mobile */}
-          <Start ready={ready} total={total} launch={launch} className="mt-auto"
+        
 />
         </section>
 
