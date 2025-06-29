@@ -96,8 +96,8 @@ export default function ModeSelect() {
           </div>
         </SteelFrame>
 
-        {/* ---------- TOURNAMENT (disabled) ---------- */}
-        <SteelFrame disabled className="w-full md:flex-1 max-w-lg h-[400px] relative">
+        {/* ---------- TOURNAMENT (visually enabled but functionally disabled) ---------- */}
+        <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px] relative">
           <div className="flex flex-col items-center text-center space-y-6 h-full justify-center">
             <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
 
@@ -109,7 +109,7 @@ export default function ModeSelect() {
               No mercy
             </p>
 
-            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative">
+            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed">
               COMING&nbsp;SOON
             </div>
           </div>
