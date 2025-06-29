@@ -1,58 +1,57 @@
-// ----------------  src/pages/ModeSelect.tsx  ----------------
+// --------------  src/pages/ModeSelect.tsx  ----------------
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 
-/* ————————————————————————————————————————————————————————
-   1. Decorative helpers
-   ———————————————————————————————————————————————————————— */
+/* UTILS ---------------------------------------------------------------- */
 
-/** steel plate + four “rivets” (8×8 pixel squares) */
-const ChromePlate: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div
-    className="relative bg-gradient-to-br from-gray-400 via-gray-500 to-gray-700
-               border border-gray-200/40 rounded-md shadow-inner overflow-hidden
-               ring-2 ring-gray-50/5 hover:ring-neonYel transition"
-  >
+const Plate: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="relative rounded-md ring-4 ring-gray-300/50 shadow-xl overflow-hidden">
     {/* rivets */}
     {['top-1 left-1', 'top-1 right-1', 'bottom-1 left-1', 'bottom-1 right-1'].map(
-      pos => (
-        <div
-          key={pos}
-          className={`absolute w-2 h-2 bg-gray-200/80 ${pos} rounded-[1px]`}
-        />
+      p => (
+        <span key={p} className={`absolute w-2 h-2 bg-gray-200 ${p} rounded-[1px]`} />
       )
     )}
-    <div className="p-10 flex flex-col items-center gap-6">{children}</div>
+    {/* black inset panel */}
+    <div className="bg-bezel/95 p-10 flex flex-col items-center gap-6">
+      {children}
+    </div>
   </div>
 );
 
-/** yellow → red arcade gradient button  */
-const CTA: React.FC<{ label: string }> = ({ label }) => (
+const CTA: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
-    className="px-10 py-2 font-arcade text-lg rounded
-               bg-gradient-to-r from-warning via-orangeYellow to-danger
-               text-bezel hover:scale-105 transition"
+    onClick={onClick}
+    className="px-12 py-2 bg-gradient-to-r from-warning via-orangeYellow to-danger
+               text-bezel font-arcade text-lg rounded hover:scale-105 transition"
   >
-    {label}
+    FIGHT!
   </button>
 );
 
-/* ————————————————————————————————————————————————————————
-   2. Page
-   ———————————————————————————————————————————————————————— */
+/* caution-stripe overlay sprite (semi-transparent) */
+const CautionOverlay = () => (
+  <img
+    src="/images/caution-stripe.png"        /* save your stripe slice here */
+    alt=""
+    className="absolute inset-0 w-full h-full object-cover opacity-80 pointer-events-none"
+  />
+);
+
+/* MAIN ------------------------------------------------------------------ */
 export default function ModeSelect() {
   const nav = useNavigate();
 
   return (
     <main className="min-h-screen bg-bezel font-arcade flex flex-col items-center py-12 px-6">
       {/* title + settings */}
-      <header className="flex w-full max-w-7xl justify-between items-start mb-14">
+      <header className="w-full max-w-7xl flex justify-between items-start mb-14">
         <h1
-          className="text-primary text-6xl md:text-7xl text-center flex-1"
+          className="flex-1 text-center text-6xl md:text-7xl text-primary"
           style={{
             textShadow:
-              '-3px 3px #07399D, 3px -3px #FE1C06,0 0 12px rgba(255,255,255,.4)',
+              '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)',
           }}
         >
           CHOOSE&nbsp;YOUR&nbsp;BATTLE
@@ -67,65 +66,45 @@ export default function ModeSelect() {
         </button>
       </header>
 
-      {/* mode cards */}
-      <section
-        className="grid gap-10 w-full max-w-7xl
-                   md:grid-cols-2
-                   [&>*]:flex-1"   /* force equal width */
-      >
-        {/* ▼ QUICK BATTLE ———————————————————————————————— */}
-        <ChromePlate>
-          {/* icon */}
+      {/* cards */}
+      <section className="grid gap-12 max-w-7xl w-full md:grid-cols-2">
+        {/* QUICK BATTLE -------------------------------------------------- */}
+        <Plate>
           <img
-            src="/images/gloves-clash.png"
+            src="/images/gloves-clash.png" /* your pixel-art gloves PNG */
             alt=""
-            className="w-24 h-24 select-none pointer-events-none"
+            className="w-24 h-24"
           />
-
           <h2 className="text-neonYel text-3xl text-center">QUICK&nbsp;BATTLE</h2>
 
-          {/* description in white now */}
           <p className="text-white text-center leading-snug">
-            1+ tasks totalling&nbsp;25&nbsp;min. <br />
-            Perfect focus sprint.
+            1+ tasks totalling&nbsp;25&nbsp;min.&nbsp; Perfect focus sprint.
           </p>
 
-          <CTA label="FIGHT!" onClick={() => nav('/quick-battle')} />
-        </ChromePlate>
+          <CTA onClick={() => nav('/quick-battle')} />
+        </Plate>
 
-        {/* ▼ TOURNAMENT MODE (locked) ——————————— */}
-        <ChromePlate>
-          <img
-            src="/images/trophy-outline.png"
-            alt=""
-            className="w-24 h-24 opacity-50"
-          />
-
-          <h2 className="text-gray-400 text-2xl text-center">TOURNAMENT MODE</h2>
-
-          <p className="text-gray-400 text-center leading-snug">
-            Brain-dump → 4 rounds. <br /> Organize &amp; conquer.
-          </p>
-
-          {/* padlock overlay */}
-          <div className="absolute inset-0 bg-black/60 grid place-content-center">
-            {/* simple chain effect - four links */}
-            <div className="flex gap-0.5 scale-105">
-              {Array.from({ length: 4 }).map((_, idx) => (
-                <div
-                  key={idx}
-                  className="w-4 h-6 border-2 border-goldenYellow rounded-sm"
-                  style={{
-                    transform: idx % 2 ? 'rotate(15deg)' : 'rotate(-15deg)',
-                  }}
-                />
-              ))}
-            </div>
-            <span className="text-goldenYellow mt-2 font-arcade text-xl">
-              Coming&nbsp;Soon
-            </span>
+        {/* TOURNAMENT (locked) ----------------------------------------- */}
+        <Plate>
+          <div className="relative w-24 h-24">
+            <img
+              src="/images/trophy-pixel.png" /* generate with prompt below */
+              alt=""
+              className="w-full h-full opacity-40"
+            />
+            <CautionOverlay />
           </div>
-        </ChromePlate>
+
+          <h2 className="text-gray-300 text-2xl text-center">TOURNAMENT&nbsp;MODE</h2>
+
+          <p className="text-gray-300 text-center leading-snug">
+            Brain-dump → 4 rounds. Organize &amp; conquer.
+          </p>
+
+          <div className="h-10 relative w-full">
+            <CautionOverlay />
+          </div>
+        </Plate>
       </section>
     </main>
   );
