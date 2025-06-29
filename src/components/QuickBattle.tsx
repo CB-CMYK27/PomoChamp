@@ -1,109 +1,90 @@
 /* ------------------------------------------------------------------
-   PomoChamp :: QUICK-BATTLE (v2-wide / hover-bar / typography-fixes)
+   PomoChamp :: QUICK-BATTLE (v2.1 – alignment, drag-fix, tidy UI)
    ------------------------------------------------------------------ */
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, GripVertical, Clock, Timer } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Clock } from 'lucide-react';
 
-/* ---------- Types ------------------------------------------------ */
+/* ---------- Types ---------- */
 interface Task { id: string; title: string; estimated: number; }
-
-/* ---------- Optional side art ----------------------------------- */
-const SideArt = () => (
-  <div className="hidden xl:flex flex-col items-center gap-6">
-    <div className="w-44 h-44 bg-[url('/fighters/f1.png')] bg-contain bg-no-repeat" />
-    <p className="text-xs text-accent/80 text-center max-w-[10rem] leading-snug">
-      Ready up!<br />Select your fighter<br />on the next screen.
-    </p>
-  </div>
-);
 
 /* ================================================================= */
 const QuickBattle: React.FC = () => {
   const nav = useNavigate();
 
   /* ----- state --------------------------------------------------- */
-  const [tasks,   setTasks]  = useState<Task[]>([]);
-  const [title,   setTitle]  = useState('');
-  const [mins,    setMins]   = useState(5);
-  const [breakM,  setBreak]  = useState(5);
-  const [dragId,  setDrag]   = useState<string|null>(null);
-  const [hoverIx,setHover]   = useState<number|null>(null);
-  const inputRef             = useRef<HTMLInputElement>(null);
+  const [tasks,  setTasks]  = useState<Task[]>([]);
+  const [title,  setTitle]  = useState('');
+  const [mins,   setMins]   = useState(5);
+  const [breakM, setBreak]  = useState(5);
+  const [dragId, setDrag]   = useState<string|null>(null);
+  const [hover,  setHover]  = useState<number|null>(null);
+  const inputRef            = useRef<HTMLInputElement>(null);
 
   /* ----- derived -------------------------------------------------- */
   const total  = tasks.reduce((s,t)=>s+t.estimated,0);
   const remain = 25 - total;
-  const canAdd = title.trim() !== '' && remain > 0;
   const ready  = total === 25;
+  const canAdd = title.trim() !== '' && remain > 0;
 
   /* ----- helpers -------------------------------------------------- */
   const barColour =
     total < 25 ? 'bg-secondary/60'
-    : total === 25 ? 'bg-primary' : 'bg-danger';
+    : total === 25 ? 'bg-primary'
+    : 'bg-danger';
 
   const status =
     total === 0   ? 'ADD AT LEAST ONE TASK'
     : total  < 25 ? `NEED ${25-total} MORE MIN`
-    : total  > 25 ? 'TOO MANY MIN – TRIM' : 'PERFECT – LOCK & LOAD!';
+    : total  > 25 ? 'TOO MANY MIN – TRIM'
+    : 'PERFECT – LOCK & LOAD!';
 
   /* ----- actions -------------------------------------------------- */
-  function addTask() {
-    if (!canAdd) return;
-    setTasks(x => [...x,{ id:crypto.randomUUID(), title:title.trim(), estimated:mins }]);
+  function addTask(){
+    if(!canAdd) return;
+    setTasks(x=>[...x,{
+      id: crypto.randomUUID(),
+      title: title.trim(),
+      estimated: mins
+    }]);
     setTitle('');
     setMins(remain - mins >= 5 ? mins : Math.max(remain,5));
     setTimeout(()=>inputRef.current?.focus(),0);
   }
-  const delTask = (id:string)=>setTasks(t=>t.filter(x=>x.id!==id));
+  const delTask = (id:string)=>setTasks(x=>x.filter(t=>t.id!==id));
 
-  /* drag-n-drop */
-  function dragStart(e:React.DragEvent,id:string){
-    setDrag(id); e.dataTransfer.effectAllowed='move';
-  }
-  function dragOver(e:React.DragEvent,ix:number){
-    e.preventDefault(); setHover(ix);
-  }
-  function drop(e:React.DragEvent,ix:number){
-    e.preventDefault();
-    if(!dragId){ setHover(null); return;}
+  /* drag-&-drop ---------------------------------------------------- */
+  const dragStart=(e:React.DragEvent,id:string)=>{setDrag(id);e.dataTransfer.effectAllowed='move';};
+  const onOver=(e:React.DragEvent,ix:number)=>{e.preventDefault();e.stopPropagation();setHover(ix);};
+  const onDrop=(e:React.DragEvent,ix:number)=>{
+    e.preventDefault(); e.stopPropagation();
+    if(!dragId) return;
     const from = tasks.findIndex(t=>t.id===dragId);
-    const arr=[...tasks]; const [item]=arr.splice(from,1);
-    arr.splice(ix,0,item); setTasks(arr);
-    setDrag(null); setHover(null);
-  }
-  /* allow drop after last by treating UL as zone */
-  function dropEnd(e:React.DragEvent){
-    if(!dragId){return;}
-    e.preventDefault();
-    if(hoverIx!==tasks.length){
-      const arr=[...tasks];
-      const from = arr.findIndex(t=>t.id===dragId);
-      const [item]=arr.splice(from,1);
-      arr.push(item); setTasks(arr);
-    }
-    setDrag(null); setHover(null);
-  }
+    if(from===ix) { setDrag(null); setHover(null); return; }
+    const arr=[...tasks]; const [item]=arr.splice(from,1); arr.splice(ix,0,item);
+    setTasks(arr); setDrag(null); setHover(null);
+  };
 
-  const startBattle = () => ready && nav('/fighter-select',{ state:{ tasks, breakMinutes:breakM }});
+  const startBattle = () => ready && nav('/fighter-select',{
+    state:{ tasks, breakMinutes:breakM }
+  });
 
-  /* ============================ UI =============================== */
+  /* ============================== RENDER ========================= */
   return (
     <main className="min-h-screen bg-bezel text-white font-arcade flex justify-center py-10 px-4">
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-10 w-full max-w-7xl">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,720px)_300px] gap-10 w-full max-w-7xl">
 
-        {/* -------- LEFT ------------------------------------------ */}
+        {/* -------- LEFT COLUMN ----------------------------------- */}
         <section className="space-y-10">
-
+          {/* title */}
           <h1
             className="text-5xl md:text-6xl tracking-wide text-primary text-center"
-            style={{ textShadow:
-              '-3px 3px 0 #07399D, 3px -3px 0 #FF3A08, 0 0 12px rgba(255,255,255,.35)' }}
+            style={{textShadow:'-3px 3px 0 #07399D, 3px -3px 0 #FF3A08,0 0 12px rgba(255,255,255,.35)'}}
           >
             QUICK&nbsp;BATTLE
           </h1>
 
-          {/* STEP-1 ------------------------------------------------ */}
+          {/* STEP 1 */}
           <div className="bg-crtBlue/40 border-4 border-crtBlue rounded-lg p-6 space-y-4">
             <header className="flex items-center gap-3">
               <span className="w-7 h-7 grid place-content-center bg-primary text-bezel">1</span>
@@ -114,67 +95,60 @@ const QuickBattle: React.FC = () => {
               Each task should be 5-25 minutes. Drag to reorder later.
             </p>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 *:text-sm *:py-[0.55rem] *:border-2 *:border-crtBlue">
               <input
                 ref={inputRef}
-                className="flex-1 bg-bezel border-2 border-crtBlue px-3 py-2 text-sm focus:border-primary outline-none"
+                className="flex-1 bg-bezel px-3 focus:border-primary outline-none"
                 placeholder="Write epic email, fix bug…"
-                value={ title }
+                value={title}
                 onChange={e=>setTitle(e.target.value)}
-                onKeyDown={e=>e.key==='Enter' && addTask()}
+                onKeyDown={e=>e.key==='Enter'&&addTask()}
                 disabled={remain<=0}
               />
-
-              <div className="relative">
-                <select
-                  value={mins}
-                  onChange={e=>setMins(Number(e.target.value))}
-                  className="bg-bezel border-2 border-crtBlue text-sm pl-6 pr-2 py-[0.55rem] focus:border-primary outline-none"
-                  disabled={remain<=0}
-                >
-                  {[5,10,15,20,25].filter(m=>m<=remain).map(m=>
-                    <option key={m}>{m} min</option>
-                  )}
-                </select>
-                <Timer size={14} className="absolute left-1 top-1/2 -translate-y-1/2 text-accent/50"/>
-              </div>
-
+              <select
+                value={mins}
+                onChange={e=>setMins(Number(e.target.value))}
+                className="bg-bezel pl-2 pr-1 focus:border-primary outline-none"
+                disabled={remain<=0}
+              >
+                {[5,10,15,20,25].filter(m=>m<=remain).map(m=>
+                  <option key={m}>{m} min</option>
+                )}
+              </select>
               <button
                 onClick={addTask}
                 disabled={!canAdd}
-                className="flex items-center gap-1 bg-primary text-bezel font-bold px-4 py-2 border-2 border-primary hover:bg-transparent hover:text-primary transition disabled:opacity-40"
+                className="flex items-center gap-1 bg-primary text-bezel font-bold px-4 py-[0.55rem] border-primary hover:bg-transparent hover:text-primary transition disabled:opacity-40"
               >
                 <Plus size={14}/> ADD
               </button>
             </div>
 
             <div className="flex justify-end text-xs items-center gap-1">
-              <Clock size={12}/> {total}/25&nbsp;MIN
+              <Clock size={12}/> {total}/25 MIN
             </div>
 
             <div className="h-2 bg-bezel border border-crtBlue rounded overflow-hidden">
-              <div className={`${barColour} h-full`} style={{ width:`${Math.min(total/25*100,100)}%` }}/>
+              <div className={`${barColour} h-full`} style={{width:`${Math.min(total/25*100,100)}%`}}/>
             </div>
 
             <p className="text-center text-accent text-sm">{status}</p>
           </div>
 
-          {/* STEP-2 ------------------------------------------------ */}
+          {/* STEP 2 */}
           <div className="bg-crtBlue/30 border-4 border-crtBlue rounded-lg p-6 space-y-4">
             <header className="flex items-center gap-3">
               <span className="w-7 h-7 grid place-content-center bg-primary text-bezel">2</span>
               <h2 className="text-primary">CHOOSE BREAK TIME</h2>
             </header>
 
-            <p className="text-sm text-accent/80">
-              Finish early? Your break gets longer!
-            </p>
+            <p className="text-sm text-accent/80">Finish early? Your break gets longer!</p>
 
             <div className="grid grid-cols-6 gap-2">
               {[5,10,15,20,25,30].map(b=>(
                 <button key={b}
                   onClick={()=>setBreak(b)}
-                  className={`px-[0.6rem] py-2 text-sm border-2 rounded-sm transition
+                  className={`px-[0.6rem] border-2 rounded-sm transition
                     ${breakM===b
                       ? 'bg-primary text-bezel border-primary shadow-goldenGlow'
                       : 'border-primary/40 text-primary hover:bg-primary/20'}`}
@@ -189,17 +163,14 @@ const QuickBattle: React.FC = () => {
           <StartBtn ready={ready} total={total} start={startBattle} className="xl:hidden"/>
         </section>
 
-        {/* -------- RIGHT ----------------------------------------- */}
-        <div className="hidden xl:flex flex-col gap-8">
-          <SideArt/>
+        {/* -------- RIGHT COLUMN ---------------------------------- */}
+        <div className="flex flex-col gap-8">
           <Review
             tasks={tasks}
-            hoverIx={hoverIx}
+            hover={hover}
             dragStart={dragStart}
-            dragOver={dragOver}
-            dragLeave={()=>setHover(null)}
-            drop={drop}
-            dropEnd={dropEnd}
+            dragOver={onOver}
+            drop={onDrop}
             del={delTask}
           />
           <StartBtn ready={ready} total={total} start={startBattle}/>
@@ -212,39 +183,33 @@ const QuickBattle: React.FC = () => {
 /* ---------- Review list ----------------------------------------- */
 const Review:React.FC<{
   tasks:Task[];
-  hoverIx:number|null;
+  hover:number|null;
   dragStart:(e:React.DragEvent,id:string)=>void;
   dragOver:(e:React.DragEvent,ix:number)=>void;
-  dragLeave:()=>void;
   drop:(e:React.DragEvent,ix:number)=>void;
-  dropEnd:(e:React.DragEvent)=>void;
   del:(id:string)=>void;
-}> = ({ tasks, hoverIx, dragStart, dragOver, dragLeave, drop, dropEnd, del }) => (
-  <div className="bg-bezel/50 border border-crtBlue/50 rounded-lg p-5 space-y-4 w-[320px]">
-    <header className="text-primary text-lg">3 • REVIEW &amp; ORDER</header>
+}> = ({ tasks, hover, dragStart, dragOver, drop, del }) => (
+  <div className="bg-bezel/50 border border-crtBlue/50 rounded-lg p-5 space-y-4 w-[300px]">
+    <header className="text-primary text-lg whitespace-nowrap">3 • REVIEW & ORDER</header>
 
-    <ul
-      className="space-y-2 max-h-[28rem] overflow-y-auto pr-1"
-      onDragOver={e=>dragOver(e,tasks.length)}   /* container drop-zone */
-      onDrop={dropEnd}
-    >
+    <ul className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
       {tasks.length===0 && (
         <li className="text-xs text-accent/70 text-center">
           Tasks show up here as you add them ↑
         </li>
       )}
+
       {tasks.map((t,i)=>(
         <li key={t.id}
             draggable
             onDragStart={e=>dragStart(e,t.id)}
             onDragOver={e=>dragOver(e,i)}
-            onDragLeave={dragLeave}
             onDrop={e=>drop(e,i)}
+            onDragLeave={e=>e.stopPropagation()}
             className="relative flex items-center gap-2 bg-bezel border border-crtBlue px-3 py-2 rounded-sm cursor-move transition"
         >
-          {/* neon hover indicator */}
-          {hoverIx===i &&
-            <div className="absolute -top-1 left-0 right-0 h-1 bg-neonYel rounded-full animate-pulse"/>}
+          {/* hover bar */}
+          {hover===i && <div className="absolute -top-1 left-0 right-0 h-1 bg-neonYel animate-pulse rounded"/>}
 
           <GripVertical size={14} className="text-crtBlue/60"/>
           <span className="bg-primary text-bezel text-xs px-2 rounded-sm">{i+1}</span>
@@ -255,16 +220,23 @@ const Review:React.FC<{
           </button>
         </li>
       ))}
-      {/* drop indicator after last */}
-      {hoverIx===tasks.length &&
-        <li className="h-1 bg-neonYel rounded-full animate-pulse mx-1"/>}
+
+      {/* ghost row = drop at end */}
+      <li
+        className="h-4"
+        onDragOver={e=>dragOver(e,tasks.length)}
+        onDrop={e=>drop(e,tasks.length)}
+      >
+        {hover===tasks.length &&
+          <div className="h-1 bg-neonYel animate-pulse rounded"/>}
+      </li>
     </ul>
   </div>
 );
 
-/* ---------- Start button --------------------------------------- */
+/* ---------- Start-battle btn ------------------------------------ */
 const StartBtn:React.FC<{ready:boolean;total:number;start:()=>void;className?:string}> =
-({ ready,total,start,className='' }) => (
+({ ready,total,start,className='' })=>(
   <div className={`text-center ${className}`}>
     <button
       onClick={start}
