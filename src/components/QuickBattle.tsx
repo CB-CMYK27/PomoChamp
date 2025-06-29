@@ -42,7 +42,7 @@ const QuickBattle: React.FC = () => {
 function addTask() {
   if (!canAdd) return;
 
-  /** Reset the dropdown FIRST so mins won’t be stale */
+  /** Reset the dropdown FIRST so mins won't be stale */
   setMins(5);
 
   /** Capture the minutes we just had before React re-renders */
@@ -94,7 +94,9 @@ setTimeout(() => inputRef.current?.focus(), 0);
         {/* title */}
         <h1
           className="row-start-1 col-span-2 text-6xl text-primary text-center"
-          style={{textShadow:'-3px 3px 0 #07399D, 3px -3px 0 #FF3A08, 0 0 12px rgba(255,255,255,.35)'}}
+          style={{
+            textShadow: '-3px 3px #07399D, 3px -3px #FF3A08, 0 0 12px rgba(255,255,255,.35)'
+          }}
         >
           QUICK&nbsp;BATTLE
         </h1>
@@ -214,7 +216,7 @@ const Review: React.FC<{
     {/* header */}
     <header className="flex items-center gap-3 whitespace-nowrap">
       <span className="w-7 h-7 grid place-content-center bg-primary text-bezel">3</span>
-      <h3 className="text-primary">REVIEW &amp; ORDER</h3>
+      <h3 className="text-primary">REVIEW & ORDER</h3>
     </header>
 
     <ul className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
@@ -263,7 +265,7 @@ const Review: React.FC<{
         </React.Fragment>
       ))}
 
-      {/* ghost line for “drop below last item” */}
+      {/* ghost line for "drop below last item" */}
       <li
         onDragOver={e => dragOver(e, tasks.length)}
         onDrop={e => drop(e, tasks.length)}
