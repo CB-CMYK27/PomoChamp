@@ -7,7 +7,7 @@ import { Settings } from 'lucide-react';
 import GlovesPNG from '/images/boxing-gloves.png';   // 92×92 transparent
 import TrophyPNG from '/images/trophy-pixel.png';    // 92×92 transparent
 
-/* ───── Generic “steel plate” wrapper ──── */
+/* ───── Generic "steel plate" wrapper ──── */
 const SteelFrame: React.FC<
   React.PropsWithChildren<{ disabled?: boolean; className?: string }>
 > = ({ disabled, className = '', children }) => (
@@ -74,8 +74,8 @@ export default function ModeSelect() {
       <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16">
 
         {/* ---------- QUICK BATTLE ---------- */}
-        <SteelFrame className="w-full md:w-[480px]">
-          <div className="flex flex-col items-center text-center space-y-6">
+        <SteelFrame className="w-full md:w-[480px] h-[400px]">
+          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center">
             <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
 
             <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
@@ -97,25 +97,25 @@ export default function ModeSelect() {
         </SteelFrame>
 
         {/* ---------- TOURNAMENT (disabled) ---------- */}
-        <SteelFrame disabled className="w-full md:w-[480px] relative">
-          <div className="flex flex-col items-center text-center space-y-6">
+        <SteelFrame disabled className="w-full md:w-[480px] h-[400px] relative">
+          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center">
             <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
 
             <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
 
             <p className="text-base leading-relaxed">
               Brain-dump → 4 rounds.<br />
-              Organize &amp; conquer.
+              Organize & conquer.
             </p>
 
-            <div className="px-8 py-3 mt-4 bg-gray-600 rounded font-bold text-black">
+            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative">
               COMING&nbsp;SOON
             </div>
           </div>
 
-          {/* Caution strip overlay */}
+          {/* Caution strip overlay positioned over the button */}
           <div
-            className="absolute left-0 right-0 bottom-20 h-8 opacity-90 pointer-events-none"
+            className="absolute left-0 right-0 bottom-6 h-8 opacity-70 pointer-events-none"
             style={{
               backgroundImage:
                 'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
