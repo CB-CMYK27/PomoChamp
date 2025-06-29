@@ -13,10 +13,10 @@ export default function AttractScreen() {
       className="min-h-screen bg-bezel text-white font-arcade flex flex-col items-center justify-center p-8 relative cursor-pointer select-none"
       onClick={handleStart}
     >
-      {/* Main Title - Made twice as big */}
-      <div className="text-center mb-8">
+      {/* Main Title - Responsive sizing that stretches across screen */}
+      <div className="text-center mb-8 w-full">
         <h1 
-          className="text-primary text-[12rem] font-bold mb-4"
+          className="text-primary text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold mb-4 w-full"
           style={{
             textShadow: '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)'
           }}
