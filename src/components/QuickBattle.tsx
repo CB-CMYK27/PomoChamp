@@ -172,7 +172,8 @@ function addTask() {
           </div>
 
           {/* Start button on mobile */}
-          <Start ready={ready} total={total} launch={launch} className="xl:hidden"/>
+          <Start ready={ready} total={total} launch={launch} className="mt-auto"
+/>
         </section>
 
         {/* RIGHT COLUMN */}
