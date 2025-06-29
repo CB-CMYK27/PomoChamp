@@ -148,6 +148,7 @@ setTimeout(() => inputRef.current?.focus(), 0);
               <Clock size={12}/> {total}/25 MIN
             </div>
            <MinuteMeter minutesFilled={total} />
+            <p className="text-center text-accent text-sm pt-2">{status}</p>
 </div>
 
           {/* STEP 2 */}
