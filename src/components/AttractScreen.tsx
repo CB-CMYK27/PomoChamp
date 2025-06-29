@@ -28,7 +28,7 @@ export default function AttractScreen() {
       {/* Value Proposition - Subtitle on one line */}
       <div className="text-center mb-8 max-w-4xl">
         <h2 
-          className="text-accent text-xl font-bold mb-4 whitespace-nowrap"
+          className="text-accent text-xl font-bold mb-8 whitespace-nowrap"
           style={{
             textShadow: '0 0 10px rgba(255,255,255,0.6), 2px 2px 0px #07399D'
           }}
