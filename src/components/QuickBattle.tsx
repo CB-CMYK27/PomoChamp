@@ -91,8 +91,8 @@ const QuickBattle: React.FC = () => {
   /* ------------------------------------------------------------------ */
 
   return (
-    <main className="min-h-screen bg-bezel text-white font-arcade flex items-start justify-center py-8 px-4">
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-10 w-full max-w-6xl">
+    <main className="min-h-screen bg-bezel text-white font-arcade flex items-center justify-center py-8 px-4 text-center">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-6 items-start w-full max-w-6xl">
 
         {/* ================= LEFT COLUMN ================= */}
         <section className="w-full space-y-8">
