@@ -44,6 +44,16 @@ export default {
         redGlow: '0 0 20px rgba(254, 28, 6, 0.4)', // Red glow
         blueGlow: '0 0 20px rgba(7, 57, 157, 0.4)', // Blue glow
       },
+      // Custom animations
+      keyframes: {
+        'slow-pulse': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' }
+        }
+      },
+      animation: {
+        'slow-pulse': 'slow-pulse 4s ease-in-out infinite'
+      },
       /* ------------------------------------------ */
     },
   },

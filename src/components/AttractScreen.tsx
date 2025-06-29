@@ -44,9 +44,13 @@ export default function AttractScreen() {
         </p>
       </div>
       
-      {/* Insert Coin */}
-      <div className="animate-pulse">
-        <p className="text-primary text-2xl font-bold">INSERT COIN</p>
+      {/* Insert Coin Image - Pulsing slowly */}
+      <div className="animate-slow-pulse">
+        <img 
+          src="/images/ChatGPT Image Jun 29, 2025, 07_19_07 PM.png" 
+          alt="Insert Coin"
+          className="w-48 h-48 object-contain"
+        />
       </div>
     </div>
   );
