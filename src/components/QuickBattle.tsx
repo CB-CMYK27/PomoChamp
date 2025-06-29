@@ -176,7 +176,8 @@ function addTask() {
         </section>
 
         {/* RIGHT COLUMN */}
-        <div className="row-start-2 flex flex-col gap-8">
+        <div className="row-start-2 flex flex-col gap-8 h-full">
+
 
           <Review
             tasks={tasks}
