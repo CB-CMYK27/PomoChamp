@@ -239,14 +239,15 @@ const Review:React.FC<{
 
   {/* delete icon */}
  <button
-  onClick={(e) => {           // NEW
-    e.stopPropagation();       // NEW – stop the drag
-
+  onClick={(e) => {
+    e.stopPropagation();   // keep the drag from triggering
+    del(t.id);             // ← this line actually removes the task
   }}
   className="text-danger hover:text-danger/80"
 >
   <Trash2 size={14} />
 </button>
+
 </li>
 
       ))}
