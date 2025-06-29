@@ -92,7 +92,7 @@ export default function FighterSelect() {
   return (
     <div className="min-h-screen bg-bezel text-neonYel font-arcade py-8 px-6 flex flex-col items-center">
       {/* title */}
-      <h1<br/> className="text-6xl mt-8 mb-12 text-primary text-center"<br/> style={{ textShadow: '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)' }}<br/>><br/> CHOOSE&nbsp;YOUR&nbsp;FIGHTER<br/></h1>
+      <h1<br/> className="text-6xl mt-8 mb-12 text-primary text-center"<br/> style={{ textShadow: '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)' }<br/>><br/> CHOOSE&nbsp;YOUR&nbsp;FIGHTER<br/></h1>
 
       {/* HERO  GRID  |  PREVIEW  |  VILLAIN GRID */}
       <div className="flex justify-center items-start gap-10 flex-wrap">
