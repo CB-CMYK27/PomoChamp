@@ -88,7 +88,7 @@ export default function FighterSelect() {
       </h1>
 
       {/* hero grid – preview – villain grid */}
-      <div className="flex gap-12 flex-wrap justify-center items-start">
+      <div className="flex gap-12 flex-wrap justify-center items-center">
         {/* -- HEROES -- */}
         <div className="flex flex-col items-center">
           <SectionHeader label="HEROES" />
