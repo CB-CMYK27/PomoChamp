@@ -196,82 +196,81 @@ function addTask() {
 };
 
 /* -------- Review list -------- */
-const Review:React.FC<{
-  tasks:Task[];
-  hoverIx:number|null;
-  dragStart:(e:React.DragEvent,id:string)=>void;
-  dragOver:(e:React.DragEvent,ix:number)=>void;
-  drop:(e:React.DragEvent,ix:number)=>void;
-  del:(id:string)=>void;
+const Review: React.FC<{
+  tasks: Task[];
+  hoverIx: number | null;
+  dragStart: (e: React.DragEvent, id: string) => void;
+  dragOver:  (e: React.DragEvent, ix: number) => void;
+  drop:      (e: React.DragEvent, ix: number) => void;
+  del:       (id: string) => void;
 }> = ({ tasks, hoverIx, dragStart, dragOver, drop, del }) => (
   <div className="bg-bezel/50 border-4 border-crtBlue rounded-lg p-5 space-y-4 w-full">
+    {/* header */}
     <header className="flex items-center gap-3 whitespace-nowrap">
       <span className="w-7 h-7 grid place-content-center bg-primary text-bezel">3</span>
-      <h3 className="text-primary">REVIEW & ORDER</h3>
+      <h3 className="text-primary">REVIEW &amp; ORDER</h3>
     </header>
 
     <ul className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
-      {tasks.length===0 && (
+      {tasks.length === 0 && (
         <li className="text-xs text-accent/70 text-center">
           Tasks show up here as you add them ↑
         </li>
       )}
 
-      {tasks.map((t,i)=>(
-        <li
-  key={t.id}
-  draggable
-  /* ----- drag events ----- */
-  onDragStart={e => { dragStart(e, t.id); }}            // start dragging
-  onDragEnter={e => { e.preventDefault(); setHover(i); }}// record hover index
-  onDragOver={e => e.preventDefault()}                  // allow drop
-  onDragLeave={() => setHover(null)}                    // clear when leaving
-  onDrop={e => drop(e, i)}                              // drop handler
-  /* ----- styling (adds yellow outline when hover) ----- */
-  className={
-    `flex items-center gap-2 bg-bezel border border-crtBlue
-     px-3 py-2 rounded-sm cursor-move hover:border-primary transition
-     ${hoverIx === i ? 'border-neonYel shadow-goldenGlow' : ''}`
-  }
->
-  {/* 6-dot handle in YELLOW so it’s obvious */}
-  <GripVertical size={14} className="text-neonYel" />
+      {tasks.map((t, i) => (
+        /* ---------- fragment so we can drop a line *before* each real item ---------- */
+        <React.Fragment key={t.id}>
+          {/* yellow landing line when hovering between items */}
+          {hoverIx === i && (
+            <li className="h-1 bg-neonYel animate-pulse rounded" />
+          )}
 
-  {/* task title (slightly smaller so longer text fits) */}
-  <span className="flex-1 text-sm overflow-hidden line-clamp-2 leading-tight">
-    {t.title}
-  </span>
+          {/* draggable task row */}
+          <li
+            draggable
+            onDragStart={e => dragStart(e, t.id)}
+            onDragOver={e => dragOver(e, i)}
+            onDrop={e => drop(e, i)}
+            className="flex items-center gap-2 bg-bezel border border-crtBlue
+                       px-3 py-2 rounded-sm cursor-move hover:border-primary transition"
+          >
+            {/* six-dot handle (yellow) */}
+            <GripVertical size={14} className="text-primary" />
 
-  {/* minutes */}
-  <span className="text-primary text-sm">{t.estimated}m</span>
+            {/* task title - truncate to 2 lines */}
+            <span className="flex-1 overflow-hidden line-clamp-2 leading-tight text-sm">
+              {t.title}
+            </span>
 
-  {/* trash icon (still stops drag) */}
-  <button
-    onClick={e => { e.stopPropagation(); del(t.id); }}
-    className="text-danger hover:text-danger/80"
-  >
-    <Trash2 size={14} />
-  </button>
-</li>
+            {/* minutes */}
+            <span className="text-primary text-sm">{t.estimated}m</span>
 
-
+            {/* delete */}
+            <button
+              onClick={e => { e.stopPropagation(); del(t.id); }}
+              className="text-danger hover:text-danger/80"
+            >
+              <Trash2 size={14} />
+            </button>
+          </li>
+        </React.Fragment>
       ))}
 
-      {/* drop-after-last ghost slot */}
-<li
-  onDragEnter={e => { e.preventDefault(); setHover(tasks.length); }}
-  onDragOver={e => e.preventDefault()}
-  onDrop={e => drop(e, tasks.length)}
-  className="h-4"
->
-  {hoverIx === tasks.length && (
-    <div className="h-1 bg-neonYel animate-pulse rounded" />
-  )}
-</li>
-
+      {/* ghost line for “drop below last item” */}
+      <li
+        onDragOver={e => dragOver(e, tasks.length)}
+        onDrop={e => drop(e, tasks.length)}
+        className="h-4"
+      >
+        {hoverIx === tasks.length && (
+          <div className="h-1 bg-neonYel animate-pulse rounded" />
+        )}
+      </li>
     </ul>
   </div>
 );
+
 
 /* -------- Start button -------- */
 const Start:React.FC<{ready:boolean;total:number;launch:()=>void;className?:string}> =
