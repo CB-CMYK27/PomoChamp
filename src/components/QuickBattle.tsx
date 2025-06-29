@@ -154,11 +154,8 @@ setTimeout(() => inputRef.current?.focus(), 0);
             <div className="flex justify-end items-center gap-1 text-xs">
               <Clock size={12}/> {total}/25 MIN
             </div>
-            <div className="h-2 bg-bezel border border-crtBlue rounded overflow-hidden">
-              <div className={`${barColour} h-full`} style={{width:`${Math.min(total/25*100,100)}%`}}/>
-            </div>
-            <p className="text-center text-accent text-sm">{status}</p>
-          </div>
+           <MinuteMeter minutesFilled={total} />
+
 
           {/* STEP 2 */}
           <div className="bg-crtBlue/30 border-4 border-crtBlue rounded-lg p-6 space-y-4">
