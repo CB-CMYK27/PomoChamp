@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
-   PomoChamp :: QUICK-BATTLE (v2.1 – alignment, drag-fix, tidy UI)
+   PomoChamp :: QUICK-BATTLE  v2.2  (wider column, right-panel alignment)
    ------------------------------------------------------------------ */
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -72,30 +72,32 @@ const QuickBattle: React.FC = () => {
   /* ============================== RENDER ========================= */
   return (
     <main className="min-h-screen bg-bezel text-white font-arcade flex justify-center py-10 px-4">
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,720px)_300px] gap-10 w-full max-w-7xl">
+      {/* 2-row grid: title (row1 col-span-2)  |  content (row2) */}
+      <div className="grid grid-rows-[auto_1fr] grid-cols-[minmax(0,770px)_300px] gap-x-12 gap-y-10 w-full max-w-7xl">
 
-        {/* -------- LEFT COLUMN ----------------------------------- */}
-        <section className="space-y-10">
-          {/* title */}
-          <h1
-            className="text-5xl md:text-6xl tracking-wide text-primary text-center"
-            style={{textShadow:'-3px 3px 0 #07399D, 3px -3px 0 #FF3A08,0 0 12px rgba(255,255,255,.35)'}}
-          >
-            QUICK&nbsp;BATTLE
-          </h1>
+        {/* -------- TITLE (row 1, col-span 2) -------------------- */}
+        <h1
+          className="row-start-1 col-span-2 text-5xl md:text-6xl tracking-wide text-primary text-center"
+          style={{textShadow:'-3px 3px 0 #07399D, 3px -3px 0 #FF3A08,0 0 12px rgba(255,255,255,.35)'}}
+        >
+          QUICK&nbsp;BATTLE
+        </h1>
+
+        {/* -------- LEFT COLUMN (row 2, col 1) ------------------ */}
+        <section className="row-start-2 space-y-10">
 
           {/* STEP 1 */}
           <div className="bg-crtBlue/40 border-4 border-crtBlue rounded-lg p-6 space-y-4">
             <header className="flex items-center gap-3">
               <span className="w-7 h-7 grid place-content-center bg-primary text-bezel">1</span>
-              <h2 className="text-primary">ADD TASKS (25 MIN MAX)</h2>
+              <h2 className="text-primary whitespace-nowrap">ADD TASKS (25 MIN MAX)</h2>
             </header>
 
             <p className="text-sm text-accent/80">
               Each task should be 5-25 minutes. Drag to reorder later.
             </p>
 
-            <div className="flex gap-3 *:text-sm *:py-[0.55rem] *:border-2 *:border-crtBlue">
+            <div className="flex gap-3 items-stretch *:text-sm *:border-2 *:border-crtBlue">
               <input
                 ref={inputRef}
                 className="flex-1 bg-bezel px-3 focus:border-primary outline-none"
@@ -108,7 +110,7 @@ const QuickBattle: React.FC = () => {
               <select
                 value={mins}
                 onChange={e=>setMins(Number(e.target.value))}
-                className="bg-bezel pl-2 pr-1 focus:border-primary outline-none"
+                className="w-[6rem] bg-bezel pl-2 pr-1 focus:border-primary outline-none"
                 disabled={remain<=0}
               >
                 {[5,10,15,20,25].filter(m=>m<=remain).map(m=>
@@ -118,14 +120,14 @@ const QuickBattle: React.FC = () => {
               <button
                 onClick={addTask}
                 disabled={!canAdd}
-                className="flex items-center gap-1 bg-primary text-bezel font-bold px-4 py-[0.55rem] border-primary hover:bg-transparent hover:text-primary transition disabled:opacity-40"
+                className="flex items-center gap-1 bg-primary text-bezel font-bold px-5 border-primary hover:bg-transparent hover:text-primary transition disabled:opacity-40"
               >
                 <Plus size={14}/> ADD
               </button>
             </div>
 
             <div className="flex justify-end text-xs items-center gap-1">
-              <Clock size={12}/> {total}/25 MIN
+              <Clock size={12}/> {total}/25&nbsp;MIN
             </div>
 
             <div className="h-2 bg-bezel border border-crtBlue rounded overflow-hidden">
@@ -139,7 +141,7 @@ const QuickBattle: React.FC = () => {
           <div className="bg-crtBlue/30 border-4 border-crtBlue rounded-lg p-6 space-y-4">
             <header className="flex items-center gap-3">
               <span className="w-7 h-7 grid place-content-center bg-primary text-bezel">2</span>
-              <h2 className="text-primary">CHOOSE BREAK TIME</h2>
+              <h2 className="text-primary whitespace-nowrap">CHOOSE BREAK TIME</h2>
             </header>
 
             <p className="text-sm text-accent/80">Finish early? Your break gets longer!</p>
@@ -148,7 +150,7 @@ const QuickBattle: React.FC = () => {
               {[5,10,15,20,25,30].map(b=>(
                 <button key={b}
                   onClick={()=>setBreak(b)}
-                  className={`px-[0.6rem] border-2 rounded-sm transition
+                  className={`px-[0.55rem] border-2 rounded-sm transition
                     ${breakM===b
                       ? 'bg-primary text-bezel border-primary shadow-goldenGlow'
                       : 'border-primary/40 text-primary hover:bg-primary/20'}`}
@@ -163,8 +165,8 @@ const QuickBattle: React.FC = () => {
           <StartBtn ready={ready} total={total} start={startBattle} className="xl:hidden"/>
         </section>
 
-        {/* -------- RIGHT COLUMN ---------------------------------- */}
-        <div className="flex flex-col gap-8">
+        {/* -------- RIGHT COLUMN (row 2, col 2) ----------------- */}
+        <div className="row-start-2 flex flex-col gap-8">
           <Review
             tasks={tasks}
             hover={hover}
@@ -190,7 +192,7 @@ const Review:React.FC<{
   del:(id:string)=>void;
 }> = ({ tasks, hover, dragStart, dragOver, drop, del }) => (
   <div className="bg-bezel/50 border border-crtBlue/50 rounded-lg p-5 space-y-4 w-[300px]">
-    <header className="text-primary text-lg whitespace-nowrap">3 • REVIEW & ORDER</header>
+    <header className="text-primary text-lg whitespace-nowrap">3 • REVIEW&nbsp;&nbsp;&amp;&nbsp;ORDER</header>
 
     <ul className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
       {tasks.length===0 && (
