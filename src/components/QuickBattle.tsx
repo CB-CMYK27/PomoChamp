@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';    
-import { Plus, Trash2, Clock, Zap, Target } from 'lucide-react';
+import { Plus, Trash2, Clock, GripVertical } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -15,7 +15,8 @@ const QuickBattle: React.FC = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskMinutes, setNewTaskMinutes] = useState(25);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [breakDuration, setBreakDuration] = useState(5); // Default to 5 minutes
+  const [breakDuration, setBreakDuration] = useState(5);
+  const [draggedTask, setDraggedTask] = useState<string | null>(null);
   
   const taskInputRef = useRef<HTMLInputElement>(null);
 
@@ -60,201 +61,219 @@ const QuickBattle: React.FC = () => {
   const handleStartBattle = () => {
     if (!canStartBattle) return;
     
-    // Convert tasks to the format expected by Fight Screen
     const formattedTasks = tasks.map(task => ({
       id: task.id,
-      name: task.title,                    // Convert 'title' to 'name'
-      estimatedTime: task.estimated_minutes,  // Convert 'estimated_minutes' to 'estimatedTime'
+      name: task.title,
+      estimatedTime: task.estimated_minutes,
       completed: false
     }));
     
     navigate('/fighter-select', {
       state: { 
         tasks: formattedTasks,
-        breakDuration: breakDuration  // Pass break duration to next screen
+        breakDuration: breakDuration
       }
     });
   };
 
+  // Drag and drop functions
+  const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    setDraggedTask(taskId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (!draggedTask) return;
+
+    const dragIndex = tasks.findIndex(task => task.id === draggedTask);
+    if (dragIndex === dropIndex) return;
+
+    const newTasks = [...tasks];
+    const [draggedItem] = newTasks.splice(dragIndex, 1);
+    newTasks.splice(dropIndex, 0, draggedItem);
+    
+    setTasks(newTasks);
+    setDraggedTask(null);
+  };
+
   const getStatusColor = () => {
-    if (totalMinutes === 0) return 'text-white/60';
-    if (isOptimal) return 'text-neonYel';
-    if (totalMinutes > 25) return 'text-neonRed';
-    if (totalMinutes < 20) return 'text-crtBlue';
-    return 'text-neonYel';
+    if (totalMinutes === 0) return 'text-accent';
+    if (isOptimal) return 'text-primary';
+    if (totalMinutes > 25) return 'text-danger';
+    if (totalMinutes < 20) return 'text-secondary';
+    return 'text-primary';
   };
 
   const getStatusMessage = () => {
-    if (totalMinutes === 0) return 'ADD TASKS TO BEGIN';
-    if (totalMinutes > 25) return 'OVER LIMIT!';
-    if (isOptimal) return 'BATTLE READY!';
-    if (totalMinutes < 20) return `NEED ${20 - totalMinutes}MIN MORE`;
-    return 'BATTLE READY!';
+    if (totalMinutes === 0) return 'ADD YOUR FIRST TASK';
+    if (totalMinutes > 25) return 'TOO MUCH! REMOVE SOME TASKS';
+    if (isOptimal) return 'PERFECT! READY TO BATTLE';
+    if (totalMinutes < 20) return `NEED ${20 - totalMinutes} MORE MINUTES`;
+    return 'READY TO BATTLE!';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-crtBlue to-gray-900 p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-nearBlack text-white font-mono p-6">
+      <div className="max-w-2xl mx-auto space-y-6">
         
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="font-mono text-xl md:text-2xl text-neonYel font-bold">
-            ⚡ QUICK BATTLE
+        {/* Main Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-primary text-3xl font-bold mb-2" style={{ fontFamily: 'monospace' }}>
+            ⚡ QUICK BATTLE SETUP
           </h1>
-          <div className="bg-black/50 rounded-lg px-4 py-2 border-2 border-neonYel flex items-center gap-2">
-            <Clock size={16} className="text-neonYel" />
-            <span className="font-mono text-sm text-neonYel font-bold">
-              {totalMinutes}/25 MIN
-            </span>
+          <div className="flex items-center justify-center gap-4 text-accent">
+            <Clock size={16} />
+            <span className="font-bold">{totalMinutes}/25 MINUTES</span>
           </div>
         </div>
 
-        {/* Task Input */}
-        <div className="bg-black/30 rounded-lg p-4 border border-crtBlue mb-6">
-          <div className="flex gap-3">
-            <input
-              ref={taskInputRef}
-              type="text"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="What needs to get done in this battle?"
-              className="flex-1 bg-black/50 border border-crtBlue rounded px-3 py-2 text-white font-mono text-sm focus:border-neonYel focus:outline-none"
-              maxLength={50}
-              disabled={!canAddTask}
-            />
-            <select
-              value={newTaskMinutes}
-              onChange={(e) => setNewTaskMinutes(Number(e.target.value))}
-              className="bg-black/50 border border-crtBlue rounded px-3 py-2 text-white font-mono text-sm focus:border-neonYel focus:outline-none"
-              disabled={!canAddTask}
-            >
-              {[5, 10, 15, 20, 25].filter(minutes => minutes <= remainingMinutes).map(minutes => (
-                <option key={minutes} value={minutes}>{minutes}min</option>
-              ))}
-            </select>
-            <button
-              onClick={handleAddTask}
-              disabled={!newTaskTitle.trim() || !canAddTask}
-              className="bg-neonYel text-black px-4 py-2 rounded font-mono text-sm font-bold hover:bg-neonYel/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-            >
-              <Plus size={14} />
-              ADD
-            </button>
+        {/* PHASE 1: ADD TASKS */}
+        <div className="bg-gradient-to-r from-secondary/20 to-secondary/10 border-2 border-secondary rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-secondary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">1</div>
+            <h2 className="text-secondary font-bold text-lg">ADD YOUR TASKS</h2>
           </div>
           
-          {/* Progress Bar */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-xs text-white/60">BATTLE PREPARATION</span>
-              <span className={`font-mono text-xs font-bold ${getStatusColor()}`}>
-                {getStatusMessage()}
-              </span>
-            </div>
-            <div className="w-full bg-black/50 rounded-full h-2 border border-white/20">
-              <div 
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  totalMinutes > 25 ? 'bg-neonRed' :
-                  isOptimal ? 'bg-neonYel' :
-                  totalMinutes >= 20 ? 'bg-neonYel' :
-                  'bg-crtBlue'
-                }`}
-                style={{ width: `${Math.min((totalMinutes / 25) * 100, 100)}%` }}
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <input
+                ref={taskInputRef}
+                type="text"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="What do you need to get done?"
+                className="flex-1 bg-nearBlack border-2 border-secondary rounded px-4 py-3 text-white focus:border-primary focus:outline-none"
+                maxLength={50}
+                disabled={!canAddTask}
               />
+              <select
+                value={newTaskMinutes}
+                onChange={(e) => setNewTaskMinutes(Number(e.target.value))}
+                className="bg-nearBlack border-2 border-secondary rounded px-3 py-3 text-white focus:border-primary focus:outline-none"
+                disabled={!canAddTask}
+              >
+                {[5, 10, 15, 20, 25].filter(minutes => minutes <= remainingMinutes).map(minutes => (
+                  <option key={minutes} value={minutes}>{minutes}min</option>
+                ))}
+              </select>
+              <button
+                onClick={handleAddTask}
+                disabled={!newTaskTitle.trim() || !canAddTask}
+                className="bg-primary text-nearBlack px-6 py-3 rounded font-bold hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Plus size={16} />
+                ADD
+              </button>
+            </div>
+            
+            {/* Status Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-white/60 text-sm">BATTLE READINESS:</span>
+                <span className={`text-sm font-bold ${getStatusColor()}`}>
+                  {getStatusMessage()}
+                </span>
+              </div>
+              <div className="w-full bg-nearBlack border border-secondary rounded-full h-3">
+                <div 
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    totalMinutes > 25 ? 'bg-danger' :
+                    isOptimal ? 'bg-primary' :
+                    totalMinutes >= 20 ? 'bg-primary' :
+                    'bg-secondary'
+                  }`}
+                  style={{ width: `${Math.min((totalMinutes / 25) * 100, 100)}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Break Duration Selection */}
-        <div className="bg-black/30 rounded-lg p-4 border border-crtBlue mb-6">
-          <h3 className="text-crtBlue/80 font-mono text-sm font-bold mb-3 flex items-center gap-2">
-            🏖️ CHOOSE YOUR BREAK LENGTH:
-          </h3>
-          <div className="grid grid-cols-3 gap-2">
+        {/* PHASE 2: CHOOSE BREAK TIME */}
+        <div className="bg-gradient-to-r from-orangeYellow/20 to-orangeYellow/10 border-2 border-orangeYellow rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-orangeYellow text-nearBlack rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">2</div>
+            <h2 className="text-orangeYellow font-bold text-lg">CHOOSE BREAK TIME</h2>
+          </div>
+          
+          <div className="grid grid-cols-6 gap-3">
             {[5, 10, 15, 20, 25, 30].map(duration => (
               <button
                 key={duration}
                 onClick={() => setBreakDuration(duration)}
-                className={`p-2 border-2 font-mono text-sm transition-colors rounded ${
+                className={`p-3 border-2 font-bold rounded transition-all ${
                   breakDuration === duration
-                    ? 'bg-crtBlue border-crtBlue/80 text-white'
-                    : 'bg-gray-700 border-gray-500 text-gray-300 hover:border-crtBlue'
+                    ? 'bg-orangeYellow border-orangeYellow text-nearBlack'
+                    : 'bg-nearBlack border-orangeYellow/50 text-orangeYellow hover:border-orangeYellow'
                 }`}
               >
-                {duration} min
+                {duration}m
               </button>
             ))}
           </div>
-          <div className="mt-2 text-xs text-crtBlue/80 font-mono">
-            💡 Your break will start automatically after completing all tasks
-          </div>
         </div>
 
-        {/* Task List */}
-        <div className="bg-black/30 rounded-lg border border-crtBlue mb-6">
-          <div className="p-4 border-b border-crtBlue/50">
-            <h2 className="font-mono text-sm text-neonYel font-bold flex items-center gap-2">
-              <Target size={16} />
-              BATTLE TASKS ({tasks.length})
-            </h2>
+        {/* PHASE 3: REVIEW & REORDER TASKS */}
+        <div className="bg-gradient-to-r from-primary/20 to-primary/10 border-2 border-primary rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-primary text-nearBlack rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">3</div>
+            <h2 className="text-primary font-bold text-lg">REVIEW & REORDER TASKS</h2>
           </div>
           
-          <div className="p-4">
-            {tasks.length === 0 ? (
-              <div className="text-white/60 text-center py-8 font-mono text-sm">
-                NO TASKS YET - WHAT WILL YOU BATTLE?
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="bg-black/40 rounded px-3 py-2 flex items-center justify-between border border-white/20"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-white text-sm font-mono truncate max-w-[300px]">
-                        {task.title}
-                      </span>
-                      <span className="text-neonYel text-xs font-bold">
-                        {task.estimated_minutes}min
-                      </span>
-                    </div>
-                    
-                    <button
-                      onClick={() => deleteTask(task.id)}
-                      className="text-neonRed hover:text-neonRed/80 text-xs opacity-60 hover:opacity-100 transition-all px-2 py-1 rounded hover:bg-neonRed/20"
-                      title="Delete task"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+          {tasks.length === 0 ? (
+            <div className="text-center py-8 text-white/60">
+              No tasks added yet. Add some tasks above to continue.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {tasks.map((task, index) => (
+                <div
+                  key={task.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task.id)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className="bg-nearBlack border border-primary/50 rounded p-3 flex items-center gap-3 hover:border-primary cursor-move transition-all"
+                >
+                  <GripVertical size={16} className="text-primary/60" />
+                  <div className="bg-primary text-nearBlack rounded px-2 py-1 text-xs font-bold min-w-[24px] text-center">
+                    {index + 1}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <div className="flex-1 text-white">{task.title}</div>
+                  <div className="text-primary font-bold text-sm">{task.estimated_minutes}min</div>
+                  <button
+                    onClick={() => deleteTask(task.id)}
+                    className="text-danger hover:text-danger/80 p-1 hover:bg-danger/20 rounded"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Start Battle Button */}
-        <div className="flex justify-center">
+        {/* START BATTLE BUTTON */}
+        <div className="text-center pt-4">
           <button
             onClick={handleStartBattle}
             disabled={!canStartBattle}
-            className={`font-mono text-lg px-8 py-4 rounded-lg border-2 transition-all font-bold ${
+            className={`font-bold text-xl px-8 py-4 rounded-lg border-2 transition-all ${
               canStartBattle
-                ? isOptimal
-                  ? 'bg-neonYel border-neonYel text-black hover:bg-neonYel/80 shadow-lg shadow-neonYel/20'
-                  : 'bg-neonYel border-neonYel text-black hover:bg-neonYel/80'
-                : 'border-white/30 text-white/30 cursor-not-allowed'
+                ? 'bg-primary border-primary text-nearBlack hover:bg-accent hover:border-accent shadow-goldenGlow'
+                : 'border-white/30 text-white/30 cursor-not-allowed bg-nearBlack'
             }`}
           >
-            {!canStartBattle ? `NEED ${25 - totalMinutes}MIN MORE TO START` : 
-             'CHOOSE YOUR FIGHTER!'}
+            {!canStartBattle ? `NEED ${25 - totalMinutes} MORE MINUTES` : 
+             '⚔️ CHOOSE YOUR FIGHTER!'}
           </button>
-        </div>
-
-        {/* Helper Text */}
-        <div className="text-center mt-4 text-white/60 text-sm font-mono">
-          💡 Add tasks totaling 25 minutes for optimal battle experience
         </div>
       </div>
     </div>
