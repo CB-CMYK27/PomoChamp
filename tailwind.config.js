@@ -29,7 +29,7 @@ export default {
         accent: '#FFE56A',        // Light yellow
         danger: '#FE1C06',        // Pure red
         warning: '#FF7300',       // Deep orange
-        success: '#FFC300',       // Golden yellow
+        success: '#2ecc40',       // Arcade green
         
         // Legacy aliases (keeping for compatibility)
         bezel: '#0D0D0F',
