@@ -1,7 +1,6 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
-import { supabase, createOrFetchUserProfile } from './services/supabase';   // adjust the path if your supabaseClient.ts lives elsewhere
-import { signInAsGuest } from './guestAuth';
+import React, { useEffect, useState } from 'react';
+import { supabase, createOrFetchUserProfile } from '../services/supabase';
+import { signInAsGuest } from '../guestAuth';
 
 /**
  * Wrap your entire app with <GuestGate> in main.tsx.

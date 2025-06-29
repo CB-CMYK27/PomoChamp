@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';          // keep global styles
 
 import App from './App';       // your main app component
-import GuestGate from './GuestGate';  // ⬅️ the file you just created
+import GuestGate from './components/GuestGate';  // ⬅️ updated path
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

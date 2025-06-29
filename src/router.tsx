@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import AttractScreen from './AttractScreen';
-import ModeSelect from './ModeSelect';
+import AttractScreen from './components/AttractScreen';
+import ModeSelect from './components/ModeSelect';
 import BrainDump from './components/BrainDump';
 import QuickBattle from './components/QuickBattle';
 import FighterSelect from './components/FighterSelect';
