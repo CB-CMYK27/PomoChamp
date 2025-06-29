@@ -30,7 +30,7 @@ export default function AttractScreen() {
         <h2 
           className="text-accent text-xl font-bold mb-4 whitespace-nowrap"
           style={{
-            textShadow: '0 0 8px rgba(255,255,255,0.3), 2px 2px 4px rgba(0,0,0,0.8)'
+            textShadow: '0 0 10px rgba(255,255,255,0.6), 2px 2px 0px #07399D'
           }}
         >
           THE POMODORO TIMER THAT DOESN'T SUCK
