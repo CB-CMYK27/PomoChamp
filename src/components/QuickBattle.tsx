@@ -116,7 +116,7 @@ setTimeout(() => inputRef.current?.focus(), 0);
             </header>
 
             <p className="text-sm text-accent/80">
-              Each task should be 5-25 minutes. Drag to reorder in step 3.
+              Tasks should be 5-25 minutes. Drag to reorder in step 3.
             </p>
 
             <div className="flex gap-3 items-stretch w-full">
