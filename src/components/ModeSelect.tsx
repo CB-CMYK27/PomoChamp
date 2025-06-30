@@ -125,9 +125,10 @@ export default function ModeSelect() {
         {/* ---------- TOURNAMENT (disabled button but full color) ---------- */}
         <SteelFrame className="w-full md:w-[640px] h-[480px]">
           <div className="relative flex flex-col items-center text-center h-full">
-            {/* Image container with fixed height - center the image */}
-            <div className="h-[200px] flex items-center justify-center">
+            {/* Image container - add top padding to align with larger gloves */}
+            <div className="h-[200px] flex items-center justify-center pt-6">
               <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" />
+            </div>-28" />
             </div>
 
             {/* Title */}
