@@ -14,33 +14,49 @@ const SteelFrame: React.FC<
   <div
     className={`relative p-6 ${className}`}
     style={{
-      background: '#0D0D0F',                // black inner screen
-      border: '10px solid #4a5568',         // dark grey outer border
+      background: '#4a5568',                // dark grey outer border
       boxShadow:
         'inset 0 0 4px #000, 0 0 6px rgba(255,255,255,.3)', // bevel
     }}
   >
-    {/* 8 rivets (small circles) */}
-    {[
-      'top-0 left-0',
-      'top-0 left-1/2 -translate-x-1/2',
-      'top-0 right-0',
-      'middle left-0',
-      'middle right-0',
-      'bottom-0 left-0',
-      'bottom-0 left-1/2 -translate-x-1/2',
-      'bottom-0 right-0',
-    ].map((pos, i) => (
-      <span
-        key={i}
-        className={`absolute ${pos.replace('middle', 'top-1/2 -translate-y-1/2')}
-                    w-3 h-3 bg-gray-700 rounded-full
-                    shadow-[inset_0_1px_1px_#fff4,0_0_3px_#0009]`}
-      />
-    ))}
+    {/* Inner lighter grey border with rivets */}
+    <div 
+      className="relative w-full h-full"
+      style={{
+        background: '#a0aec0',              // lighter grey inner border
+        border: '4px solid #4a5568'         // dark grey border for "screwed" effect
+      }}
+    >
+      {/* 8 rivets (small circles) positioned on the lighter grey frame */}
+      {[
+        'top-0 left-0',
+        'top-0 left-1/2 -translate-x-1/2',
+        'top-0 right-0',
+        'middle left-0',
+        'middle right-0',
+        'bottom-0 left-0',
+        'bottom-0 left-1/2 -translate-x-1/2',
+        'bottom-0 right-0',
+      ].map((pos, i) => (
+        <span
+          key={i}
+          className={`absolute ${pos.replace('middle', 'top-1/2 -translate-y-1/2')}
+                      w-3 h-3 bg-gray-700 rounded-full
+                      shadow-[inset_0_1px_1px_#fff4,0_0_3px_#0009]`}
+        />
+      ))}
 
-    {/* content */}
-    <div className={`${disabled ? 'opacity-60' : ''}`}>{children}</div>
+      {/* Black card content area */}
+      <div 
+        className="w-full h-full p-4"
+        style={{
+          background: '#0D0D0F'              // black inner screen
+        }}
+      >
+        {/* content */}
+        <div className={`h-full ${disabled ? 'opacity-60' : ''}`}>{children}</div>
+      </div>
+    </div>
   </div>
 );
 
@@ -70,67 +86,59 @@ export default function ModeSelect() {
         </button>
       </header>
 
-      {/* 👇 NEW wrapper that fills the remaining height and centres its children */}
-      <div className="flex-1 flex flex-col justify-center">
-        {/* ─────────── Cards ─────────── */}
-        <div className="flex flex-col md:flex-row gap-12 items-stretch justify-center pb-16 px-8">
+      {/* ─────────── Cards ─────────── */}
+      <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16">
 
-          {/* ---------- QUICK BATTLE ---------- */}
-          <SteelFrame className="w-full md:flex-1 max-w-xl h-[400px]">
-            <div className="flex flex-col items-center text-center space-y-6 h-full pt-4 pb-16">
-              <div className="flex flex-col items-center space-y-6">
-                <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
+        {/* ---------- QUICK BATTLE ---------- */}
+        <SteelFrame className="w-full md:w-[480px] h-[400px]">
+          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
+            <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
 
-                <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
+            <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
 
-                <p className="text-base leading-relaxed">
-                  1 session<br />
-                  25 minutes<br />
-                  No excuses
-                </p>
-              </div>
+            <p className="text-base leading-relaxed">
+              1&nbsp;session<br />
+              25&nbsp;minutes<br />
+              No&nbsp;excuses
+            </p>
 
-              <button
-                onClick={() => nav('/quick-battle')}
-                className="mt-auto bg-gradient-to-r from-orange-600 to-red-600
-                           hover:to-red-500 px-10 py-3 text-lg rounded font-bold
-                           tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
-              >
-                FIGHT!
-              </button>
+            <button
+              onClick={() => nav('/quick-battle')}
+              className="bg-gradient-to-r from-orange-600 to-red-600
+                         hover:to-red-500 px-10 py-3 text-lg rounded font-bold
+                         tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
+            >
+              FIGHT!
+            </button>
+          </div>
+        </SteelFrame>
+
+        {/* ---------- TOURNAMENT (disabled) ---------- */}
+        <SteelFrame disabled className="w-full md:w-[480px] h-[400px] relative">
+          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
+            <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
+
+            <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
+
+            <p className="text-base leading-relaxed">
+              Brain-dump&nbsp;→&nbsp;4&nbsp;rounds.<br />
+              Organize&nbsp;&&nbsp;conquer.
+            </p>
+
+            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative">
+              COMING&nbsp;SOON
             </div>
-          </SteelFrame>
+          </div>
 
-          {/* ---------- TOURNAMENT (visually enabled but functionally disabled) ---------- */}
-          <SteelFrame className="w-full md:flex-1 max-w-xl h-[400px] relative">
-            <div className="flex flex-col items-center text-center space-y-6 h-full pt-4 pb-16">
-              <div className="flex flex-col items-center space-y-6">
-                <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
-
-                <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
-
-                <p className="text-base leading-relaxed">
-                  4 sessions<br />
-                  2 hours<br />
-                  No mercy
-                </p>
-              </div>
-
-              <div className="mt-auto px-10 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed text-lg tracking-wider">
-                COMING&nbsp;SOON
-              </div>
-            </div>
-
-            {/* Caution strip overlay positioned over the button */}
-            <div
-              className="absolute left-0 right-0 bottom-6 h-8 opacity-70 pointer-events-none"
-              style={{
-                backgroundImage:
-                  'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
-              }}
-            />
-          </SteelFrame>
-        </div>
+          {/* Caution strip overlay positioned over the button */}
+          <div
+            className="absolute left-0 right-0 bottom-6 h-8 opacity-70 pointer-events-none"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
+            }}
+          />
+        </SteelFrame>
       </div>
     </div>
   );
