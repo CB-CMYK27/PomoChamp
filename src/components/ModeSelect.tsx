@@ -12,7 +12,7 @@ const SteelFrame: React.FC<
   React.PropsWithChildren<{ disabled?: boolean; className?: string }>
 > = ({ disabled, className = '', children }) => (
   <div
-    className={`relative p-4 ${className}`} // Reduced from p-6 to p-4 for more content space
+    className={`relative p-4 ${className}`} {/* Reduced from p-6 to p-4 for more content space */}
     style={{
       background: '#4a5568',                // dark grey outer border
       boxShadow:
@@ -27,16 +27,16 @@ const SteelFrame: React.FC<
         border: '2px solid #4a5568'         // reduced border to show more light grey
       }}
     >
-      {/* 8 rivets (small circles) positioned with spacing from frame edges */}
+      {/* 8 rivets (small circles) positioned ON the light grey frame */}
       {[
-        'top-2 left-2',                              // moved in from edges
-        'top-2 left-1/2 -translate-x-1/2',          // top center
-        'top-2 right-2',                             // moved in from edges
-        'middle left-2',                             // moved in from edge
-        'middle right-2',                            // moved in from edge
-        'bottom-2 left-2',                           // moved in from edges
-        'bottom-2 left-1/2 -translate-x-1/2',       // bottom center
-        'bottom-2 right-2',                          // moved in from edges
+        'top-3 left-3',                              // positioned on light grey frame
+        'top-3 left-1/2 -translate-x-1/2',          // top center on frame
+        'top-3 right-3',                             // positioned on light grey frame
+        'top-1/2 -translate-y-1/2 left-3',          // middle left on frame
+        'top-1/2 -translate-y-1/2 right-3',         // middle right on frame
+        'bottom-3 left-3',                           // positioned on light grey frame
+        'bottom-3 left-1/2 -translate-x-1/2',       // bottom center on frame
+        'bottom-3 right-3',                          // positioned on light grey frame
       ].map((pos, i) => (
         <span
           key={i}
@@ -48,7 +48,7 @@ const SteelFrame: React.FC<
 
       {/* Black card content area */}
       <div 
-        className="w-full h-full p-6" // Increased from p-4 to p-6 for more content padding
+        className="w-full h-full p-6" {/* Increased from p-4 to p-6 for more content padding */}
         style={{
           background: '#0D0D0F'              // black inner screen
         }}
@@ -91,7 +91,7 @@ export default function ModeSelect() {
 
         {/* ---------- QUICK BATTLE ---------- */}
         <SteelFrame className="w-full md:w-[520px] h-[450px]"> {/* Made larger */}
-          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> // Increased space-y and reduced pb
+          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8"> {/* Adjusted spacing to prevent overlap */}
             <img src={GlovesPNG} alt="Crossed gloves" className="w-28 h-28" /> {/* Made larger */}
 
             <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
@@ -106,8 +106,7 @@ export default function ModeSelect() {
               onClick={() => nav('/quick-battle')}
               className="bg-gradient-to-r from-orange-600 to-red-600
                          hover:to-red-500 px-10 py-3 text-lg rounded font-bold
-                         tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]
-                         mt-2" // Added top margin to move away from text
+                         tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
             >
               FIGHT!
             </button>
@@ -116,7 +115,7 @@ export default function ModeSelect() {
 
         {/* ---------- TOURNAMENT (disabled) ---------- */}
         <SteelFrame disabled className="w-full md:w-[520px] h-[450px] relative"> {/* Made larger */}
-          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> // Increased space-y and reduced pb
+          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8"> {/* Adjusted spacing to prevent overlap */}
             <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" /> {/* Made larger */}
 
             <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
@@ -126,14 +125,14 @@ export default function ModeSelect() {
               Organize&nbsp;&&nbsp;conquer.
             </p>
 
-            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative mt-2"> // Added top margin
+            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative">
               COMING&nbsp;SOON
             </div>
           </div>
 
           {/* Caution strip overlay positioned over the button area */}
           <div
-            className="absolute left-0 right-0 bottom-8 h-8 opacity-70 pointer-events-none" // Moved up from bottom-6 to bottom-8
+            className="absolute left-0 right-0 bottom-8 h-8 opacity-70 pointer-events-none" {/* Moved up from bottom-6 to bottom-8 */}
             style={{
               backgroundImage:
                 'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
