@@ -1326,7 +1326,7 @@ console.log('❌ Background image failed to load:', session.stage);
     {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') && (
       <div className="bg-black bg-opacity-80 p-3 text-center border-t-2 border-cyan-400">
         <div className="text-neonYel font-mono text-sm">
-          Click anywhere to start audio • Complete tasks to deal damage • Don't let task timers run out!
+          Complete tasks to deal damage • Don't let task timers run out!
         </div>
         <div className="text-cyan-400 font-mono text-xs mt-1">
           Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | 
