@@ -45,6 +45,7 @@ class AudioManager {
   private bgmBuffer: AudioBuffer | null = null;
   private currentBGMPath: string | null = null;
   private bgmBufferCache: Map<string, AudioBuffer> = new Map();
+  private bgmLoading: boolean = false; // NEW: Loading guard
   
   constructor() {
     this.setupSoundTimings();
@@ -456,16 +457,26 @@ class AudioManager {
     
     const track = trackPath || audioStore.currentBGM;
     
+    // NEW: Check if BGM is already loading
+    if (this.bgmLoading) {
+      console.log('🔄 [BGM] BGM is already loading, skipping duplicate request');
+      return;
+    }
+    
     // Don't restart if the same track is already playing
     if (this.currentBGMPath === track && this.currentBGMSource) {
       console.log(`🎵 [BGM] Track already playing: ${track}`);
       return;
     }
     
-    // Stop current BGM if playing
-    this.stopBGM();
+    // NEW: Set loading flag and current path immediately
+    this.bgmLoading = true;
+    this.currentBGMPath = track;
     
     try {
+      // Stop current BGM if playing
+      this.stopBGM();
+      
       // Initialize audio context if needed
       if (!this.audioContext) {
         await this.initializeAudioContext();
@@ -491,9 +502,6 @@ class AudioManager {
       this.currentBGMSource.loop = true; // Enable seamless looping
       this.currentBGMSource.connect(this.bgmGainNode);
       
-      // Store current track path
-      this.currentBGMPath = track;
-      
       // Start playback
       this.currentBGMSource.start(0);
       
@@ -512,6 +520,9 @@ class AudioManager {
       this.currentBGMSource = null;
       this.bgmGainNode = null;
       this.currentBGMPath = null;
+    } finally {
+      // NEW: Always clear loading flag in finally block
+      this.bgmLoading = false;
     }
   }
   
