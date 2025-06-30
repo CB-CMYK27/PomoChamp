@@ -53,8 +53,8 @@ const SteelFrame: React.FC<
           background: '#0D0D0F'              // black inner screen
         }}
       >
-        {/* content */}
-        <div className={`h-full ${disabled ? 'opacity-60' : ''}`}>{children}</div>
+        {/* content - removed opacity dimming */}
+        <div className="h-full">{children}</div>
       </div>
     </div>
   </div>
@@ -97,9 +97,9 @@ export default function ModeSelect() {
             <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
 
             <p className="text-base leading-relaxed">
-              1&nbsp;session<br />
-              25&nbsp;minutes<br />
-              No&nbsp;excuses
+              4&nbsp;sessions<br />
+              2&nbsp;hours<br />
+              No&nbsp;mercy
             </p>
 
             <button
@@ -113,8 +113,8 @@ export default function ModeSelect() {
           </div>
         </SteelFrame>
 
-        {/* ---------- TOURNAMENT (disabled) ---------- */}
-        <SteelFrame disabled className="w-full md:w-[520px] h-[450px] relative">
+        {/* ---------- TOURNAMENT (disabled button but full color) ---------- */}
+        <SteelFrame className="w-full md:w-[520px] h-[450px] relative">
           <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
             <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" />
 
@@ -125,7 +125,7 @@ export default function ModeSelect() {
               Organize&nbsp;&&nbsp;conquer.
             </p>
 
-            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative">
+            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed">
               COMING&nbsp;SOON
             </div>
           </div>
