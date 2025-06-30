@@ -7,7 +7,7 @@ import { Plus, Trash2, GripVertical, Clock } from 'lucide-react';
 import MinuteMeter from './MinuteMeter';
 
 
-interface Task { id: string; title: string; estimated: number; }
+interface Task { id: string; title: string; estimatedTime: number; }
 
 const QuickBattle: React.FC = () => {
   const nav = useNavigate();
@@ -24,7 +24,7 @@ const QuickBattle: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   /* -------------- derived -------------- */
-  const total  = tasks.reduce((s,t)=>s+t.estimated,0);
+  const total  = tasks.reduce((s,t)=>s+t.estimatedTime,0);
   const remain = 25 - total;
   const ready  = total === 25;
   const canAdd = title.trim() !== '' && remain > 0;
@@ -51,7 +51,7 @@ function addTask() {
   const newTask: Task = {
     id: crypto.randomUUID(),
     title: title.trim(),
-    estimated: minutes
+    estimatedTime: minutes
   };
 
   setTasks(prev => [...prev, newTask]);
@@ -252,7 +252,7 @@ const Review: React.FC<{
             </span>
 
             {/* minutes */}
-            <span className="text-primary text-sm">{t.estimated}m</span>
+            <span className="text-primary text-sm">{t.estimatedTime}m</span>
 
             {/* delete */}
             <button

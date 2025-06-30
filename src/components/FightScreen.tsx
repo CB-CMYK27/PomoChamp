@@ -27,7 +27,7 @@ interface Fighter {
 
 interface Task {
   id: string;
-  name: string;
+  title: string;
   estimatedTime: number;
   completed: boolean;
 }
@@ -376,7 +376,7 @@ const FightScreen: React.FC = () => {
             for (let i = 0; i < session.tasks.length; i++) {
               const task = session.tasks[i];
               const dbTask = await addTaskToSession({
-                title: task.name,
+                title: task.title,
                 estimated_minutes: task.estimatedTime,
                 user_id: currentUser.user_id,
                 session_id: sessionData.session_id,
@@ -1058,7 +1058,7 @@ const FightScreen: React.FC = () => {
                                 isFailed ? 'text-neonRed line-through' :
                                 'text-white'
                               }`}>
-                                {task.name}
+                                {task.title}
                                 {isFailed && ' (FAILED)'}
                               </div>
                               
