@@ -213,7 +213,6 @@ const lastTickRef = useRef<number>(Date.now()); // Track last tick time for accu
 const { 
   registerTogglePause, 
   clearFightScreenData, 
-  setFightScreenTimeRemaining, 
   setFightScreenGameState 
 } = useGameStore();
 
@@ -380,9 +379,8 @@ clearFightScreenData();
 
 // Update game store with current fight screen state
 useEffect(() => {
-setFightScreenTimeRemaining(session.timeRemaining);
 setFightScreenGameState(session.gameState);
-}, [session.timeRemaining, session.gameState, setFightScreenTimeRemaining, setFightScreenGameState]);
+}, [session.gameState, setFightScreenGameState]);
 
 // Break screen callback functions
 const handleBreakComplete = () => {
@@ -1082,6 +1080,21 @@ console.log('❌ Background image failed to load:', session.stage);
   
   {/* Main content */}
   <div className="relative min-h-screen flex flex-col" style={{ zIndex: 2 }}>
+    
+    {/* Session Timer - Centered at top */}
+    {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') && (
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30">
+        <div className={`bg-black/80 border-4 border-neonYel rounded-lg px-6 py-3 ${
+          session.timeRemaining < 300 ? 'animate-pulse' : ''
+        }`}>
+          <div className={`font-mono text-6xl font-bold text-center ${
+            session.timeRemaining < 300 ? 'text-neonRed' : 'text-neonYel'
+          }`}>
+            {formatTime(session.timeRemaining)}
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* Combat area */}
     <div className="flex-1 flex items-center justify-between px-8 py-8"

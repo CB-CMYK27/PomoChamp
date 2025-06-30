@@ -21,7 +21,6 @@ const HamburgerMenu: React.FC = () => {
   } = useAudioStore();
   
   const {
-    fightScreenTimeRemaining,
     fightScreenGameState,
     triggerTogglePause
   } = useGameStore();
@@ -29,7 +28,7 @@ const HamburgerMenu: React.FC = () => {
   // Check if alerts are enabled (both warning and event sounds)
   const alertsEnabled = warningEnabled && eventEnabled;
   
-  // Check if we're in a fight screen state that should show timer/pause
+  // Check if we're in a fight screen state that should show pause button
   const showFightControls = fightScreenGameState && 
     ['fighting', 'paused', 'victory', 'defeat', 'draw'].includes(fightScreenGameState);
   
@@ -69,14 +68,6 @@ const HamburgerMenu: React.FC = () => {
     triggerTogglePause();
   };
   
-  // Format time display
-  const formatTime = (seconds: number) => {
-    const roundedSeconds = Math.round(seconds);
-    const mins = Math.floor(roundedSeconds / 60);
-    const secs = roundedSeconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-  
   // Don't show "Main Screen" button on the attract screen
   const showMainScreenButton = location.pathname !== '/';
   
@@ -111,21 +102,8 @@ const HamburgerMenu: React.FC = () => {
   
   return (
     <div className="fixed top-4 right-4 z-50" ref={menuRef}>
-      {/* Fight Controls Container - Timer and Pause Button */}
+      {/* Fight Controls Container - Pause Button */}
       <div className="flex items-center gap-3 mb-3">
-        {/* Session Timer - only show during fight */}
-        {showFightControls && (
-          <div className={`bg-black/80 border-2 border-neonYel rounded-lg px-4 py-2 ${
-            fightScreenTimeRemaining < 300 ? 'animate-pulse' : ''
-          }`}>
-            <div className={`font-mono text-3xl font-bold ${
-              fightScreenTimeRemaining < 300 ? 'text-neonRed' : 'text-neonYel'
-            }`}>
-              {formatTime(fightScreenTimeRemaining)}
-            </div>
-          </div>
-        )}
-        
         {/* Pause/Resume Button - only show during fight */}
         {showFightControls && (
           <button

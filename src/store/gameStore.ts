@@ -2,11 +2,9 @@ import { create } from 'zustand';
 
 interface GameState {
   fighterId: string | null;
-  fightScreenTimeRemaining: number;
   fightScreenGameState: string;
   _togglePauseFunction: (() => void) | null;
   setFighter: (id: string) => void;
-  setFightScreenTimeRemaining: (time: number) => void;
   setFightScreenGameState: (state: string) => void;
   registerTogglePause: (toggleFn: () => void) => void;
   triggerTogglePause: () => void;
@@ -15,13 +13,10 @@ interface GameState {
 
 export const useGameStore = create<GameState>((set, get) => ({
   fighterId: null,
-  fightScreenTimeRemaining: 0,
   fightScreenGameState: '',
   _togglePauseFunction: null,
   
   setFighter: (id) => set({ fighterId: id }),
-  
-  setFightScreenTimeRemaining: (time) => set({ fightScreenTimeRemaining: time }),
   
   setFightScreenGameState: (state) => set({ fightScreenGameState: state }),
   
@@ -35,7 +30,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   
   clearFightScreenData: () => set({ 
-    fightScreenTimeRemaining: 0, 
     fightScreenGameState: '', 
     _togglePauseFunction: null 
   })
