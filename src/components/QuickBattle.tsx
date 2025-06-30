@@ -116,7 +116,7 @@ setTimeout(() => inputRef.current?.focus(), 0);
             </header>
 
             <p className="text-sm text-accent/80">
-              Tasks should be 5-25 minutes. Drag to reorder in step 3. Estimate how long each task should take to prevent time blindness and don't forget to complete them during your fight to damage your opponent.
+              Tasks should be 5-25 minutes. Drag to reorder in step 3. Estimate how long each task should take to prevent time blindness.
               
             </p>
 
