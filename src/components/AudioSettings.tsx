@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAudioStore } from '../store/audioStore';
 import { audioManager } from '../utils/audioManager';
 import { Volume2, VolumeX, Music, Zap, AlertTriangle, ArrowLeft, RotateCcw, Play, Square } from 'lucide-react';
+import SpinalTapModal from './SpinalTapModal';
 
 /* ───── Steel Frame Component (copied from ModeSelect.tsx) ──── */
 const SteelFrame: React.FC<
@@ -60,6 +61,7 @@ const SteelFrame: React.FC<
 const AudioSettings: React.FC = () => {
   const navigate = useNavigate();
   const [testSoundPath, setTestSoundPath] = useState('/sfx/timer-warning');
+  const [showSpinalTapModal, setShowSpinalTapModal] = useState(false);
   
   const {
     masterVolume,
@@ -184,209 +186,223 @@ const AudioSettings: React.FC = () => {
     if (!musicEnabled) toggleMusic();
     if (!warningEnabled) toggleWarning();
     if (!eventEnabled) toggleEvent();
+    
+    // Show the modal
+    setShowSpinalTapModal(true);
+  };
+
+  const handleCloseSpinalTapModal = () => {
+    setShowSpinalTapModal(false);
   };
 
   return (
-    <div className="min-h-screen bg-bezel font-arcade text-white flex justify-center py-10 px-8 lg:px-14">
-      <div className="w-full max-w-6xl space-y-10">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="bg-crtBlue hover:bg-crtBlue/80 text-white p-2 rounded-lg border-2 border-crtBlue/80 transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <h1 
-              className="text-primary text-xl md:text-2xl font-bold"
-              style={{
-                textShadow: '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)'
-              }}
-            >
-              🔊 AUDIO SETTINGS
-            </h1>
-          </div>
+    <>
+      <div className="min-h-screen bg-bezel font-arcade text-white flex justify-center py-10 px-8 lg:px-14">
+        <div className="w-full max-w-6xl space-y-10">
           
-          <button
-            onClick={resetToDefaults}
-            className="bg-neonRed hover:bg-neonRed/80 text-white px-4 py-2 rounded-lg border-2 border-neonRed/80 font-arcade text-sm font-bold transition-colors flex items-center gap-2"
-          >
-            <RotateCcw size={16} />
-            RESET
-          </button>
-        </div>
-
-        {/* Master Volume Section */}
-        <SteelFrame>
-          <div className="space-y-4">
-            <h2 className="text-primary font-arcade text-lg font-bold mb-4">MASTER CONTROLS</h2>
-            <VolumeSlider
-              label="MASTER VOLUME"
-              icon={<Volume2 size={20} className="text-neonYel" />}
-              value={masterVolume}
-              enabled={true}
-              onChange={setMasterVolume}
-              onToggle={() => {}} // Master volume can't be disabled
-              color="border-neonYel"
-            />
-          </div>
-        </SteelFrame>
-
-        {/* Sound Categories Section */}
-        <SteelFrame>
-          <div className="space-y-4">
-            <h2 className="text-primary font-arcade text-lg font-bold mb-4">SOUND CATEGORIES</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
-              <VolumeSlider
-                label="SOUND EFFECTS"
-                icon={<Zap size={20} className={sfxEnabled ? 'text-crtBlue' : 'text-gray-500'} />}
-                value={sfxVolume}
-                enabled={sfxEnabled}
-                onChange={setSfxVolume}
-                onToggle={toggleSfx}
-                color="border-crtBlue"
-              />
-              
-              <VolumeSlider
-                label="BACKGROUND MUSIC"
-                icon={<Music size={20} className={musicEnabled ? 'text-green-400' : 'text-gray-500'} />}
-                value={musicVolume}
-                enabled={musicEnabled}
-                onChange={setMusicVolume}
-                onToggle={toggleMusic}
-                color="border-green-400"
-              />
-              
-              <div className="md:col-span-2">
-                <VolumeSlider
-                  label="ALERTS"
-                  icon={<AlertTriangle size={20} className={alertsEnabled ? 'text-orange-400' : 'text-gray-500'} />}
-                  value={warningVolume}
-                  enabled={alertsEnabled}
-                  onChange={handleAlertsVolumeChange}
-                  onToggle={toggleAlerts}
-                  color="border-orange-400"
-                />
-              </div>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="bg-crtBlue hover:bg-crtBlue/80 text-white p-2 rounded-lg border-2 border-crtBlue/80 transition-colors"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <h1 
+                className="text-primary text-xl md:text-2xl font-bold"
+                style={{
+                  textShadow: '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)'
+                }}
+              >
+                🔊 AUDIO SETTINGS
+              </h1>
             </div>
+            
+            <button
+              onClick={resetToDefaults}
+              className="bg-neonRed hover:bg-neonRed/80 text-white px-4 py-2 rounded-lg border-2 border-neonRed/80 font-arcade text-sm font-bold transition-colors flex items-center gap-2"
+            >
+              <RotateCcw size={16} />
+              RESET
+            </button>
           </div>
-        </SteelFrame>
 
-        {/* Background Music Selection Section */}
-        <SteelFrame>
-          <div className="space-y-4">
-            <h2 className="text-primary font-arcade text-lg font-bold mb-4">BACKGROUND MUSIC</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {availableBGM.map((track) => (
-                <button
-                  key={track}
-                  onClick={() => setBGM(track)}
-                  className={`p-3 rounded-lg border-2 font-arcade text-sm font-bold transition-colors ${
-                    currentBGM === track
-                      ? 'bg-green-400 text-black border-green-400'
-                      : 'bg-bezel/50 text-white border-gray-500 hover:border-green-400'
-                  }`}
-                >
-                  {getBGMDisplayName(track)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </SteelFrame>
-
-        {/* Development Test Section - Only visible in development */}
-        {import.meta.env.DEV && (
+          {/* Master Volume Section */}
           <SteelFrame>
             <div className="space-y-4">
-              <h2 className="text-neonRed font-arcade text-lg font-bold mb-4">🧪 DEVELOPMENT TESTING</h2>
-              <div className="mb-4">
-                <label className="block text-white font-arcade text-sm font-bold mb-2">
-                  Test Sound Base Path (without extension):
-                </label>
-                <input
-                  type="text"
-                  value={testSoundPath}
-                  onChange={(e) => setTestSoundPath(e.target.value)}
-                  placeholder="/sfx/timer-warning"
-                  className="w-full bg-bezel border-2 border-crtBlue rounded px-3 py-2 text-white font-mono text-sm focus:border-neonYel focus:outline-none"
-                />
-                <div className="text-gray-400 font-mono text-xs mt-1">
-                  Examples: /sfx/timer-warning, /sfx/player-punch, /sfx/round-victory, /sfx/fighters/jack-tower/grunt
-                </div>
-              </div>
-              
-              <div className="flex gap-3">
-                <button
-                  onClick={handlePlayTestSound}
-                  className="bg-neonRed hover:bg-neonRed/80 text-white px-4 py-2 rounded-lg border-2 border-neonRed/80 font-arcade text-sm font-bold transition-colors flex items-center gap-2"
-                >
-                  <Play size={16} />
-                  PLAY TEST SOUND
-                </button>
+              <h2 className="text-primary font-arcade text-lg font-bold mb-4">MASTER CONTROLS</h2>
+              <VolumeSlider
+                label="MASTER VOLUME"
+                icon={<Volume2 size={20} className="text-neonYel" />}
+                value={masterVolume}
+                enabled={true}
+                onChange={setMasterVolume}
+                onToggle={() => {}} // Master volume can't be disabled
+                color="border-neonYel"
+              />
+            </div>
+          </SteelFrame>
+
+          {/* Sound Categories Section */}
+          <SteelFrame>
+            <div className="space-y-4">
+              <h2 className="text-primary font-arcade text-lg font-bold mb-4">SOUND CATEGORIES</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
-                <button
-                  onClick={handleStopAllSounds}
-                  className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg border-2 border-gray-400 font-arcade text-sm font-bold transition-colors flex items-center gap-2"
-                >
-                  <Square size={16} />
-                  STOP ALL SFX
-                </button>
-              </div>
-              
-              <div className="mt-3 text-neonYel font-arcade text-xs">
-                ⚠️ This section is only visible in development mode<br/>
-                🎵 Audio system automatically detects .flac, .wav, .ogg, .mp3 extensions
+                <VolumeSlider
+                  label="SOUND EFFECTS"
+                  icon={<Zap size={20} className={sfxEnabled ? 'text-crtBlue' : 'text-gray-500'} />}
+                  value={sfxVolume}
+                  enabled={sfxEnabled}
+                  onChange={setSfxVolume}
+                  onToggle={toggleSfx}
+                  color="border-crtBlue"
+                />
+                
+                <VolumeSlider
+                  label="BACKGROUND MUSIC"
+                  icon={<Music size={20} className={musicEnabled ? 'text-green-400' : 'text-gray-500'} />}
+                  value={musicVolume}
+                  enabled={musicEnabled}
+                  onChange={setMusicVolume}
+                  onToggle={toggleMusic}
+                  color="border-green-400"
+                />
+                
+                <div className="md:col-span-2">
+                  <VolumeSlider
+                    label="ALERTS"
+                    icon={<AlertTriangle size={20} className={alertsEnabled ? 'text-orange-400' : 'text-gray-500'} />}
+                    value={warningVolume}
+                    enabled={alertsEnabled}
+                    onChange={handleAlertsVolumeChange}
+                    onToggle={toggleAlerts}
+                    color="border-orange-400"
+                  />
+                </div>
               </div>
             </div>
           </SteelFrame>
-        )}
 
-        {/* Audio Info Section */}
-        <SteelFrame>
-          <div className="space-y-4">
-            <h3 className="text-white font-arcade text-sm font-bold mb-2">AUDIO SYSTEM INFO</h3>
-            <div className="text-gray-400 font-mono text-xs space-y-1">
-              <div>• Flexible audio format support (.flac, .wav, .ogg, .mp3)</div>
-              <div>• Character-specific punch and grunt sounds with fallbacks</div>
-              <div>• Dynamic volume mixing and timing controls</div>
-              <div>• Settings automatically saved to browser storage</div>
-              <div>• Sound timing prevents audio overlap and clashing</div>
-              <div>• Volume goes to 11 (because it's one louder)</div>
-              {import.meta.env.DEV && (
-                <div className="text-neonRed">• Development test tools enabled</div>
-              )}
+          {/* Background Music Selection Section */}
+          <SteelFrame>
+            <div className="space-y-4">
+              <h2 className="text-primary font-arcade text-lg font-bold mb-4">BACKGROUND MUSIC</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {availableBGM.map((track) => (
+                  <button
+                    key={track}
+                    onClick={() => setBGM(track)}
+                    className={`p-3 rounded-lg border-2 font-arcade text-sm font-bold transition-colors ${
+                      currentBGM === track
+                        ? 'bg-green-400 text-black border-green-400'
+                        : 'bg-bezel/50 text-white border-gray-500 hover:border-green-400'
+                    }`}
+                  >
+                    {getBGMDisplayName(track)}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </SteelFrame>
+          </SteelFrame>
 
-        {/* Spinal Tap Easter Egg */}
-        <div className="text-center">
-          <img 
-            src="/images/spinal-tap.png" 
-            alt="Spinal Tap Easter Egg"
-            onClick={handleSpinalTapClick}
-            className="mx-auto cursor-pointer hover:scale-105 transition-transform duration-200 max-w-xs opacity-80 hover:opacity-100"
-            title="These go to eleven..."
-          />
-        </div>
+          {/* Development Test Section - Only visible in development */}
+          {import.meta.env.DEV && (
+            <SteelFrame>
+              <div className="space-y-4">
+                <h2 className="text-neonRed font-arcade text-lg font-bold mb-4">🧪 DEVELOPMENT TESTING</h2>
+                <div className="mb-4">
+                  <label className="block text-white font-arcade text-sm font-bold mb-2">
+                    Test Sound Base Path (without extension):
+                  </label>
+                  <input
+                    type="text"
+                    value={testSoundPath}
+                    onChange={(e) => setTestSoundPath(e.target.value)}
+                    placeholder="/sfx/timer-warning"
+                    className="w-full bg-bezel border-2 border-crtBlue rounded px-3 py-2 text-white font-mono text-sm focus:border-neonYel focus:outline-none"
+                  />
+                  <div className="text-gray-400 font-mono text-xs mt-1">
+                    Examples: /sfx/timer-warning, /sfx/player-punch, /sfx/round-victory, /sfx/fighters/jack-tower/grunt
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={handlePlayTestSound}
+                    className="bg-neonRed hover:bg-neonRed/80 text-white px-4 py-2 rounded-lg border-2 border-neonRed/80 font-arcade text-sm font-bold transition-colors flex items-center gap-2"
+                  >
+                    <Play size={16} />
+                    PLAY TEST SOUND
+                  </button>
+                  
+                  <button
+                    onClick={handleStopAllSounds}
+                    className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg border-2 border-gray-400 font-arcade text-sm font-bold transition-colors flex items-center gap-2"
+                  >
+                    <Square size={16} />
+                    STOP ALL SFX
+                  </button>
+                </div>
+                
+                <div className="mt-3 text-neonYel font-arcade text-xs">
+                  ⚠️ This section is only visible in development mode<br/>
+                  🎵 Audio system automatically detects .flac, .wav, .ogg, .mp3 extensions
+                </div>
+              </div>
+            </SteelFrame>
+          )}
 
-        {/* Test Sounds Section */}
-        <div className="text-center">
-          <div className="text-gray-400 font-arcade text-sm mb-4">
-            💡 Start a battle to test your audio settings!
+          {/* Audio Info Section */}
+          <SteelFrame>
+            <div className="space-y-4">
+              <h3 className="text-white font-arcade text-sm font-bold mb-2">AUDIO SYSTEM INFO</h3>
+              <div className="text-gray-400 font-mono text-xs space-y-1">
+                <div>• Flexible audio format support (.flac, .wav, .ogg, .mp3)</div>
+                <div>• Character-specific punch and grunt sounds with fallbacks</div>
+                <div>• Dynamic volume mixing and timing controls</div>
+                <div>• Settings automatically saved to browser storage</div>
+                <div>• Sound timing prevents audio overlap and clashing</div>
+                <div>• Volume goes to 11 (because it's one louder)</div>
+                {import.meta.env.DEV && (
+                  <div className="text-neonRed">• Development test tools enabled</div>
+                )}
+              </div>
+            </div>
+          </SteelFrame>
+
+          {/* Spinal Tap Easter Egg */}
+          <div className="text-center">
+            <img 
+              src="/images/spinal-tap.png" 
+              alt="Spinal Tap Easter Egg"
+              onClick={handleSpinalTapClick}
+              className="mx-auto cursor-pointer hover:scale-105 transition-transform duration-200 max-w-xs opacity-80 hover:opacity-100"
+              title="These go to eleven..."
+            />
           </div>
-          <button
-            onClick={() => navigate('/quick-battle')}
-            className="bg-neonYel text-black px-6 py-3 rounded-lg font-arcade text-lg font-bold hover:bg-neonYel/80 transition-colors border-2 border-neonYel"
-          >
-            START QUICK BATTLE
-          </button>
+
+          {/* Test Sounds Section */}
+          <div className="text-center">
+            <div className="text-gray-400 font-arcade text-sm mb-4">
+              💡 Start a battle to test your audio settings!
+            </div>
+            <button
+              onClick={() => navigate('/quick-battle')}
+              className="bg-neonYel text-black px-6 py-3 rounded-lg font-arcade text-lg font-bold hover:bg-neonYel/80 transition-colors border-2 border-neonYel"
+            >
+              START QUICK BATTLE
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Spinal Tap Modal */}
+      {showSpinalTapModal && (
+        <SpinalTapModal onClose={handleCloseSpinalTapModal} />
+      )}
+    </>
   );
 };
 
