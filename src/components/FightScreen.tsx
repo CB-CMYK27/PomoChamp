@@ -99,6 +99,56 @@ const AVAILABLE_STAGES = [
 'army-base.webp'
 ];
 
+// Helper function to get opponent - moved outside component
+const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
+if (!playerFighter) return null;
+
+if (mode === 'quick-battle') {
+  const counterpartId = COUNTERPARTS[playerFighter.id];
+  const counterpart = fighters.find((f: any) => f.id === counterpartId);
+  return counterpart || null;
+} else {
+  const availableOpponents = fighters.filter((f: any) => f.id !== playerFighter.id);
+  const opponentIndex = (round - 1) % availableOpponents.length;
+  return availableOpponents[opponentIndex] || null;
+}
+};
+
+// Helper function to get stage - moved outside component
+const getStage = (playerFighter: Fighter, mode: string, round: number): string => {
+if (!playerFighter) return 'construction-floor.webp';
+
+if (mode === 'quick-battle' || round === 1) {
+  const stageMapping: { [key: string]: string } = {
+    // Heroes
+    'jack-tower': 'construction-floor.webp',
+    'ellen-ryker': 'cargo-hold.webp',
+    'raging-stallion': 'boxing-ring.webp',
+    'beach-belle': 'lifeguard-deck.webp',
+    'bond-sterling': 'casino-terrace.webp',
+    'waves-mcrad': 'coastal-skatepark.webp',
+    
+    // Villains
+    'prof-kruber': 'rooftop.webp',
+    'queen-chroma': 'alien-hive.webp',
+    'iron-titan': 'moscow-ring.webp',
+    'dr-whiskers': 'volcano-lair.webp',
+    'jawsome': 'ocean-shallows.webp',
+    'gen-buzzkill': 'army-base.webp'
+  };
+  
+  const mappedStage = stageMapping[playerFighter.id];
+  if (mappedStage && AVAILABLE_STAGES.includes(mappedStage)) {
+    return mappedStage;
+  }
+  
+  return 'construction-floor.webp';
+} else {
+  const stageIndex = (round - 1) % AVAILABLE_STAGES.length;
+  return AVAILABLE_STAGES[stageIndex];
+}
+};
+
 /* ───────── Speech bubble (pixel-art, grows outward) ───────── */
 
 type BubbleSide = 'left' | 'right';
@@ -331,56 +381,13 @@ setOpponentAnimation(prev => ({ ...prev, isHit: false, redGlow: false }));
 }, 300); // 300ms hit animation
 };
 
-// Helper function to get opponent
-const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
-if (!playerFighter) return null;
-
-if (mode === 'quick-battle') {
-  const counterpartId = COUNTERPARTS[playerFighter.id];
-  const counterpart = fighters.find((f: any) => f.id === counterpartId);
-  return counterpart || null;
-} else {
-  const availableOpponents = fighters.filter((f: any) => f.id !== playerFighter.id);
-  const opponentIndex = (round - 1) % availableOpponents.length;
-  return availableOpponents[opponentIndex] || null;
-}
-
-};
-
-// Helper function to get stage - UPDATED WITH CORRECT MAPPINGS
-const getStage = (playerFighter: Fighter, mode: string, round: number): string => {
-if (!playerFighter) return 'construction-floor.webp';
-
-if (mode === 'quick-battle' || round === 1) {
-  const stageMapping: { [key: string]: string } = {
-    // Heroes
-    'jack-tower': 'construction-floor.webp',
-    'ellen-ryker': 'cargo-hold.webp',
-    'raging-stallion': 'boxing-ring.webp',
-    'beach-belle': 'lifeguard-deck.webp',
-    'bond-sterling': 'casino-terrace.webp',
-    'waves-mcrad': 'coastal-skatepark.webp',
-    
-    // Villains
-    'prof-kruber': 'rooftop.webp',
-    'queen-chroma': 'alien-hive.webp',
-    'iron-titan': 'moscow-ring.webp',
-    'dr-whiskers': 'volcano-lair.webp',
-    'jawsome': 'ocean-shallows.webp',
-    'gen-buzzkill': 'army-base.webp'
-  };
-  
-  const mappedStage = stageMapping[playerFighter.id];
-  if (mappedStage && AVAILABLE_STAGES.includes(mappedStage)) {
-    return mappedStage;
-  }
-  
-  return 'construction-floor.webp';
-} else {
-  const stageIndex = (round - 1) % AVAILABLE_STAGES.length;
-  return AVAILABLE_STAGES[stageIndex];
-}
-
+const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
+return tasks.map((task, index) => ({
+taskId: task.id,
+estimatedTime: task.estimatedTime,
+timeRemaining: task.estimatedTime * 60, // Convert to seconds (integer)
+status: index === 0 ? 'active' : 'pending'
+}));
 };
 
 // FIXED: Set break duration from location state on component mount
@@ -427,15 +434,6 @@ setShowBreakScreen(true);
 }
 
 }, [session.gameState]);
-
-const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
-return tasks.map((task, index) => ({
-taskId: task.id,
-estimatedTime: task.estimatedTime,
-timeRemaining: task.estimatedTime * 60, // Convert to seconds (integer)
-status: index === 0 ? 'active' : 'pending'
-}));
-};
 
 // Load current user on component mount
 useEffect(() => {
