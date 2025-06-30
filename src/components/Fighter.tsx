@@ -65,11 +65,6 @@ const Fighter: React.FC<FighterProps> = ({
           }}
         />
       </div>
-      
-      {/* Name tag */}
-      <div className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-4 py-1 bg-gray-800 text-white font-bold rounded-lg border-2 border-neonYel`}>
-        {name}
-      </div>
     </div>
   );
 };
