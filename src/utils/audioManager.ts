@@ -566,10 +566,17 @@ class AudioManager {
     };
     
     this.playSfx(soundMap[eventType], undefined, true, () => {
-      // Restart BGM after event sound (after 1 second)
-      setTimeout(() => {
-        this.playBGM();
-      }, 1000);
+      // FIXED: Check if music is enabled before restarting BGM
+      const currentAudioStore = useAudioStore.getState();
+      if (currentAudioStore.musicEnabled) {
+        console.log('🎵 [EVENT] Music is enabled, restarting BGM after event sound');
+        // Restart BGM after event sound (after 1 second)
+        setTimeout(() => {
+          this.playBGM();
+        }, 1000);
+      } else {
+        console.log('🔇 [EVENT] Music is disabled, not restarting BGM after event sound');
+      }
     });
   }
   
