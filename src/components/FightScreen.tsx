@@ -27,7 +27,7 @@ stageBg: string;
 
 interface Task {
 id: string;
-name: string;
+title: string;
 estimatedTime: number;
 completed: boolean;
 }
@@ -389,7 +389,7 @@ setIsInitializingSession(true);
         for (let i = 0; i < session.tasks.length; i++) {
           const task = session.tasks[i];
           const dbTask = await addTaskToSession({
-            title: task.name,
+            title: task.title,
             estimated_minutes: task.estimatedTime,
             user_id: currentUser.user_id,
             session_id: sessionData.session_id,
@@ -1095,7 +1095,7 @@ console.log('❌ Background image failed to load:', session.stage);
                             isFailed ? 'text-neonRed line-through' :
                             'text-white'
                           }`}>
-                            {task.name}
+                            {task.title}
                             {isFailed && ' (FAILED)'}
                           </div>
                           
