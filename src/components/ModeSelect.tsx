@@ -84,6 +84,7 @@ export default function ModeSelect() {
                 <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
 
                 <p className="text-base leading-relaxed">
+                  1 session<br />
                   25 minutes<br />
                   No excuses
                 </p>
