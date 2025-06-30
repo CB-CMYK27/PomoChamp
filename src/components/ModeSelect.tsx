@@ -126,7 +126,7 @@ export default function ModeSelect() {
               Organize&nbsp;&&nbsp;conquer.
             </p>
 
-            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative mt-2"> // Added top margin
+            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative mt-2"> 
               COMING&nbsp;SOON
             </div>
           </div>
