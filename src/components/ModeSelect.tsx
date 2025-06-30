@@ -14,7 +14,7 @@ const SteelFrame: React.FC<
   <div
     className={`relative p-6 ${className}`}
     style={{
-      background: '#a0aec0',                // light grey inner frame
+      background: '#0D0D0F',                // black inner screen
       border: '10px solid #4a5568',         // dark grey outer border
       boxShadow:
         'inset 0 0 4px #000, 0 0 6px rgba(255,255,255,.3)', // bevel
