@@ -76,8 +76,8 @@ export default function ModeSelect() {
         <div className="flex flex-col md:flex-row gap-12 items-stretch justify-center pb-16 px-8">
 
           {/* ---------- QUICK BATTLE ---------- */}
-          <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px]">
-            <div className="flex flex-col items-center text-center space-y-6 h-full justify-between py-4">
+          <SteelFrame className="w-full md:flex-1 max-w-xl h-[400px]">
+            <div className="flex flex-col items-center text-center space-y-6 h-full pt-4 pb-10">
               <div className="flex flex-col items-center space-y-6">
                 <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
 
@@ -91,7 +91,7 @@ export default function ModeSelect() {
 
               <button
                 onClick={() => nav('/quick-battle')}
-                className="bg-gradient-to-r from-orange-600 to-red-600
+                className="mt-auto bg-gradient-to-r from-orange-600 to-red-600
                            hover:to-red-500 px-10 py-3 text-lg rounded font-bold
                            tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
               >
@@ -101,8 +101,8 @@ export default function ModeSelect() {
           </SteelFrame>
 
           {/* ---------- TOURNAMENT (visually enabled but functionally disabled) ---------- */}
-          <SteelFrame className="w-full md:flex-1 max-w-lg h-[400px] relative">
-            <div className="flex flex-col items-center text-center space-y-6 h-full justify-between py-4">
+          <SteelFrame className="w-full md:flex-1 max-w-xl h-[400px] relative">
+            <div className="flex flex-col items-center text-center space-y-6 h-full pt-4 pb-10">
               <div className="flex flex-col items-center space-y-6">
                 <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
 
@@ -115,7 +115,7 @@ export default function ModeSelect() {
                 </p>
               </div>
 
-              <div className="px-10 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed text-lg tracking-wider">
+              <div className="mt-auto px-10 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed text-lg tracking-wider">
                 COMING&nbsp;SOON
               </div>
             </div>
