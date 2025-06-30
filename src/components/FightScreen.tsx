@@ -1322,16 +1322,11 @@ console.log('❌ Background image failed to load:', session.stage);
       </div>
     )}
 
-    {/* Bottom status bar - only show during fighting */}
+    {/* Bottom status bar - simplified and centered */}
     {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') && (
-      <div className="bg-black bg-opacity-80 p-3 text-center border-t-2 border-cyan-400">
-        <div className="text-neonYel font-mono text-sm">
+      <div className="bg-black bg-opacity-80 p-4 text-center border-t-2 border-cyan-400">
+        <div className="text-neonYel font-mono text-lg font-bold">
           Complete tasks to deal damage • Don't let task timers run out!
-        </div>
-        <div className="text-cyan-400 font-mono text-xs mt-1">
-          Mode: {session.gameMode} | Opponent: {session.opponent?.name || 'Loading...'} | Stage: /stages/{session.stage} | 
-          Session: {gameSessionId ? '✅' : '❌'} | User: {currentUser?.username || 'Guest'} | Break: {currentBreakDuration}min
-          {session.gameState === 'paused' && ' | ⏸️ PAUSED'}
         </div>
       </div>
     )}
