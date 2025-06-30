@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Volume2, VolumeX, Settings, ArrowLeft, Home, Award } from 'lucide-react';
+import { Menu, X, Volume2, VolumeX, Settings, ArrowLeft, Home, Award, Play, Pause } from 'lucide-react';
 import { useAudioStore } from '../store/audioStore';
+import { useGameStore } from '../store/gameStore';
 
 const HamburgerMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,8 +20,18 @@ const HamburgerMenu: React.FC = () => {
     toggleAlerts
   } = useAudioStore();
   
+  const {
+    fightScreenTimeRemaining,
+    fightScreenGameState,
+    triggerTogglePause
+  } = useGameStore();
+  
   // Check if alerts are enabled (both warning and event sounds)
   const alertsEnabled = warningEnabled && eventEnabled;
+  
+  // Check if we're in a fight screen state that should show timer/pause
+  const showFightControls = fightScreenGameState && 
+    ['fighting', 'paused', 'victory', 'defeat', 'draw'].includes(fightScreenGameState);
   
   // Close menu when clicking outside
   useEffect(() => {
@@ -52,6 +63,18 @@ const HamburgerMenu: React.FC = () => {
   const handleGoBack = () => {
     setIsOpen(false);
     navigate(-1);
+  };
+  
+  const handleTogglePause = () => {
+    triggerTogglePause();
+  };
+  
+  // Format time display
+  const formatTime = (seconds: number) => {
+    const roundedSeconds = Math.round(seconds);
+    const mins = Math.floor(roundedSeconds / 60);
+    const secs = roundedSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   
   // Don't show "Main Screen" button on the attract screen
@@ -88,17 +111,47 @@ const HamburgerMenu: React.FC = () => {
   
   return (
     <div className="fixed top-4 right-4 z-50" ref={menuRef}>
-      {/* Hamburger Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-12 h-12 bg-crtBlue hover:bg-crtBlue/80 rounded-lg border-2 border-crtBlue/80 flex items-center justify-center transition-colors"
-      >
-        {isOpen ? (
-          <X size={24} className="text-white" />
-        ) : (
-          <Menu size={24} className="text-white" />
+      {/* Fight Controls Container - Timer and Pause Button */}
+      <div className="flex items-center gap-3 mb-3">
+        {/* Session Timer - only show during fight */}
+        {showFightControls && (
+          <div className={`bg-black/80 border-2 border-neonYel rounded-lg px-4 py-2 ${
+            fightScreenTimeRemaining < 300 ? 'animate-pulse' : ''
+          }`}>
+            <div className={`font-mono text-3xl font-bold ${
+              fightScreenTimeRemaining < 300 ? 'text-neonRed' : 'text-neonYel'
+            }`}>
+              {formatTime(fightScreenTimeRemaining)}
+            </div>
+          </div>
         )}
-      </button>
+        
+        {/* Pause/Resume Button - only show during fight */}
+        {showFightControls && (
+          <button
+            onClick={handleTogglePause}
+            className="w-12 h-12 bg-crtBlue hover:bg-crtBlue/80 rounded-lg border-2 border-crtBlue/80 flex items-center justify-center transition-colors"
+          >
+            {fightScreenGameState === 'paused' ? (
+              <Play size={20} className="text-white" />
+            ) : (
+              <Pause size={20} className="text-white" />
+            )}
+          </button>
+        )}
+        
+        {/* Hamburger Button */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-12 h-12 bg-crtBlue hover:bg-crtBlue/80 rounded-lg border-2 border-crtBlue/80 flex items-center justify-center transition-colors"
+        >
+          {isOpen ? (
+            <X size={24} className="text-white" />
+          ) : (
+            <Menu size={24} className="text-white" />
+          )}
+        </button>
+      </div>
       
       {/* Dropdown Menu */}
       {isOpen && (

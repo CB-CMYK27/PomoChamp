@@ -5,6 +5,7 @@ import BreakScreen from './BreakScreen';
 import HealthBarThin from './HealthBarThin';
 import Fighter from './Fighter';
 import { audioManager } from '../utils/audioManager';
+import { useGameStore } from '../store/gameStore';
 import {
 createGameSession,
 updateGameSession,
@@ -208,6 +209,14 @@ const navigate = useNavigate();
 const timerRef = useRef<NodeJS.Timeout | null>(null);
 const lastTickRef = useRef<number>(Date.now()); // Track last tick time for accurate timing
 
+// Game store for global state management
+const { 
+  registerTogglePause, 
+  clearFightScreenData, 
+  setFightScreenTimeRemaining, 
+  setFightScreenGameState 
+} = useGameStore();
+
 // Get data from navigation state - FIXED: Extract breakDuration properly
 const { selectedFighter, tasks: initialTasks, gameMode = 'quick-battle', currentRound = 1, breakDuration = 5 } = location.state || {};
 
@@ -360,6 +369,20 @@ setCurrentBreakDuration(breakDuration);
 console.log(`🏖️ Break duration set to: ${breakDuration} minutes`);
 }
 }, [breakDuration]);
+
+// Register toggle pause function with game store
+useEffect(() => {
+registerTogglePause(togglePause);
+return () => {
+clearFightScreenData();
+};
+}, [registerTogglePause, clearFightScreenData]);
+
+// Update game store with current fight screen state
+useEffect(() => {
+setFightScreenTimeRemaining(session.timeRemaining);
+setFightScreenGameState(session.gameState);
+}, [session.timeRemaining, session.gameState, setFightScreenTimeRemaining, setFightScreenGameState]);
 
 // Break screen callback functions
 const handleBreakComplete = () => {
@@ -1059,25 +1082,6 @@ console.log('❌ Background image failed to load:', session.stage);
   
   {/* Main content */}
   <div className="relative min-h-screen flex flex-col" style={{ zIndex: 2 }}>
-    
-    {/* Header - now just the timer */}
-    {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') && (
-      <div className="flex justify-center items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
-        <div className="text-center">
-          {/* Main Session Timer */}
-          <div className={`font-mono text-4xl font-bold ${session.timeRemaining < 300 ? 'text-neonRed animate-pulse' : 'text-neonYel'}`}>
-            {formatTime(session.timeRemaining)}
-          </div>
-          
-          <button 
-            onClick={togglePause}
-            className="mt-2 bg-crtBlue text-white font-mono px-4 py-1 text-sm border-2 border-crtBlue/80 hover:bg-crtBlue/80 transition-colors"
-          >
-            {session.gameState === 'paused' ? 'RESUME' : 'PAUSE'}
-          </button>
-        </div>
-      </div>
-    )}
 
     {/* Combat area */}
     <div className="flex-1 flex items-center justify-between px-8 py-8"
