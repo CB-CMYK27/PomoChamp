@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fighters from '../data/fighters.json';
 import BreakScreen from './BreakScreen';
+import HealthBarThin from './HealthBarThin';
 import { audioManager } from '../utils/audioManager';
 import {
 createGameSession,
@@ -984,20 +985,9 @@ console.log('❌ Background image failed to load:', session.stage);
   {/* Main content */}
   <div className="relative min-h-screen flex flex-col" style={{ zIndex: 2 }}>
     
-    {/* Header with HP bars and timer - only show during fighting */}
+    {/* Header - now just the timer */}
     {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat') && (
-      <div className="flex justify-between items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
-        <div className="flex flex-col items-center">
-          <div className="text-neonYel font-mono text-lg font-bold mb-2">{session.selectedFighter.name}</div>
-          <div className="w-48 h-4 bg-gray-800 border-2 border-white rounded">
-            <div 
-              className="h-full bg-gradient-to-r from-green-500 to-yellow-500 transition-all duration-500 rounded"
-              style={{ width: `${session.fighterHP}%` }}
-            ></div>
-          </div>
-          <div className="text-white font-mono text-sm mt-1">{Math.round(session.fighterHP)} HP</div>
-        </div>
-        
+      <div className="flex justify-center items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
         <div className="text-center">
           {/* Main Session Timer */}
           <div className={`font-mono text-4xl font-bold ${session.timeRemaining < 300 ? 'text-neonRed animate-pulse' : 'text-neonYel'}`}>
@@ -1010,19 +1000,6 @@ console.log('❌ Background image failed to load:', session.stage);
           >
             {session.gameState === 'paused' ? 'RESUME' : 'PAUSE'}
           </button>
-        </div>
-        
-        <div className="flex flex-col items-center">
-          <div className="text-neonRed font-mono text-lg font-bold mb-2">
-            {session.opponent ? session.opponent.name : 'PROCRASTINATION'}
-          </div>
-          <div className="w-48 h-4 bg-gray-800 border-2 border-white rounded">
-            <div 
-              className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500 rounded"
-              style={{ width: `${session.opponentHP}%` }}
-            ></div>
-          </div>
-          <div className="text-white font-mono text-sm mt-1">{Math.round(session.opponentHP)} HP</div>
         </div>
       </div>
     )}
@@ -1045,6 +1022,9 @@ console.log('❌ Background image failed to load:', session.stage);
             }}
           />
         </div>
+        
+        {/* Player HP bar */}
+        <HealthBarThin percent={session.fighterHP} />
         
         {/* Player speech bubble */}
         {introPhase === 'player-quip' && (
@@ -1167,6 +1147,9 @@ console.log('❌ Background image failed to load:', session.stage);
             }}
           />
         </div>
+        
+        {/* Opponent HP bar */}
+        <HealthBarThin percent={session.opponentHP} />
         
         {/* Opponent speech bubble */}
         {introPhase === 'opponent-quip' && session.opponent && (
