@@ -39,7 +39,7 @@ const MusicConsentModal: React.FC<MusicConsentModalProps> = ({ onYes, onNo }) =>
         
         {/* Small note */}
         <p className="text-gray-400 text-xs mt-4">
-          You can change this later in audio settings
+          You can change this later in audio settings at the top right of the screen
         </p>
       </div>
     </div>
