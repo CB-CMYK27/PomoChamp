@@ -26,7 +26,7 @@ export default function FighterSelect() {
   ------------------------------------------------------------------ */
   const navigate         = useNavigate();
   const { state }        = useLocation();
-  const { tasks = [] }   = state || {};          // breakDuration removed
+  const { tasks = [], breakMinutes = 5 } = state || {}; // Extract breakMinutes from state
   const setFighter       = useGameStore(s => s.setFighter);
 
   /* ------------------------------------------------------------------
@@ -60,7 +60,14 @@ export default function FighterSelect() {
   function confirmChoice() {
     if (!selectedId) return;
     setFighter(selectedId);
-    navigate('/fight', { state: { selectedFighter: selectedFighter, tasks } });
+    // Pass both tasks and breakMinutes to the fight screen
+    navigate('/fight', { 
+      state: { 
+        selectedFighter: selectedFighter, 
+        tasks,
+        breakDuration: breakMinutes // Pass the break duration
+      } 
+    });
   }
 
   /* 144-px portrait button – no bounce */

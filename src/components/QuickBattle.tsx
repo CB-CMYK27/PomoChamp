@@ -83,6 +83,7 @@ setTimeout(() => inputRef.current?.focus(), 0);
     setTasks(arr); setDrag(null); setHover(null);
   };
 
+  // FIXED: Pass breakMinutes to fighter select
   const launch = () => ready && nav('/fighter-select',{state:{tasks, breakMinutes:breakMins}});
 
   /* ---------------------- render ---------------------- */

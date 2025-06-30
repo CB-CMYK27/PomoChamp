@@ -49,7 +49,7 @@ tasks: Task[];
 timeRemaining: number; // Always in seconds (integer)
 fighterHP: number;
 opponentHP: number;
-gameState: 'intro' | 'fighting' | 'paused' | 'victory' | 'defeat';
+gameState: 'intro' | 'fighting' | 'paused' | 'victory' | 'defeat' | 'draw'; // Added 'draw' state
 gameMode: 'quick-battle' | 'tournament';
 currentRound: number;
 stage: string;
@@ -200,12 +200,12 @@ const navigate = useNavigate();
 const timerRef = useRef<NodeJS.Timeout | null>(null);
 const lastTickRef = useRef<number>(Date.now()); // Track last tick time for accurate timing
 
-// Get data from navigation state
+// Get data from navigation state - FIXED: Extract breakDuration properly
 const { selectedFighter, tasks: initialTasks, gameMode = 'quick-battle', currentRound = 1, breakDuration = 5 } = location.state || {};
 
 // Break screen state management
 const [showBreakScreen, setShowBreakScreen] = useState(false);
-const [currentBreakDuration, setCurrentBreakDuration] = useState(5);
+const [currentBreakDuration, setCurrentBreakDuration] = useState(breakDuration); // FIXED: Initialize with passed breakDuration
 
 // Intro animation states
 const [introPhase, setIntroPhase] = useState<'intro' | 'player-quip' | 'opponent-quip' | 'countdown' | 'on-task' | 'fighting'>('intro');
@@ -299,10 +299,11 @@ taskTimers: [],
 failedTasks: []
 });
 
-// Set break duration from location state
+// FIXED: Set break duration from location state on component mount
 useEffect(() => {
 if (breakDuration) {
 setCurrentBreakDuration(breakDuration);
+console.log(`🏖️ Break duration set to: ${breakDuration} minutes`);
 }
 }, [breakDuration]);
 
@@ -319,11 +320,11 @@ navigate('/');
 
 // Watch for game state changes to trigger break screen
 useEffect(() => {
-if (session.gameState === 'victory' || session.gameState === 'defeat') {
-// Delay showing break screen to allow victory/defeat state to be processed
+if (session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') {
+// Delay showing break screen to allow victory/defeat/draw state to be processed
 const timer = setTimeout(() => {
 setShowBreakScreen(true);
-}, 2000); // 2 second delay to show victory/defeat briefly
+}, 2000); // 2 second delay to show victory/defeat/draw briefly
 
   return () => clearTimeout(timer);
 }
@@ -428,7 +429,7 @@ createSession();
 // Update game session when game ends
 useEffect(() => {
 const updateSession = async () => {
-if ((session.gameState === 'victory' || session.gameState === 'defeat') && gameSessionId && currentUser) {
+if ((session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') && gameSessionId && currentUser) {
 try {
 console.log('🎮 Updating game session on game end');
 
@@ -613,23 +614,36 @@ return;
       // Update main session timer by subtracting elapsed time (ensure integer)
       const newSessionTimeRemaining = Math.max(0, prev.timeRemaining - simulatedElapsedSeconds);
 
-      // Check if session time expired - FIXED: Always set defeat when timer runs out
+      // FIXED: Check for session timeout and determine outcome based on HP comparison
       if (newSessionTimeRemaining <= 0) {
-        console.log('⏰ Session timer expired - setting defeat state');
+        console.log('⏰ Session timer expired - determining outcome based on HP');
         
-        // Play session timeout sequence
+        let gameOutcome: 'victory' | 'defeat' | 'draw';
+        
+        if (prev.fighterHP > prev.opponentHP) {
+          gameOutcome = 'victory';
+          console.log(`🏆 Victory! Player HP: ${prev.fighterHP}, Opponent HP: ${prev.opponentHP}`);
+        } else if (prev.fighterHP < prev.opponentHP) {
+          gameOutcome = 'defeat';
+          console.log(`💀 Defeat! Player HP: ${prev.fighterHP}, Opponent HP: ${prev.opponentHP}`);
+        } else {
+          gameOutcome = 'draw';
+          console.log(`🤝 Draw! Both fighters have ${prev.fighterHP} HP`);
+        }
+        
+        // Play appropriate audio sequence
         if (prev.opponent) {
-          audioManager.playSessionTimeoutSequence(
-            prev.opponent.id,
-            prev.selectedFighter.id,
-            true // Session timeout is always a defeat
-          );
+          if (gameOutcome === 'victory') {
+            audioManager.playEventSound('victory');
+          } else {
+            audioManager.playEventSound('defeat');
+          }
         }
         
         return { 
           ...prev, 
           timeRemaining: 0, 
-          gameState: 'defeat' // FIXED: Always defeat when session timer expires
+          gameState: gameOutcome
         };
       }
 
@@ -814,9 +828,9 @@ setSession(prev => {
     return timer;
   });
   
-  const allTasksComplete = updatedTasks.every(task => task.completed);
-  if (allTasksComplete || newOpponentHP <= 0) {
-    console.log('🏆 Victory condition met!');
+  // FIXED: Only declare victory if opponent HP reaches zero
+  if (newOpponentHP <= 0) {
+    console.log('🏆 Victory condition met - opponent HP reached zero!');
     audioManager.playEventSound('victory');
     return {
       ...prev,
@@ -828,6 +842,7 @@ setSession(prev => {
     };
   }
   
+  // Continue fighting if opponent still has HP
   return {
     ...prev,
     tasks: updatedTasks,
@@ -986,7 +1001,7 @@ console.log('❌ Background image failed to load:', session.stage);
   <div className="relative min-h-screen flex flex-col" style={{ zIndex: 2 }}>
     
     {/* Header - now just the timer */}
-    {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat') && (
+    {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') && (
       <div className="flex justify-center items-center p-4 bg-black bg-opacity-60 border-b-2 border-cyan-400">
         <div className="text-center">
           {/* Main Session Timer */}
@@ -1033,7 +1048,7 @@ console.log('❌ Background image failed to load:', session.stage);
       </div>
 
       {/* Task list - center - only show during fighting */}
-      {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat') && (
+      {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') && (
         <div className="flex-1 max-w-md mx-8 flex flex-col items-center">
           {/* Only show the h2 for tournament mode */}
           {session.gameMode === 'tournament' && (
@@ -1225,8 +1240,23 @@ console.log('❌ Background image failed to load:', session.stage);
       </div>
     )}
 
+    {/* FIXED: Add draw state overlay */}
+    {session.gameState === 'draw' && (
+      <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-20">
+        <div className="text-center p-8 bg-black bg-opacity-80 border-2 border-neonYel rounded-lg">
+          <h2 className="text-neonYel font-mono text-6xl font-bold mb-4 animate-pulse">DRAW!</h2>
+          <p className="text-white font-mono text-lg mb-6">
+            Both fighters have equal HP! It's a tie!
+          </p>
+          <div className="text-cyan-400 font-mono text-sm">
+            🏖️ Take a {currentBreakDuration} minute break and consider it a learning experience...
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* Bottom status bar - only show during fighting */}
-    {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat') && (
+    {(session.gameState === 'fighting' || session.gameState === 'paused' || session.gameState === 'victory' || session.gameState === 'defeat' || session.gameState === 'draw') && (
       <div className="bg-black bg-opacity-80 p-3 text-center border-t-2 border-cyan-400">
         <div className="text-neonYel font-mono text-sm">
           Click anywhere to start audio • Complete tasks to deal damage • Don't let task timers run out!
