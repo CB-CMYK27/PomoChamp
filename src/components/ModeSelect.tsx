@@ -7,68 +7,54 @@ import { Settings } from 'lucide-react';
 import GlovesPNG from '/images/boxing-gloves.png';   // 92×92 transparent
 import TrophyPNG from '/images/trophy-pixel.png';    // 92×92 transparent
 
-/* ───── Generic "steel plate" wrapper ──── */
+/*────────────────────────  NEW – SteelFrame  ───────────────────────*/
 const SteelFrame: React.FC<
   React.PropsWithChildren<{ disabled?: boolean; className?: string }>
 > = ({ disabled, className = '', children }) => (
+  /* LAYER ① – dark outer bezel */
   <div
-    className={`relative p-6 ${className}`}
-    style={{
-      background: '#4a5568',                // dark grey outer border
-      boxShadow:
-        'inset 0 0 4px #000, 0 0 6px rgba(255,255,255,.3)', // bevel
-    }}
+    className={`relative p-3 bg-[#3b3f4a] ${className}`}
+    style={{ boxShadow: '0 0 8px #0008' }}
   >
-    {/* Inner lighter grey border with rivets */}
-    <div 
-      className="relative w-full h-full"
-      style={{
-        background: '#a0aec0',              // lighter grey inner border
-        border: '4px solid #4a5568'         // dark grey border for "screwed" effect
-      }}
-    >
-      {/* 8 rivets (small circles) positioned on the lighter grey frame */}
+    {/* LAYER ② – lighter steel plate + rivets */}
+    <div className="relative w-full h-full bg-[#9aa3ad]">
+      {/* eight rivets on the steel rim */}
       {[
         'top-0 left-0',
         'top-0 left-1/2 -translate-x-1/2',
         'top-0 right-0',
-        'middle left-0',
-        'middle right-0',
+        'top-1/2 -translate-y-1/2 left-0',
+        'top-1/2 -translate-y-1/2 right-0',
         'bottom-0 left-0',
         'bottom-0 left-1/2 -translate-x-1/2',
         'bottom-0 right-0',
       ].map((pos, i) => (
         <span
           key={i}
-          className={`absolute ${pos.replace('middle', 'top-1/2 -translate-y-1/2')}
-                      w-3 h-3 bg-gray-700 rounded-full
-                      shadow-[inset_0_1px_1px_#fff4,0_0_3px_#0009]`}
+          className={`absolute ${pos} w-4 h-4 bg-[#444b55] rounded-full
+                      shadow-[inset_0_1px_2px_#ffffff2b,0_0_3px_#0009]`}
         />
       ))}
 
-      {/* Black card content area */}
-      <div 
-        className="w-full h-full p-4"
-        style={{
-          background: '#0D0D0F'              // black inner screen
-        }}
-      >
-        {/* content */}
-        <div className={`h-full ${disabled ? 'opacity-60' : ''}`}>{children}</div>
+      {/* LAYER ③ – black inner card */}
+      <div className="m-6 bg-bezel h-full flex flex-col p-6">
+        {/* content (opacity if disabled) */}
+        <div className={disabled ? 'opacity-50 select-none' : ''}>{children}</div>
       </div>
     </div>
   </div>
 );
+/*───────────────────────────────────────────────────────────────────*/
 
 export default function ModeSelect() {
   const nav = useNavigate();
 
   return (
     <div className="min-h-screen bg-bezel font-arcade text-white flex flex-col">
-      {/* ─────────── Title & Settings ─────────── */}
+      {/* TITLE */}
       <header className="relative">
         <h1
-          className="text-primary text-6xl sm:text-7xl text-center pt-12 pb-8"
+          className="text-primary text-6xl sm:text-7xl text-center pt-12 pb-10"
           style={{
             textShadow:
               '-3px 3px #07399D, 3px -3px #FE1C06, 0 0 12px rgba(255,255,255,.4)',
@@ -86,59 +72,55 @@ export default function ModeSelect() {
         </button>
       </header>
 
-      {/* ─────────── Cards ─────────── */}
-      <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16">
+      {/* CENTRED CARD ROW  */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex flex-col md:flex-row gap-14 px-8">
 
-        {/* ---------- QUICK BATTLE ---------- */}
-        <SteelFrame className="w-full md:w-[480px] h-[400px]">
-          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
-            <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
+          {/* ───────── QUICK BATTLE ───────── */}
+          <SteelFrame className="w-full md:w-[480px] max-w-xl h-[430px]">
+            <img src={GlovesPNG} alt="" className="w-24 h-24 mx-auto" />
 
-            <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
+            <h2 className="text-3xl text-neonYel mt-6 mb-3">QUICK BATTLE</h2>
 
-            <p className="text-base leading-relaxed">
-              1&nbsp;session<br />
-              25&nbsp;minutes<br />
-              No&nbsp;excuses
+            <p className="text-base leading-relaxed mb-8">
+              1 session<br />25 minutes<br />No excuses
             </p>
 
             <button
               onClick={() => nav('/quick-battle')}
-              className="bg-gradient-to-r from-orange-600 to-red-600
+              className="mt-auto bg-gradient-to-r from-orange-600 to-red-600
                          hover:to-red-500 px-10 py-3 text-lg rounded font-bold
                          tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
             >
               FIGHT!
             </button>
-          </div>
-        </SteelFrame>
+          </SteelFrame>
 
-        {/* ---------- TOURNAMENT (disabled) ---------- */}
-        <SteelFrame disabled className="w-full md:w-[480px] h-[400px] relative">
-          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
-            <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
+          {/* ───────── TOURNAMENT ───────── */}
+          <SteelFrame disabled className="w-full md:w-[480px] max-w-xl h-[430px] relative">
+            <img src={TrophyPNG} alt="" className="w-24 h-24 mx-auto" />
 
-            <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
+            <h2 className="text-3xl text-neonYel mt-6 mb-3">TOURNAMENT MODE</h2>
 
-            <p className="text-base leading-relaxed">
-              Brain-dump&nbsp;→&nbsp;4&nbsp;rounds.<br />
-              Organize&nbsp;&&nbsp;conquer.
+            <p className="text-base leading-relaxed mb-8">
+              Brain-dump → 4 rounds.<br />Organize & conquer.
             </p>
 
-            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative">
+            <div className="mt-auto px-10 py-3 bg-gray-600 rounded font-bold text-white
+                            cursor-not-allowed text-lg tracking-wider">
               COMING&nbsp;SOON
             </div>
-          </div>
 
-          {/* Caution strip overlay positioned over the button */}
-          <div
-            className="absolute left-0 right-0 bottom-6 h-8 opacity-70 pointer-events-none"
-            style={{
-              backgroundImage:
-                'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
-            }}
-          />
-        </SteelFrame>
+            {/* yellow/black caution tape */}
+            <div
+              className="absolute left-6 right-6 bottom-8 h-8 opacity-70 pointer-events-none"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
+              }}
+            />
+          </SteelFrame>
+        </div>
       </div>
     </div>
   );
