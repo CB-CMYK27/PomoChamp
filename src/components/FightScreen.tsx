@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import fighters from '../data/fighters.json';
 import BreakScreen from './BreakScreen';
 import HealthBarThin from './HealthBarThin';
+import Fighter from './Fighter';
 import { audioManager } from '../utils/audioManager';
 import {
 createGameSession,
@@ -56,6 +57,13 @@ stage: string;
 currentTaskIndex: number;
 taskTimers: TaskTimer[];
 failedTasks: string[];
+}
+
+// Animation state interface
+interface AnimationState {
+isPunching: boolean;
+isHit: boolean;
+redGlow: boolean;
 }
 
 // Character counterpart mappings
@@ -214,6 +222,19 @@ const [musicStarted, setMusicStarted] = useState(false);
 const [audioInitialized, setAudioInitialized] = useState(false);
 const [canSkip, setCanSkip] = useState(true);
 
+// Animation states for fighters
+const [playerAnimation, setPlayerAnimation] = useState<AnimationState>({
+isPunching: false,
+isHit: false,
+redGlow: false
+});
+
+const [opponentAnimation, setOpponentAnimation] = useState<AnimationState>({
+isPunching: false,
+isHit: false,
+redGlow: false
+});
+
 // Database integration states
 const [currentUser, setCurrentUser] = useState<any>(null);
 const [gameSessionId, setGameSessionId] = useState<string | null>(null);
@@ -223,6 +244,39 @@ const [isInitializingSession, setIsInitializingSession] = useState(false);
 const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 const currentResolveRef = useRef<(() => void) | null>(null);
 const skipCountdownRef = useRef(false);
+
+// Animation trigger functions
+const triggerPlayerPunch = () => {
+console.log('🥊 [ANIMATION] Triggering player punch animation');
+setPlayerAnimation(prev => ({ ...prev, isPunching: true }));
+setTimeout(() => {
+setPlayerAnimation(prev => ({ ...prev, isPunching: false }));
+}, 200); // 200ms punch animation
+};
+
+const triggerOpponentPunch = () => {
+console.log('🥊 [ANIMATION] Triggering opponent punch animation');
+setOpponentAnimation(prev => ({ ...prev, isPunching: true }));
+setTimeout(() => {
+setOpponentAnimation(prev => ({ ...prev, isPunching: false }));
+}, 200); // 200ms punch animation
+};
+
+const triggerPlayerHit = () => {
+console.log('😵 [ANIMATION] Triggering player hit animation');
+setPlayerAnimation(prev => ({ ...prev, isHit: true, redGlow: true }));
+setTimeout(() => {
+setPlayerAnimation(prev => ({ ...prev, isHit: false, redGlow: false }));
+}, 300); // 300ms hit animation
+};
+
+const triggerOpponentHit = () => {
+console.log('😵 [ANIMATION] Triggering opponent hit animation');
+setOpponentAnimation(prev => ({ ...prev, isHit: true, redGlow: true }));
+setTimeout(() => {
+setOpponentAnimation(prev => ({ ...prev, isHit: false, redGlow: false }));
+}, 300); // 300ms hit animation
+};
 
 // Helper function to get opponent
 const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
@@ -631,7 +685,7 @@ return;
           console.log(`🤝 Draw! Both fighters have ${prev.fighterHP} HP`);
         }
         
-        // Play appropriate audio sequence
+        // Play appropriate audio sequence with animations
         if (prev.opponent) {
           if (gameOutcome === 'victory') {
             audioManager.playEventSound('victory');
@@ -668,12 +722,14 @@ return;
         if (newTaskTimeRemaining <= 0 && timer.timeRemaining > 0 && !timer.damageApplied) {
           console.log(`💥 Task timer expired: ${timer.taskId} - Applying damage`);
           
-          // Play task timer expired sequence (opponent attacks player)
+          // Play task timer expired sequence with animations (opponent attacks player)
           if (prev.opponent) {
             audioManager.playTaskTimerExpiredSequence(
               prev.opponent.id,
               prev.selectedFighter.id,
-              false // Don't kill player on single task failure
+              false, // Don't kill player on single task failure
+              triggerOpponentPunch, // Opponent punch animation
+              triggerPlayerHit // Player hit animation
             );
           }
           
@@ -721,7 +777,9 @@ return;
           audioManager.playSessionTimeoutSequence(
             prev.opponent.id,
             prev.selectedFighter.id,
-            true // Player dies from HP loss
+            true, // Player dies from HP loss
+            triggerOpponentPunch, // Opponent punch animation
+            triggerPlayerHit // Player hit animation
           );
         }
         
@@ -798,13 +856,15 @@ setSession(prev => {
   
   console.log(`💥 Dealing ${damagePerTask} damage (${completedTask?.estimatedTime} min task). Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
   
-  // Play damage sequence: player attacks opponent
+  // Play damage sequence: player attacks opponent with animations
   if (prev.opponent) {
     audioManager.playDamageSequence(
       prev.selectedFighter.id,
       prev.opponent.id,
       true, // player is attacker
-      newOpponentHP <= 0 // is killing blow
+      newOpponentHP <= 0, // is killing blow
+      triggerPlayerPunch, // Player punch animation
+      triggerOpponentHit // Opponent hit animation
     );
   }
   
@@ -1027,14 +1087,16 @@ console.log('❌ Background image failed to load:', session.stage);
       <div className="flex flex-col items-center justify-start h-full relative">
         <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
                        ${getFighterAnimation(true)}`}>
-          <img 
-            src={session.selectedFighter.full}
-            alt={session.selectedFighter.name}
-            className="w-full h-full object-contain object-bottom"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-            }}
+          <Fighter
+            side="left"
+            name={session.selectedFighter.name}
+            isAttackingProp={playerAnimation.isPunching}
+            isHitProp={playerAnimation.isHit}
+            redGlow={playerAnimation.redGlow}
+            timeLeft={session.timeRemaining}
+            gameState={session.gameState}
+            fighterHP={session.fighterHP}
+            opponentHP={session.opponentHP}
           />
         </div>
         
@@ -1151,15 +1213,16 @@ console.log('❌ Background image failed to load:', session.stage);
       <div className="flex flex-col items-center justify-start h-full relative">
         <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
                        ${getFighterAnimation(false)}`}>
-          <img 
-            src={session.opponent?.full || ''}
-            alt={session.opponent?.name || 'No opponent'}
-            className="w-full h-full object-contain object-bottom"
-            style={{ transform: 'scaleX(-1)' }}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-            }}
+          <Fighter
+            side="right"
+            name={session.opponent?.name || 'No opponent'}
+            isAttackingProp={opponentAnimation.isPunching}
+            isHitProp={opponentAnimation.isHit}
+            redGlow={opponentAnimation.redGlow}
+            timeLeft={session.timeRemaining}
+            gameState={session.gameState}
+            fighterHP={session.opponentHP}
+            opponentHP={session.fighterHP}
           />
         </div>
         

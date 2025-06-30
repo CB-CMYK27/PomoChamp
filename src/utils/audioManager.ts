@@ -377,20 +377,32 @@ class AudioManager {
     }
   }
   
-  // Play damage sequence with proper timing
+  // Play damage sequence with proper timing and animation callbacks
   public playDamageSequence(
     attackerFighterId: string,
     defenderFighterId: string,
     attackerIsPlayer: boolean,
-    isKillingBlow: boolean = false
+    isKillingBlow: boolean = false,
+    onAttackerPunchStart?: () => void,
+    onDefenderHitStart?: () => void
   ): void {
     console.log(`⚔️ [SEQUENCE] Playing damage sequence: ${attackerFighterId} attacks ${defenderFighterId} (killing blow: ${isKillingBlow})`);
     
-    // Step 1: Play attacker's punch sound
+    // Step 1: Trigger attacker punch animation and play punch sound
+    if (onAttackerPunchStart) {
+      console.log(`🥊 [SEQUENCE] Triggering attacker punch animation`);
+      onAttackerPunchStart();
+    }
+    
     this.playSfx('punch', attackerFighterId, attackerIsPlayer, () => {
       console.log(`🥊 [SEQUENCE] Attacker punch ended, waiting 200ms for defender grunt`);
-      // Step 2: After punch ends, wait 200ms then play defender's grunt
+      // Step 2: After punch ends, wait 200ms then trigger defender hit animation and play grunt
       setTimeout(() => {
+        if (onDefenderHitStart) {
+          console.log(`😵 [SEQUENCE] Triggering defender hit animation`);
+          onDefenderHitStart();
+        }
+        
         this.playSfx('grunt', defenderFighterId, !attackerIsPlayer, () => {
           console.log(`😵 [SEQUENCE] Defender grunt ended, isKillingBlow: ${isKillingBlow}`);
           // Step 3: If it's a killing blow, wait 400ms then play defender's death sound
@@ -409,24 +421,28 @@ class AudioManager {
   public playSessionTimeoutSequence(
     opponentFighterId: string,
     playerFighterId: string,
-    playerDies: boolean = false
+    playerDies: boolean = false,
+    onOpponentPunchStart?: () => void,
+    onPlayerHitStart?: () => void
   ): void {
     console.log(`⏰ [SEQUENCE] Playing session timeout sequence: ${opponentFighterId} attacks ${playerFighterId} (player dies: ${playerDies})`);
     
     // Opponent punch -> Player grunt -> (optional) Player death
-    this.playDamageSequence(opponentFighterId, playerFighterId, false, playerDies);
+    this.playDamageSequence(opponentFighterId, playerFighterId, false, playerDies, onOpponentPunchStart, onPlayerHitStart);
   }
   
   // Play task timer expired sequence (opponent attacks player)
   public playTaskTimerExpiredSequence(
     opponentFighterId: string,
     playerFighterId: string,
-    playerDies: boolean = false
+    playerDies: boolean = false,
+    onOpponentPunchStart?: () => void,
+    onPlayerHitStart?: () => void
   ): void {
     console.log(`⏱️ [SEQUENCE] Playing task timer expired sequence: ${opponentFighterId} attacks ${playerFighterId} (player dies: ${playerDies})`);
     
     // Opponent punch -> Player grunt -> (optional) Player death
-    this.playDamageSequence(opponentFighterId, playerFighterId, false, playerDies);
+    this.playDamageSequence(opponentFighterId, playerFighterId, false, playerDies, onOpponentPunchStart, onPlayerHitStart);
   }
   
   public async playBGM(trackPath?: string): Promise<void> {

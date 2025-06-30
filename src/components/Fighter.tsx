@@ -1,60 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { useTimerStore } from '../store/timerStore';
+import React from 'react';
 
 interface FighterProps {
   side: 'left' | 'right';
   name: string;
+  isAttackingProp?: boolean;
+  isHitProp?: boolean;
+  redGlow?: boolean;
+  timeLeft?: number;
+  gameState?: string;
+  fighterHP?: number;
+  opponentHP?: number;
 }
 
-const Fighter: React.FC<FighterProps> = ({ side, name }) => {
-  const { progress, isRunning, mode, timeLeft } = useTimerStore();
-  const [isAttacking, setIsAttacking] = useState(false);
-  const [isHit, setIsHit] = useState(false);
-  const [isVictorious, setIsVictorious] = useState(false);
+const Fighter: React.FC<FighterProps> = ({ 
+  side, 
+  name, 
+  isAttackingProp = false,
+  isHitProp = false,
+  redGlow = false,
+  timeLeft = 0,
+  gameState = 'fighting',
+  fighterHP = 100,
+  opponentHP = 100
+}) => {
   
   // Fighter colors based on side
   const fighterClass = side === 'left' 
     ? 'bg-neonRed border-neonRed/80' 
     : 'bg-crtBlue border-crtBlue/80';
   
-  // Animation for attacking
-  useEffect(() => {
-    if (isRunning && timeLeft > 0 && timeLeft % 10 === 0) {
-      if (side === 'left' && mode === 'work') {
-        setIsAttacking(true);
-        setTimeout(() => {
-          setIsAttacking(false);
-          setIsHit(false);
-        }, 500);
-      } else if (side === 'right' && mode === 'break') {
-        setIsAttacking(true);
-        setTimeout(() => {
-          setIsAttacking(false);
-          setIsHit(false);
-        }, 500);
-      }
-    }
-  }, [isRunning, timeLeft, side, mode]);
-  
-  // Set victory pose when timer completes
-  useEffect(() => {
-    if (timeLeft === 0) {
-      if ((side === 'left' && mode === 'work') || (side === 'right' && mode === 'break')) {
-        setIsVictorious(true);
-      } else {
-        setIsHit(true);
-      }
-    } else {
-      setIsVictorious(false);
-      setIsHit(false);
-    }
-  }, [timeLeft, side, mode]);
-  
   const getStateClass = () => {
-    if (isVictorious) return 'animate-bounce';
-    if (isHit) return 'animate-ping opacity-50';
-    if (isAttacking) return side === 'left' ? 'translate-x-5' : '-translate-x-5';
+    if (isHitProp) return 'animate-shake';
+    if (isAttackingProp) return side === 'left' ? 'translate-x-2' : '-translate-x-2';
+    if (gameState === 'fighting') {
+      const isPlayer = side === 'left';
+      if (isPlayer && fighterHP < 30) return 'animate-pulse';
+      if (!isPlayer && opponentHP < 30) return 'animate-pulse';
+      if (isPlayer && gameState === 'victory') return 'animate-bounce';
+      if (!isPlayer && gameState === 'defeat') return 'animate-bounce';
+    }
     return 'animate-pulse';
+  };
+
+  const getRedGlowClass = () => {
+    return redGlow ? 'animate-redGlow' : '';
   };
 
   return (
@@ -63,7 +52,7 @@ const Fighter: React.FC<FighterProps> = ({ side, name }) => {
       <div
         className={`
           w-32 h-48 relative
-          transform ${getStateClass()} transition-all duration-300
+          transform ${getStateClass()} ${getRedGlowClass()} transition-all duration-150
           ${side === 'right' ? 'scale-x-[-1]' : ''}
         `}
       >
@@ -74,9 +63,9 @@ const Fighter: React.FC<FighterProps> = ({ side, name }) => {
           <div className="absolute top-4 right-2 w-3 h-3 bg-white rounded-full"></div>
           
           {/* Mouth - changes based on state */}
-          {isVictorious ? (
+          {gameState === 'victory' ? (
             <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-8 h-2 bg-white rounded-full"></div>
-          ) : isHit ? (
+          ) : isHitProp ? (
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white rounded-full"></div>
           ) : (
             <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-white rounded-full"></div>
@@ -90,8 +79,8 @@ const Fighter: React.FC<FighterProps> = ({ side, name }) => {
         </div>
         
         {/* Arms */}
-        <div className={`w-6 h-16 ${fighterClass} border-4 border-black absolute top-16 ${side === 'left' ? 'left-2' : 'right-2'} rounded-full transform ${isAttacking ? (side === 'left' ? 'rotate-45' : '-rotate-45') : ''}`}></div>
-        <div className={`w-6 h-16 ${fighterClass} border-4 border-black absolute top-16 ${side === 'left' ? 'right-2' : 'left-2'} rounded-full transform ${isAttacking ? (side === 'left' ? '-rotate-45' : 'rotate-45') : ''}`}></div>
+        <div className={`w-6 h-16 ${fighterClass} border-4 border-black absolute top-16 ${side === 'left' ? 'left-2' : 'right-2'} rounded-full transform ${isAttackingProp ? (side === 'left' ? 'rotate-45' : '-rotate-45') : ''}`}></div>
+        <div className={`w-6 h-16 ${fighterClass} border-4 border-black absolute top-16 ${side === 'left' ? 'right-2' : 'left-2'} rounded-full transform ${isAttackingProp ? (side === 'left' ? '-rotate-45' : 'rotate-45') : ''}`}></div>
         
         {/* Legs */}
         <div className={`w-8 h-20 ${fighterClass} border-4 border-black absolute bottom-0 left-8 rounded-b-lg`}></div>

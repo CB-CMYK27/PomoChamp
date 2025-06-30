@@ -49,10 +49,31 @@ export default {
         'slow-pulse': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.5' }
+        },
+        'shake': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-2px)' },
+          '20%, 40%, 60%, 80%': { transform: 'translateX(2px)' }
+        },
+        'redGlow': {
+          '0%': { 
+            boxShadow: '0 0 0px rgba(254, 28, 6, 0)',
+            backgroundColor: 'transparent'
+          },
+          '50%': { 
+            boxShadow: '0 0 20px rgba(254, 28, 6, 0.8)',
+            backgroundColor: 'rgba(254, 28, 6, 0.1)'
+          },
+          '100%': { 
+            boxShadow: '0 0 0px rgba(254, 28, 6, 0)',
+            backgroundColor: 'transparent'
+          }
         }
       },
       animation: {
-        'slow-pulse': 'slow-pulse 4s ease-in-out infinite'
+        'slow-pulse': 'slow-pulse 4s ease-in-out infinite',
+        'shake': 'shake 0.3s ease-in-out',
+        'redGlow': 'redGlow 0.3s ease-in-out'
       },
       /* ------------------------------------------ */
     },
