@@ -32,6 +32,7 @@ interface AudioStore extends AudioSettings {
   
   // Music controls
   setBGM: (track: string) => void;
+  enableMusic: () => void; // NEW: Enable music (for consent modal)
   
   // Utility
   getEffectiveVolume: (category: 'sfx' | 'music' | 'warning' | 'event') => number;
@@ -45,7 +46,7 @@ const defaultSettings: AudioSettings = {
   warningVolume: 0.9,
   eventVolume: 0.8,
   sfxEnabled: true,
-  musicEnabled: true,
+  musicEnabled: false, // CHANGED: Default to false so music is off initially
   warningEnabled: true,
   eventEnabled: true,
   currentBGM: '/sfx/Mercury.wav',
@@ -84,6 +85,7 @@ export const useAudioStore = create<AudioStore>()(
       
       // Music control
       setBGM: (track: string) => set({ currentBGM: track }),
+      enableMusic: () => set({ musicEnabled: true }), // NEW: Enable music function
       
       // Utility functions
       getEffectiveVolume: (category: 'sfx' | 'music' | 'warning' | 'event') => {
