@@ -120,7 +120,7 @@ const AudioSettings: React.FC = () => {
       </div>
       
       <div className="flex items-center gap-3">
-        <span className="text-xs text-gray-400 w-8">0%</span>
+        <span className="text-xs text-gray-400 w-8">0</span>
         <div className="flex-1 relative">
           <input
             type="range"
@@ -141,7 +141,7 @@ const AudioSettings: React.FC = () => {
           />
         </div>
         <span className="text-xs text-gray-400 w-10 text-right">
-          {Math.round(value * 100)}%
+          {Math.round(value * 11)}
         </span>
       </div>
     </div>
@@ -336,6 +336,7 @@ const AudioSettings: React.FC = () => {
               <div>• Dynamic volume mixing and timing controls</div>
               <div>• Settings automatically saved to browser storage</div>
               <div>• Sound timing prevents audio overlap and clashing</div>
+              <div>• Volume goes to 11 (because it's one louder)</div>
               {import.meta.env.DEV && (
                 <div className="text-neonRed">• Development test tools enabled</div>
               )}
