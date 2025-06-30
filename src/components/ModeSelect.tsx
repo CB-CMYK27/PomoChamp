@@ -86,10 +86,10 @@ export default function ModeSelect() {
       </header>
 
       {/* ─────────── Cards ─────────── */}
-      <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16">
+      <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16 px-8">
 
         {/* ---------- QUICK BATTLE ---------- */}
-        <SteelFrame className="w-full md:w-[520px] h-[450px]">
+        <SteelFrame className="w-full md:w-[640px] h-[480px]">
           <div className="relative flex flex-col items-center text-center h-full">
             {/* Image container with fixed height - center the image */}
             <div className="h-[200px] flex items-center justify-center">
@@ -100,7 +100,7 @@ export default function ModeSelect() {
             <h2 className="text-3xl text-neonYel mb-4">QUICK BATTLE</h2>
 
             {/* Description */}
-            <div className="flex-1 flex items-center">
+            <div className="flex-1 flex items-center pb-4">
               <p className="text-base leading-relaxed">
                 1&nbsp;session<br />
                 25&nbsp;minutes<br />
@@ -109,7 +109,7 @@ export default function ModeSelect() {
             </div>
 
             {/* Button container with fixed positioning from bottom */}
-            <div className="h-[80px] flex items-start">
+            <div className="h-[100px] flex items-start pt-2">
               <button
                 onClick={() => nav('/quick-battle')}
                 className="bg-gradient-to-r from-orange-600 to-red-600
