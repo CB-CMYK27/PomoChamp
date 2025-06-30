@@ -91,15 +91,13 @@ export default function ModeSelect() {
         {/* ---------- QUICK BATTLE ---------- */}
         <SteelFrame className="w-full md:w-[520px] h-[450px]">
           <div className="relative flex flex-col items-center text-center h-full">
-            {/* Image container with fixed positioning */}
-            <div className="h-[180px] flex items-end justify-center pt-8">
+            {/* Image container with fixed height - center the image */}
+            <div className="h-[200px] flex items-center justify-center">
               <img src={GlovesPNG} alt="Crossed gloves" className="w-40 h-40" />
             </div>
 
-            {/* Title with fixed height */}
-            <h2 className="text-3xl text-neonYel h-[40px] flex items-center mt-4">
-              QUICK BATTLE
-            </h2>
+            {/* Title */}
+            <h2 className="text-3xl text-neonYel mb-4">QUICK BATTLE</h2>
 
             {/* Description */}
             <div className="flex-1 flex items-center">
@@ -127,15 +125,13 @@ export default function ModeSelect() {
         {/* ---------- TOURNAMENT (disabled button but full color) ---------- */}
         <SteelFrame className="w-full md:w-[520px] h-[450px] relative">
           <div className="relative flex flex-col items-center text-center h-full">
-            {/* Image container with fixed positioning */}
-            <div className="h-[180px] flex items-end justify-center pt-8">
+            {/* Image container with fixed height - center the image */}
+            <div className="h-[200px] flex items-center justify-center">
               <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" />
             </div>
 
-            {/* Title with fixed height */}
-            <h2 className="text-3xl text-neonYel h-[40px] flex items-center mt-4">
-              TOURNAMENT&nbsp;MODE
-            </h2>
+            {/* Title */}
+            <h2 className="text-3xl text-neonYel mb-4">TOURNAMENT&nbsp;MODE</h2>
 
             {/* Description */}
             <div className="flex-1 flex items-center">
