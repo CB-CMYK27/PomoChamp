@@ -1,4 +1,3 @@
-// ----------------  src/pages/ModeSelect.tsx  ----------------
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings } from 'lucide-react';
@@ -91,43 +90,67 @@ export default function ModeSelect() {
 
         {/* ---------- QUICK BATTLE ---------- */}
         <SteelFrame className="w-full md:w-[520px] h-[450px]">
-          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
-            <img src={GlovesPNG} alt="Crossed gloves" className="w-40 h-40" />
+          <div className="relative flex flex-col items-center text-center h-full">
+            {/* Image container with fixed positioning */}
+            <div className="h-[180px] flex items-end justify-center pt-8">
+              <img src={GlovesPNG} alt="Crossed gloves" className="w-40 h-40" />
+            </div>
 
-            <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
+            {/* Title with fixed height */}
+            <h2 className="text-3xl text-neonYel h-[40px] flex items-center mt-4">
+              QUICK BATTLE
+            </h2>
 
-            <p className="text-base leading-relaxed">
-              1&nbsp;session<br />
-              25&nbsp;minutes<br />
-              No&nbsp;excuses
-            </p>
+            {/* Description */}
+            <div className="flex-1 flex items-center">
+              <p className="text-base leading-relaxed">
+                1&nbsp;session<br />
+                25&nbsp;minutes<br />
+                No&nbsp;excuses
+              </p>
+            </div>
 
-            <button
-              onClick={() => nav('/quick-battle')}
-              className="bg-gradient-to-r from-orange-600 to-red-600
-                         hover:to-red-500 px-10 py-3 text-lg rounded font-bold
-                         tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
-            >
-              FIGHT!
-            </button>
+            {/* Button container with fixed positioning from bottom */}
+            <div className="h-[80px] flex items-start">
+              <button
+                onClick={() => nav('/quick-battle')}
+                className="bg-gradient-to-r from-orange-600 to-red-600
+                           hover:to-red-500 px-10 py-3 text-lg rounded font-bold
+                           tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
+              >
+                FIGHT!
+              </button>
+            </div>
           </div>
         </SteelFrame>
 
         {/* ---------- TOURNAMENT (disabled button but full color) ---------- */}
         <SteelFrame className="w-full md:w-[520px] h-[450px] relative">
-          <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
-            <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" />
+          <div className="relative flex flex-col items-center text-center h-full">
+            {/* Image container with fixed positioning */}
+            <div className="h-[180px] flex items-end justify-center pt-8">
+              <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" />
+            </div>
 
-            <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
+            {/* Title with fixed height */}
+            <h2 className="text-3xl text-neonYel h-[40px] flex items-center mt-4">
+              TOURNAMENT&nbsp;MODE
+            </h2>
 
-             <p className="text-base leading-relaxed">
-              4&nbsp;sessions<br />
-              2&nbsp;hours<br />
-              No&nbsp;mercy
-            </p>
+            {/* Description */}
+            <div className="flex-1 flex items-center">
+              <p className="text-base leading-relaxed">
+                4&nbsp;sessions<br />
+                2&nbsp;hours<br />
+                No&nbsp;mercy
+              </p>
+            </div>
 
-            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed">
-              COMING&nbsp;SOON
+            {/* Button container with fixed positioning from bottom */}
+            <div className="h-[80px] flex items-start">
+              <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed">
+                COMING&nbsp;SOON
+              </div>
             </div>
           </div>
 
