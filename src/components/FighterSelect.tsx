@@ -80,7 +80,7 @@ export default function FighterSelect() {
       <button
         onMouseEnter={() => setHover(f.id)}
         onClick={() => setSelect(f.id)}
-        className={`w-full aspect-square ring-offset-0 transition
+        className={`w-36 h-36 ring-offset-0 transition
           ${sel ? `${ring} ring-4`
                : hov ? `${ring}/60 ring-4`
                : 'ring-0'}`}
@@ -112,12 +112,12 @@ export default function FighterSelect() {
       </h1>
 
       {/* HERO GRID | PREVIEW | VILLAIN GRID */}
-      <div className="flex gap-6 flex-wrap justify-center items-start">
+      <div className="flex gap-12 justify-center items-start">
         {/* ---------- HEROES ---------- */}
         <div className="flex flex-col items-center">
           <SectionHeader label="HEROES" />
           <Frame side="hero" setHover={setHover}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {heroes.map(f => (
                 <Tile key={f.id} f={f} ring="ring-crtBlue" setHover={setHover} />
               ))}
@@ -177,7 +177,7 @@ export default function FighterSelect() {
         <div className="flex flex-col items-center">
           <SectionHeader label="VILLAINS" />
           <Frame side="villain" setHover={setHover}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {villains.map(f => (
                 <Tile key={f.id} f={f} ring="ring-neonRed" setHover={setHover} />
               ))}
