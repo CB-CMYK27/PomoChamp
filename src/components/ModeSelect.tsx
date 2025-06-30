@@ -12,7 +12,7 @@ const SteelFrame: React.FC<
   React.PropsWithChildren<{ disabled?: boolean; className?: string }>
 > = ({ disabled, className = '', children }) => (
   <div
-    className={relative p-6 ${className}}
+    className={`relative p-6 ${className}`}
     style={{
       background: '#4a5568',                // dark grey outer border
       boxShadow:
@@ -40,9 +40,9 @@ const SteelFrame: React.FC<
       ].map((pos, i) => (
         <span
           key={i}
-          className={absolute ${pos.replace('middle', 'top-1/2 -translate-y-1/2')}
+          className={`absolute ${pos.replace('middle', 'top-1/2 -translate-y-1/2')}
                       w-3 h-3 bg-gray-700 rounded-full
-                      shadow-[inset_0_1px_1px_#fff4,0_0_3px_#0009]}
+                      shadow-[inset_0_1px_1px_#fff4,0_0_3px_#0009]`}
         />
       ))}
 
@@ -54,7 +54,7 @@ const SteelFrame: React.FC<
         }}
       >
         {/* content */}
-        <div className={h-full ${disabled ? 'opacity-60' : ''}}>{children}</div>
+        <div className={`h-full ${disabled ? 'opacity-60' : ''}`}>{children}</div>
       </div>
     </div>
   </div>
