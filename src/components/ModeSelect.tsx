@@ -123,7 +123,7 @@ export default function ModeSelect() {
         </SteelFrame>
 
         {/* ---------- TOURNAMENT (disabled button but full color) ---------- */}
-        <SteelFrame className="w-full md:w-[520px] h-[450px] relative">
+        <SteelFrame className="w-full md:w-[640px] h-[480px]">
           <div className="relative flex flex-col items-center text-center h-full">
             {/* Image container with fixed height - center the image */}
             <div className="h-[200px] flex items-center justify-center">
@@ -134,7 +134,7 @@ export default function ModeSelect() {
             <h2 className="text-3xl text-neonYel mb-4">TOURNAMENT&nbsp;MODE</h2>
 
             {/* Description */}
-            <div className="flex-1 flex items-center">
+            <div className="flex-1 flex items-center pb-4">
               <p className="text-base leading-relaxed">
                 4&nbsp;sessions<br />
                 2&nbsp;hours<br />
@@ -143,21 +143,12 @@ export default function ModeSelect() {
             </div>
 
             {/* Button container with fixed positioning from bottom */}
-            <div className="h-[80px] flex items-start">
+            <div className="h-[100px] flex items-start pt-2">
               <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed">
                 COMING&nbsp;SOON
               </div>
             </div>
           </div>
-
-          {/* Caution strip overlay positioned over the button area */}
-          <div
-            className="absolute left-0 right-0 bottom-8 h-8 opacity-70 pointer-events-none"
-            style={{
-              backgroundImage:
-                'repeating-linear-gradient(135deg,#FFC300 0 20px,#0D0D0F 20px 40px)',
-            }}
-          />
         </SteelFrame>
       </div>
     </div>
