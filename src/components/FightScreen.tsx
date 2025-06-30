@@ -175,7 +175,6 @@ if (fallback) fallback.style.display = 'block';
 }}
 />
 
-```
     {/* Fallback text if image fails */}
     <div className="text-fallback text-neonRed font-mono font-black text-8xl 
                     transform transition-all duration-1000
@@ -188,7 +187,6 @@ if (fallback) fallback.style.display = 'block';
     </div>
   </div>
 );
-```
 
 }
 
@@ -229,7 +227,6 @@ const skipCountdownRef = useRef(false);
 const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
 if (!playerFighter) return null;
 
-```
 if (mode === 'quick-battle') {
   const counterpartId = COUNTERPARTS[playerFighter.id];
   const counterpart = fighters.find((f: any) => f.id === counterpartId);
@@ -239,7 +236,6 @@ if (mode === 'quick-battle') {
   const opponentIndex = (round - 1) % availableOpponents.length;
   return availableOpponents[opponentIndex] || null;
 }
-```
 
 };
 
@@ -247,7 +243,6 @@ if (mode === 'quick-battle') {
 const getStage = (playerFighter: Fighter, mode: string, round: number): string => {
 if (!playerFighter) return 'construction-floor.webp';
 
-```
 if (mode === 'quick-battle' || round === 1) {
   const stageMapping: { [key: string]: string } = {
     // Heroes
@@ -277,7 +272,6 @@ if (mode === 'quick-battle' || round === 1) {
   const stageIndex = (round - 1) % AVAILABLE_STAGES.length;
   return AVAILABLE_STAGES[stageIndex];
 }
-```
 
 };
 
@@ -289,7 +283,7 @@ selectedFighter: selectedFighter || null,
 opponent: opponent,
 tasks: initialTasks?.map((task: any, index: number) => ({
 ...task,
-id: [task.id](http://task.id) || `task-${index}`,
+id: task.id || `task-${index}`,
 completed: false
 })) || [],
 timeRemaining: 25 * 60,
@@ -330,16 +324,14 @@ const timer = setTimeout(() => {
 setShowBreakScreen(true);
 }, 2000); // 2 second delay to show victory/defeat briefly
 
-```
   return () => clearTimeout(timer);
 }
-```
 
 }, [session.gameState]);
 
 const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
 return tasks.map((task, index) => ({
-taskId: [task.id](http://task.id),
+taskId: task.id,
 estimatedTime: task.estimatedTime,
 timeRemaining: task.estimatedTime * 60, // Convert to seconds (integer)
 status: index === 0 ? 'active' : 'pending'
@@ -358,9 +350,7 @@ console.error('Error loading user:', error);
 }
 };
 
-```
 loadUser();
-```
 
 }, []);
 
@@ -370,7 +360,6 @@ const createSession = async () => {
 if (session.gameState === 'fighting' && !gameSessionId && !isInitializingSession && currentUser) {
 setIsInitializingSession(true);
 
-```
     try {
       console.log('🎮 Creating game session for user:', currentUser.user_id);
       
@@ -432,7 +421,6 @@ setIsInitializingSession(true);
 };
 
 createSession();
-```
 
 }, [session.gameState, gameSessionId, isInitializingSession, currentUser, session.selectedFighter, session.tasks, session.gameMode, session.currentRound]);
 
@@ -443,7 +431,6 @@ if ((session.gameState === 'victory' || session.gameState === 'defeat') && gameS
 try {
 console.log('🎮 Updating game session on game end');
 
-```
       // Calculate final score
       const completedTasks = session.tasks.filter(task => task.completed);
       const totalScore = completedTasks.reduce((sum, task) => sum + (task.estimatedTime * 4), 0);
@@ -482,7 +469,6 @@ console.log('🎮 Updating game session on game end');
 };
 
 updateSession();
-```
 
 }, [session.gameState, gameSessionId, currentUser, session.tasks]);
 
@@ -498,7 +484,6 @@ currentResolveRef.current = resolve;
 introTimeoutRef.current = setTimeout(resolve, 2000);
 });
 
-```
       // Phase 2: Player quip (2.5 seconds)
       setIntroPhase('player-quip');
       await new Promise(resolve => {
@@ -563,7 +548,6 @@ return () => {
     clearTimeout(introTimeoutRef.current);
   }
 };
-```
 
 }, [session.gameState]);
 
@@ -572,7 +556,6 @@ const handleFirstInteraction = async () => {
 if (!audioInitialized) {
 console.log('🎮 First user interaction detected - initializing audio');
 
-```
   try {
     // Initialize audio manager
     await audioManager.initialize();
@@ -589,7 +572,6 @@ console.log('🎮 First user interaction detected - initializing audio');
     console.error('❌ Failed to initialize audio:', error);
   }
 }
-```
 
 };
 
@@ -604,7 +586,6 @@ setSession(prev => ({ ...prev, taskTimers: initialTimers }));
 return;
 }
 
-```
   // Reset last tick time when starting/resuming
   lastTickRef.current = Date.now();
 
@@ -738,7 +719,6 @@ return;
     console.log('🛑 Timer cleared - game paused or time expired');
   }
 }
-```
 
 }, [session.gameState, session.timeRemaining > 0, session.taskTimers.length > 0]); // FIXED: Better dependency array
 
@@ -746,7 +726,6 @@ return;
 const completeTask = async (taskId: string) => {
 console.log(`⚔️ Completing task: ${taskId}`);
 
-```
 setSession(prev => {
   // Check if task can be completed (must be active)
   const taskTimer = prev.taskTimers.find(timer => timer.taskId === taskId);
@@ -834,7 +813,6 @@ setSession(prev => {
     currentTaskIndex: taskIndex + 1
   };
 });
-```
 
 };
 
@@ -843,7 +821,6 @@ const togglePause = () => {
 setSession(prev => {
 const newGameState = prev.gameState === 'fighting' ? 'paused' : 'fighting';
 
-```
   console.log(newGameState === 'fighting' ? '▶️ Game resumed' : '⏸️ Game paused');
   
   return {
@@ -851,7 +828,6 @@ const newGameState = prev.gameState === 'fighting' ? 'paused' : 'fighting';
     gameState: newGameState
   };
 });
-```
 
 };
 
@@ -867,7 +843,6 @@ return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 const skipIntroPhase = () => {
 if (!canSkip || session.gameState !== 'intro') return;
 
-```
 console.log(`⏭️ Skipping intro phase: ${introPhase}`);
 
 // Special handling for countdown phase - set skip flag instead of resolving
@@ -887,7 +862,6 @@ if (currentResolveRef.current) {
   currentResolveRef.current();
   currentResolveRef.current = null;
 }
-```
 
 };
 
@@ -976,7 +950,6 @@ console.log('❌ Background image failed to load:', session.stage);
 }}
 />
 
-```
   {/* Fallback gradient background */}
   <div 
     className="absolute inset-0 w-full h-full bg-gradient-to-b from-purple-900 via-crtBlue to-black"
@@ -1262,7 +1235,6 @@ console.log('❌ Background image failed to load:', session.stage);
     )}
   </div>
 </div>
-```
 
 );
 };
