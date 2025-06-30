@@ -612,24 +612,24 @@ return;
       // Update main session timer by subtracting elapsed time (ensure integer)
       const newSessionTimeRemaining = Math.max(0, prev.timeRemaining - simulatedElapsedSeconds);
 
+      // Check if session time expired - FIXED: Always set defeat when timer runs out
       if (newSessionTimeRemaining <= 0) {
-        // Session time expired - opponent attacks player
-        const newFighterHP = Math.max(0, prev.fighterHP - 20);
+        console.log('⏰ Session timer expired - setting defeat state');
         
         // Play session timeout sequence
         if (prev.opponent) {
           audioManager.playSessionTimeoutSequence(
             prev.opponent.id,
             prev.selectedFighter.id,
-            newFighterHP <= 0
+            true // Session timeout is always a defeat
           );
         }
         
-        if (newFighterHP <= 0) {
-          return { ...prev, timeRemaining: 0, fighterHP: 0, gameState: 'defeat' };
-        }
-        
-        return { ...prev, timeRemaining: 0, fighterHP: newFighterHP };
+        return { 
+          ...prev, 
+          timeRemaining: 0, 
+          gameState: 'defeat' // FIXED: Always defeat when session timer expires
+        };
       }
 
       // Update individual task timers by subtracting elapsed time (ensure integers)
@@ -695,6 +695,28 @@ return;
 
       if (totalDamage > 0) {
         console.log(`💔 Total damage: ${totalDamage}, Fighter HP: ${prev.fighterHP} → ${newFighterHP}`);
+      }
+
+      // FIXED: Check if fighter HP dropped to zero and set defeat state
+      if (newFighterHP <= 0) {
+        console.log('💀 Fighter HP reached zero - setting defeat state');
+        
+        // Play death sequence if not already playing session timeout
+        if (prev.opponent && newSessionTimeRemaining > 0) {
+          audioManager.playSessionTimeoutSequence(
+            prev.opponent.id,
+            prev.selectedFighter.id,
+            true // Player dies from HP loss
+          );
+        }
+        
+        return {
+          ...prev,
+          timeRemaining: newSessionTimeRemaining,
+          taskTimers: updatedTaskTimersWithDamage,
+          fighterHP: 0,
+          gameState: 'defeat' // FIXED: Set defeat when HP reaches zero
+        };
       }
 
       return {
@@ -1062,8 +1084,8 @@ console.log('❌ Background image failed to load:', session.stage);
                       isActive ? 'border-neonYel bg-neonYel/10' : 'border-gray-600'
                     }`}>
                       <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className={`font-mono text-sm font-bold ${
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-mono text-sm font-bold break-words ${
                             task.completed ? 'text-green-400 line-through' : 
                             isFailed ? 'text-neonRed line-through' :
                             'text-white'
@@ -1103,7 +1125,7 @@ console.log('❌ Background image failed to load:', session.stage);
                               completeTask(task.id);
                             }}
                             disabled={!isActive}
-                            className={`font-mono px-3 py-1 text-xs border-2 transition-colors ml-2 ${
+                            className={`font-mono px-3 py-1 text-xs border-2 transition-colors ml-2 flex-shrink-0 ${
                               isActive 
                                 ? 'bg-neonRed text-white border-neonRed/80 hover:bg-neonRed/80' 
                                 : 'bg-gray-600 text-gray-400 border-gray-500 cursor-not-allowed'
@@ -1114,11 +1136,11 @@ console.log('❌ Background image failed to load:', session.stage);
                         )}
                         
                         {task.completed && (
-                          <div className="text-green-400 font-mono text-xs font-bold">✓ DONE</div>
+                          <div className="text-green-400 font-mono text-xs font-bold flex-shrink-0">✓ DONE</div>
                         )}
                         
                         {isFailed && (
-                          <div className="text-neonRed font-mono text-xs font-bold">✗ FAILED</div>
+                          <div className="text-neonRed font-mono text-xs font-bold flex-shrink-0">✗ FAILED</div>
                         )}
                       </div>
                     </div>
