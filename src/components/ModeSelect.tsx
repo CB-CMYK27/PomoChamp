@@ -77,7 +77,7 @@ export default function ModeSelect() {
 
           {/* ---------- QUICK BATTLE ---------- */}
           <SteelFrame className="w-full md:flex-1 max-w-xl h-[400px]">
-            <div className="flex flex-col items-center text-center space-y-6 h-full pt-4 pb-10">
+            <div className="flex flex-col items-center text-center space-y-6 h-full pt-4 pb-16">
               <div className="flex flex-col items-center space-y-6">
                 <img src={GlovesPNG} alt="Crossed gloves" className="w-24 h-24" />
 
@@ -103,7 +103,7 @@ export default function ModeSelect() {
 
           {/* ---------- TOURNAMENT (visually enabled but functionally disabled) ---------- */}
           <SteelFrame className="w-full md:flex-1 max-w-xl h-[400px] relative">
-            <div className="flex flex-col items-center text-center space-y-6 h-full pt-4 pb-10">
+            <div className="flex flex-col items-center text-center space-y-6 h-full pt-4 pb-16">
               <div className="flex flex-col items-center space-y-6">
                 <img src={TrophyPNG} alt="Trophy" className="w-24 h-24" />
 
