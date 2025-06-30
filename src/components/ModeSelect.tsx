@@ -12,7 +12,6 @@ const SteelFrame: React.FC<
   React.PropsWithChildren<{ disabled?: boolean; className?: string }>
 > = ({ disabled, className = '', children }) => (
   <div
-    {/* Reduced from p-6 to p-4 for more content space */}
     className={`relative p-4 ${className}`}
     style={{
       background: '#4a5568',                // dark grey outer border
@@ -49,7 +48,6 @@ const SteelFrame: React.FC<
 
       {/* Black card content area */}
       <div 
-        {/* Increased from p-4 to p-6 for more content padding */}
         className="w-full h-full p-6"
         style={{
           background: '#0D0D0F'              // black inner screen
@@ -92,11 +90,8 @@ export default function ModeSelect() {
       <div className="flex flex-col md:flex-row gap-12 items-center justify-center flex-1 pb-16">
 
         {/* ---------- QUICK BATTLE ---------- */}
-        {/* Made larger */}
         <SteelFrame className="w-full md:w-[520px] h-[450px]">
-          {/* Adjusted spacing to prevent overlap */}
           <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
-            {/* Made larger */}
             <img src={GlovesPNG} alt="Crossed gloves" className="w-28 h-28" />
 
             <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
@@ -119,11 +114,8 @@ export default function ModeSelect() {
         </SteelFrame>
 
         {/* ---------- TOURNAMENT (disabled) ---------- */}
-        {/* Made larger */}
         <SteelFrame disabled className="w-full md:w-[520px] h-[450px] relative">
-          {/* Adjusted spacing to prevent overlap */}
           <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
-            {/* Made larger */}
             <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" />
 
             <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
@@ -140,7 +132,6 @@ export default function ModeSelect() {
 
           {/* Caution strip overlay positioned over the button area */}
           <div
-            {/* Moved up from bottom-6 to bottom-8 */}
             className="absolute left-0 right-0 bottom-8 h-8 opacity-70 pointer-events-none"
             style={{
               backgroundImage:
