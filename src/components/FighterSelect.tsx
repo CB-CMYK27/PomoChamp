@@ -5,19 +5,14 @@ import fighters from '../data/fighters.json';
 import { useGameStore } from '../store/gameStore';
 
 /* coloured frame around each 3 × 2 grid */
-const Frame: React.FC<{ side: 'hero' | 'villain'; children: React.ReactNode }> =
-  ({ side, children }) => (
+const Frame: React.FC<{ side: 'hero' | 'villain'; children: React.ReactNode; setHover: (id: string | null) => void }> =
+  ({ side, children, setHover }) => (
     <div
       className={`border-4 p-3 bg-bezel
         ${side === 'hero' ? 'border-crtBlue' : 'border-neonRed'}`}
+      onMouseLeave={() => setHover(null)}
     >
-      {/* FIXED: Add onMouseLeave to the grid container to reset hover state */}
-      <div 
-        className="w-full h-full p-6"
-        onMouseLeave={() => setHover(null)}
-      >
-        {children}
-      </div>
+      {children}
     </div>
   );
 
@@ -56,7 +51,6 @@ export default function FighterSelect() {
   const [hoverId,    setHover]  = useState<string | null>(null);
   const [selectedId, setSelect] = useState<string | null>(null);
 
-  // FIXED: Prioritize hoverId over selectedId for preview display
   const activeId        = hoverId || selectedId;
   const activeFighter   = fighters.find(f => f.id === activeId) || null;
   const selectedFighter = fighters.find(f => f.id === selectedId) || null;
@@ -78,16 +72,15 @@ export default function FighterSelect() {
   }
 
   /* 144-px portrait button – no bounce */
-  const Tile: React.FC<{ f: any; ring: string }> = ({ f, ring }) => {
+  const Tile: React.FC<{ f: any; ring: string; setHover: (id: string | null) => void }> = ({ f, ring, setHover }) => {
     const sel = selectedId === f.id;
     const hov = hoverId    === f.id;
 
     return (
       <button
         onMouseEnter={() => setHover(f.id)}
-        // FIXED: Remove individual onMouseLeave - handled by Frame container
         onClick={() => setSelect(f.id)}
-        className={`w-36 h-36 ring-offset-0 transition
+        className={`w-full aspect-square ring-offset-0 transition
           ${sel ? `${ring} ring-4`
                : hov ? `${ring}/60 ring-4`
                : 'ring-0'}`}
@@ -119,14 +112,14 @@ export default function FighterSelect() {
       </h1>
 
       {/* HERO GRID | PREVIEW | VILLAIN GRID */}
-      <div className="flex gap-12 flex-wrap justify-center items-start">
+      <div className="flex gap-6 flex-wrap justify-center items-start">
         {/* ---------- HEROES ---------- */}
         <div className="flex flex-col items-center">
           <SectionHeader label="HEROES" />
-          <Frame side="hero">
-            <div className="grid grid-cols-3 gap-2">
+          <Frame side="hero" setHover={setHover}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {heroes.map(f => (
-                <Tile key={f.id} f={f} ring="ring-crtBlue" />
+                <Tile key={f.id} f={f} ring="ring-crtBlue" setHover={setHover} />
               ))}
             </div>
           </Frame>
@@ -183,10 +176,10 @@ export default function FighterSelect() {
         {/* ---------- VILLAINS ---------- */}
         <div className="flex flex-col items-center">
           <SectionHeader label="VILLAINS" />
-          <Frame side="villain">
-            <div className="grid grid-cols-3 gap-2">
+          <Frame side="villain" setHover={setHover}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {villains.map(f => (
-                <Tile key={f.id} f={f} ring="ring-neonRed" />
+                <Tile key={f.id} f={f} ring="ring-neonRed" setHover={setHover} />
               ))}
             </div>
           </Frame>
