@@ -820,7 +820,7 @@ return;
         fighterHP: newFighterHP
       };
     });
-  }, 100);
+  }, 1000); // FIXED: Changed from 100ms to 1000ms (1 second) for proper timer functionality
 
   return () => {
     if (timerRef.current) {
