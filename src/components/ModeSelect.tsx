@@ -92,7 +92,7 @@ export default function ModeSelect() {
         {/* ---------- QUICK BATTLE ---------- */}
         <SteelFrame className="w-full md:w-[520px] h-[450px]">
           <div className="flex flex-col items-center text-center space-y-6 h-full justify-center pb-8">
-            <img src={GlovesPNG} alt="Crossed gloves" className="w-28 h-28" />
+            <img src={GlovesPNG} alt="Crossed gloves" className="w-40 h-40" />
 
             <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
 
