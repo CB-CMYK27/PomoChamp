@@ -99,56 +99,6 @@ const AVAILABLE_STAGES = [
 'army-base.webp'
 ];
 
-// Helper function to get opponent - moved outside component
-const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
-if (!playerFighter) return null;
-
-if (mode === 'quick-battle') {
-  const counterpartId = COUNTERPARTS[playerFighter.id];
-  const counterpart = fighters.find((f: any) => f.id === counterpartId);
-  return counterpart || null;
-} else {
-  const availableOpponents = fighters.filter((f: any) => f.id !== playerFighter.id);
-  const opponentIndex = (round - 1) % availableOpponents.length;
-  return availableOpponents[opponentIndex] || null;
-}
-};
-
-// Helper function to get stage - moved outside component
-const getStage = (playerFighter: Fighter, mode: string, round: number): string => {
-if (!playerFighter) return 'construction-floor.webp';
-
-if (mode === 'quick-battle' || round === 1) {
-  const stageMapping: { [key: string]: string } = {
-    // Heroes
-    'jack-tower': 'construction-floor.webp',
-    'ellen-ryker': 'cargo-hold.webp',
-    'raging-stallion': 'boxing-ring.webp',
-    'beach-belle': 'lifeguard-deck.webp',
-    'bond-sterling': 'casino-terrace.webp',
-    'waves-mcrad': 'coastal-skatepark.webp',
-    
-    // Villains
-    'prof-kruber': 'rooftop.webp',
-    'queen-chroma': 'alien-hive.webp',
-    'iron-titan': 'moscow-ring.webp',
-    'dr-whiskers': 'volcano-lair.webp',
-    'jawsome': 'ocean-shallows.webp',
-    'gen-buzzkill': 'army-base.webp'
-  };
-  
-  const mappedStage = stageMapping[playerFighter.id];
-  if (mappedStage && AVAILABLE_STAGES.includes(mappedStage)) {
-    return mappedStage;
-  }
-  
-  return 'construction-floor.webp';
-} else {
-  const stageIndex = (round - 1) % AVAILABLE_STAGES.length;
-  return AVAILABLE_STAGES[stageIndex];
-}
-};
-
 /* ───────── Speech bubble (pixel-art, grows outward) ───────── */
 
 type BubbleSide = 'left' | 'right';
@@ -261,9 +211,6 @@ const lastTickRef = useRef<number>(Date.now()); // Track last tick time for accu
 
 // Game store for global state management
 const { 
-  currentFightSession,
-  setCurrentFightSession,
-  updateFightSession,
   registerTogglePause, 
   clearFightScreenData, 
   setFightScreenGameState 
@@ -306,48 +253,6 @@ const introTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 const currentResolveRef = useRef<(() => void) | null>(null);
 const skipCountdownRef = useRef(false);
 
-// Initialize or restore session from global store
-const initializeSession = (): FightSession => {
-  // If we have a current session in the store, use it
-  if (currentFightSession) {
-    console.log('🎮 [INIT] Restoring session from global store:', currentFightSession);
-    return currentFightSession;
-  }
-
-  // Otherwise, create a new session from location state
-  console.log('🎮 [INIT] Creating new session from location state');
-  
-  const opponent = selectedFighter ? getOpponent(selectedFighter, gameMode, currentRound) : null;
-  const stageBackground = selectedFighter ? getStage(selectedFighter, gameMode, currentRound) : AVAILABLE_STAGES[0];
-
-  const newSession: FightSession = {
-    selectedFighter: selectedFighter || null,
-    opponent: opponent,
-    tasks: initialTasks?.map((task: any, index: number) => ({
-      ...task,
-      id: task.id || `task-${index}`,
-      completed: false
-    })) || [],
-    timeRemaining: 25 * 60,
-    fighterHP: 100,
-    opponentHP: 100,
-    gameState: 'intro',
-    gameMode: gameMode,
-    currentRound: currentRound,
-    stage: stageBackground,
-    currentTaskIndex: 0,
-    taskTimers: [],
-    failedTasks: []
-  };
-
-  // Store the new session in the global store
-  setCurrentFightSession(newSession);
-  return newSession;
-};
-
-// Get the session (either from store or initialize new one)
-const session = initializeSession();
-
 // Animation trigger functions
 const triggerPlayerPunch = () => {
 console.log('🥊 [ANIMATION] Triggering player punch animation');
@@ -381,14 +286,80 @@ setOpponentAnimation(prev => ({ ...prev, isHit: false, redGlow: false }));
 }, 300); // 300ms hit animation
 };
 
-const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
-return tasks.map((task, index) => ({
-taskId: task.id,
-estimatedTime: task.estimatedTime,
-timeRemaining: task.estimatedTime * 60, // Convert to seconds (integer)
-status: index === 0 ? 'active' : 'pending'
-}));
+// Helper function to get opponent
+const getOpponent = (playerFighter: Fighter, mode: string, round: number): Fighter | null => {
+if (!playerFighter) return null;
+
+if (mode === 'quick-battle') {
+  const counterpartId = COUNTERPARTS[playerFighter.id];
+  const counterpart = fighters.find((f: any) => f.id === counterpartId);
+  return counterpart || null;
+} else {
+  const availableOpponents = fighters.filter((f: any) => f.id !== playerFighter.id);
+  const opponentIndex = (round - 1) % availableOpponents.length;
+  return availableOpponents[opponentIndex] || null;
+}
+
 };
+
+// Helper function to get stage - UPDATED WITH CORRECT MAPPINGS
+const getStage = (playerFighter: Fighter, mode: string, round: number): string => {
+if (!playerFighter) return 'construction-floor.webp';
+
+if (mode === 'quick-battle' || round === 1) {
+  const stageMapping: { [key: string]: string } = {
+    // Heroes
+    'jack-tower': 'construction-floor.webp',
+    'ellen-ryker': 'cargo-hold.webp',
+    'raging-stallion': 'boxing-ring.webp',
+    'beach-belle': 'lifeguard-deck.webp',
+    'bond-sterling': 'casino-terrace.webp',
+    'waves-mcrad': 'coastal-skatepark.webp',
+    
+    // Villains
+    'prof-kruber': 'rooftop.webp',
+    'queen-chroma': 'alien-hive.webp',
+    'iron-titan': 'moscow-ring.webp',
+    'dr-whiskers': 'volcano-lair.webp',
+    'jawsome': 'ocean-shallows.webp',
+    'gen-buzzkill': 'army-base.webp'
+  };
+  
+  const mappedStage = stageMapping[playerFighter.id];
+  if (mappedStage && AVAILABLE_STAGES.includes(mappedStage)) {
+    return mappedStage;
+  }
+  
+  return 'construction-floor.webp';
+} else {
+  const stageIndex = (round - 1) % AVAILABLE_STAGES.length;
+  return AVAILABLE_STAGES[stageIndex];
+}
+
+};
+
+const opponent = selectedFighter ? getOpponent(selectedFighter, gameMode, currentRound) : null;
+const stageBackground = selectedFighter ? getStage(selectedFighter, gameMode, currentRound) : AVAILABLE_STAGES[0];
+
+const [session, setSession] = useState<FightSession>({
+selectedFighter: selectedFighter || null,
+opponent: opponent,
+tasks: initialTasks?.map((task: any, index: number) => ({
+...task,
+id: task.id || `task-${index}`,
+completed: false
+})) || [],
+timeRemaining: 25 * 60,
+fighterHP: 100,
+opponentHP: 100,
+gameState: 'intro',
+gameMode: gameMode,
+currentRound: currentRound,
+stage: stageBackground,
+currentTaskIndex: 0,
+taskTimers: [],
+failedTasks: []
+});
 
 // FIXED: Set break duration from location state on component mount
 useEffect(() => {
@@ -398,18 +369,18 @@ console.log(`🏖️ Break duration set to: ${breakDuration} minutes`);
 }
 }, [breakDuration]);
 
-// Register toggle pause function with game store and cleanup on unmount
+// Register toggle pause function with game store
 useEffect(() => {
 registerTogglePause(togglePause);
 return () => {
 clearFightScreenData();
 };
-}, []);
+}, [registerTogglePause, clearFightScreenData]);
 
 // Update game store with current fight screen state
 useEffect(() => {
 setFightScreenGameState(session.gameState);
-}, [session.gameState]);
+}, [session.gameState, setFightScreenGameState]);
 
 // Break screen callback functions
 const handleBreakComplete = () => {
@@ -434,6 +405,15 @@ setShowBreakScreen(true);
 }
 
 }, [session.gameState]);
+
+const initializeTaskTimers = (tasks: Task[]): TaskTimer[] => {
+return tasks.map((task, index) => ({
+taskId: task.id,
+estimatedTime: task.estimatedTime,
+timeRemaining: task.estimatedTime * 60, // Convert to seconds (integer)
+status: index === 0 ? 'active' : 'pending'
+}));
+};
 
 // Load current user on component mount
 useEffect(() => {
@@ -494,17 +474,18 @@ setIsInitializingSession(true);
         }
         
         // Update session with tasks that have proper database UUIDs
-        const updatedSession = {
-          ...session,
-          tasks: updatedTasks
-        };
-        
-        // Re-initialize task timers with updated task IDs
-        const newTaskTimers = initializeTaskTimers(updatedTasks);
-        updatedSession.taskTimers = newTaskTimers;
-        
-        // Update the global store
-        setCurrentFightSession(updatedSession);
+        setSession(prev => {
+          const newSession = {
+            ...prev,
+            tasks: updatedTasks
+          };
+          
+          // Re-initialize task timers with updated task IDs
+          const newTaskTimers = initializeTaskTimers(updatedTasks);
+          newSession.taskTimers = newTaskTimers;
+          
+          return newSession;
+        });
         
         console.log('✅ All tasks added to session with database UUIDs');
       }
@@ -626,7 +607,7 @@ introTimeoutRef.current = setTimeout(resolve, 2000);
       });
       
       // Phase 6: Start fighting!
-      updateFightSession({ gameState: 'fighting' });
+      setSession(prev => ({ ...prev, gameState: 'fighting' }));
       setIntroPhase('fighting');
       setCanSkip(false);
     } catch (error) {
@@ -678,7 +659,7 @@ if (session.gameState === 'fighting' && session.timeRemaining > 0) {
 // Initialize task timers on first run
 if (session.taskTimers.length === 0 && session.tasks.length > 0) {
 const initialTimers = initializeTaskTimers(session.tasks);
-updateFightSession({ taskTimers: initialTimers });
+setSession(prev => ({ ...prev, taskTimers: initialTimers }));
 return;
 }
 
@@ -698,137 +679,146 @@ return;
     // Skip update if no time has elapsed (prevents unnecessary re-renders)
     if (simulatedElapsedSeconds <= 0) return;
 
-    // Update main session timer by subtracting elapsed time (ensure integer)
-    const newSessionTimeRemaining = Math.max(0, session.timeRemaining - simulatedElapsedSeconds);
-
-    // FIXED: Check for session timeout and determine outcome based on HP comparison
-    if (newSessionTimeRemaining <= 0) {
-      console.log('⏰ Session timer expired - determining outcome based on HP');
-      
-      let gameOutcome: 'victory' | 'defeat' | 'draw';
-      
-      if (session.fighterHP > session.opponentHP) {
-        gameOutcome = 'victory';
-        console.log(`🏆 Victory! Player HP: ${session.fighterHP}, Opponent HP: ${session.opponentHP}`);
-      } else if (session.fighterHP < session.opponentHP) {
-        gameOutcome = 'defeat';
-        console.log(`💀 Defeat! Player HP: ${session.fighterHP}, Opponent HP: ${session.opponentHP}`);
-      } else {
-        gameOutcome = 'draw';
-        console.log(`🤝 Draw! Both fighters have ${session.fighterHP} HP`);
+    setSession(prev => {
+      // CRITICAL: Check if game is still in fighting state before updating
+      if (prev.gameState !== 'fighting') {
+        console.log('🛑 Timer stopped - game no longer in fighting state');
+        return prev; // Don't update if not fighting
       }
-      
-      // Play appropriate audio sequence with animations
-      if (session.opponent) {
-        if (gameOutcome === 'victory') {
-          audioManager.playEventSound('victory');
+
+      // Update main session timer by subtracting elapsed time (ensure integer)
+      const newSessionTimeRemaining = Math.max(0, prev.timeRemaining - simulatedElapsedSeconds);
+
+      // FIXED: Check for session timeout and determine outcome based on HP comparison
+      if (newSessionTimeRemaining <= 0) {
+        console.log('⏰ Session timer expired - determining outcome based on HP');
+        
+        let gameOutcome: 'victory' | 'defeat' | 'draw';
+        
+        if (prev.fighterHP > prev.opponentHP) {
+          gameOutcome = 'victory';
+          console.log(`🏆 Victory! Player HP: ${prev.fighterHP}, Opponent HP: ${prev.opponentHP}`);
+        } else if (prev.fighterHP < prev.opponentHP) {
+          gameOutcome = 'defeat';
+          console.log(`💀 Defeat! Player HP: ${prev.fighterHP}, Opponent HP: ${prev.opponentHP}`);
         } else {
-          audioManager.playEventSound('defeat');
+          gameOutcome = 'draw';
+          console.log(`🤝 Draw! Both fighters have ${prev.fighterHP} HP`);
         }
-      }
-      
-      updateFightSession({ 
-        timeRemaining: 0, 
-        gameState: gameOutcome
-      });
-      return;
-    }
-
-    // Update individual task timers by subtracting elapsed time (ensure integers)
-    const updatedTaskTimers = session.taskTimers.map((timer, index) => {
-      if (timer.status !== 'active') return timer;
-
-      const newTaskTimeRemaining = timer.timeRemaining - simulatedElapsedSeconds;
-
-      // 30-second warning (only once, using range to avoid duplicates)
-      if (newTaskTimeRemaining <= 30 && newTaskTimeRemaining > 25 && !timer.hasPlayedWarning) {
-        console.log(`⚠️ 30-second warning for task: ${timer.taskId}`);
-        audioManager.playWarningSound();
-        return {
-          ...timer,
-          timeRemaining: newTaskTimeRemaining,
-          hasPlayedWarning: true
+        
+        // Play appropriate audio sequence with animations
+        if (prev.opponent) {
+          if (gameOutcome === 'victory') {
+            audioManager.playEventSound('victory');
+          } else {
+            audioManager.playEventSound('defeat');
+          }
+        }
+        
+        return { 
+          ...prev, 
+          timeRemaining: 0, 
+          gameState: gameOutcome
         };
       }
 
-      // Timer hits zero - apply damage immediately (only once)
-      if (newTaskTimeRemaining <= 0 && timer.timeRemaining > 0 && !timer.damageApplied) {
-        console.log(`💥 Task timer expired: ${timer.taskId} - Applying damage`);
+      // Update individual task timers by subtracting elapsed time (ensure integers)
+      const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
+        if (timer.status !== 'active') return timer;
+
+        const newTaskTimeRemaining = timer.timeRemaining - simulatedElapsedSeconds;
+
+        // 30-second warning (only once, using range to avoid duplicates)
+        if (newTaskTimeRemaining <= 30 && newTaskTimeRemaining > 25 && !timer.hasPlayedWarning) {
+          console.log(`⚠️ 30-second warning for task: ${timer.taskId}`);
+          audioManager.playWarningSound();
+          return {
+            ...timer,
+            timeRemaining: newTaskTimeRemaining,
+            hasPlayedWarning: true
+          };
+        }
+
+        // Timer hits zero - apply damage immediately (only once)
+        if (newTaskTimeRemaining <= 0 && timer.timeRemaining > 0 && !timer.damageApplied) {
+          console.log(`💥 Task timer expired: ${timer.taskId} - Applying damage`);
+          
+          // Play task timer expired sequence with animations (opponent attacks player)
+          if (prev.opponent) {
+            audioManager.playTaskTimerExpiredSequence(
+              prev.opponent.id,
+              prev.selectedFighter.id,
+              false, // Don't kill player on single task failure
+              triggerOpponentPunch, // Opponent punch animation
+              triggerPlayerHit // Player hit animation
+            );
+          }
+          
+          // Mark as damage applied to prevent duplicates
+          return {
+            ...timer,
+            timeRemaining: newTaskTimeRemaining,
+            damageApplied: true
+          };
+        }
+
+        return {
+          ...timer,
+          timeRemaining: newTaskTimeRemaining // Can be negative (overtime)
+        };
+      });
+
+      // Calculate damage from newly expired timers (only once)
+      let totalDamage = 0;
+      const updatedTaskTimersWithDamage = updatedTaskTimers.map(timer => {
+        if (timer.damageApplied && timer.timeRemaining <= 0) {
+          const damage = timer.estimatedTime * 4;
+          totalDamage += damage;
+          console.log(`💥 Applying ${damage} damage from task: ${timer.taskId} (one time only)`);
+          
+          // Clear damage flag after applying damage once
+          return { ...timer, damageApplied: false };
+        }
+        return timer;
+      });
+
+      // Apply damage to fighter HP
+      const newFighterHP = totalDamage > 0 ? Math.max(0, prev.fighterHP - totalDamage) : prev.fighterHP;
+
+      if (totalDamage > 0) {
+        console.log(`💔 Total damage: ${totalDamage}, Fighter HP: ${prev.fighterHP} → ${newFighterHP}`);
+      }
+
+      // FIXED: Check if fighter HP dropped to zero and set defeat state
+      if (newFighterHP <= 0) {
+        console.log('💀 Fighter HP reached zero - setting defeat state');
         
-        // Play task timer expired sequence with animations (opponent attacks player)
-        if (session.opponent) {
-          audioManager.playTaskTimerExpiredSequence(
-            session.opponent.id,
-            session.selectedFighter.id,
-            false, // Don't kill player on single task failure
+        // Play death sequence if not already playing session timeout
+        if (prev.opponent && newSessionTimeRemaining > 0) {
+          audioManager.playSessionTimeoutSequence(
+            prev.opponent.id,
+            prev.selectedFighter.id,
+            true, // Player dies from HP loss
             triggerOpponentPunch, // Opponent punch animation
             triggerPlayerHit // Player hit animation
           );
         }
         
-        // Mark as damage applied to prevent duplicates
         return {
-          ...timer,
-          timeRemaining: newTaskTimeRemaining,
-          damageApplied: true
+          ...prev,
+          timeRemaining: newSessionTimeRemaining,
+          taskTimers: updatedTaskTimersWithDamage,
+          fighterHP: 0,
+          gameState: 'defeat' // FIXED: Set defeat when HP reaches zero
         };
       }
 
       return {
-        ...timer,
-        timeRemaining: newTaskTimeRemaining // Can be negative (overtime)
-      };
-    });
-
-    // Calculate damage from newly expired timers (only once)
-    let totalDamage = 0;
-    const updatedTaskTimersWithDamage = updatedTaskTimers.map(timer => {
-      if (timer.damageApplied && timer.timeRemaining <= 0) {
-        const damage = timer.estimatedTime * 4;
-        totalDamage += damage;
-        console.log(`💥 Applying ${damage} damage from task: ${timer.taskId} (one time only)`);
-        
-        // Clear damage flag after applying damage once
-        return { ...timer, damageApplied: false };
-      }
-      return timer;
-    });
-
-    // Apply damage to fighter HP
-    const newFighterHP = totalDamage > 0 ? Math.max(0, session.fighterHP - totalDamage) : session.fighterHP;
-
-    if (totalDamage > 0) {
-      console.log(`💔 Total damage: ${totalDamage}, Fighter HP: ${session.fighterHP} → ${newFighterHP}`);
-    }
-
-    // FIXED: Check if fighter HP dropped to zero and set defeat state
-    if (newFighterHP <= 0) {
-      console.log('💀 Fighter HP reached zero - setting defeat state');
-      
-      // Play death sequence if not already playing session timeout
-      if (session.opponent && newSessionTimeRemaining > 0) {
-        audioManager.playSessionTimeoutSequence(
-          session.opponent.id,
-          session.selectedFighter.id,
-          true, // Player dies from HP loss
-          triggerOpponentPunch, // Opponent punch animation
-          triggerPlayerHit // Player hit animation
-        );
-      }
-      
-      updateFightSession({
+        ...prev,
         timeRemaining: newSessionTimeRemaining,
         taskTimers: updatedTaskTimersWithDamage,
-        fighterHP: 0,
-        gameState: 'defeat' // FIXED: Set defeat when HP reaches zero
-      });
-      return;
-    }
-
-    updateFightSession({
-      timeRemaining: newSessionTimeRemaining,
-      taskTimers: updatedTaskTimersWithDamage,
-      fighterHP: newFighterHP
+        fighterHP: newFighterHP
+      };
     });
   }, 100);
 
@@ -852,103 +842,112 @@ return;
 const completeTask = async (taskId: string) => {
 console.log(`⚔️ Completing task: ${taskId}`);
 
-// Check if task can be completed (must be active)
-const taskTimer = session.taskTimers.find(timer => timer.taskId === taskId);
-if (!taskTimer || taskTimer.status !== 'active') {
-console.log(`❌ Cannot complete task ${taskId} - not active`);
-return;
-}
-
-// Calculate actual time taken for the task
-const estimatedTimeInSeconds = taskTimer.estimatedTime * 60;
-const timeRemainingInSeconds = taskTimer.timeRemaining;
-
-// If timeRemaining is positive, task was completed early
-// If timeRemaining is negative, task went into overtime
-const actualTimeInSeconds = estimatedTimeInSeconds - timeRemainingInSeconds;
-const actualMinutes = Math.round(actualTimeInSeconds / 60); // Round to nearest whole number for integer
-
-console.log(`⏱️ Task completion time analysis:
-  - Estimated: ${taskTimer.estimatedTime} minutes (${estimatedTimeInSeconds}s)
-  - Time remaining: ${timeRemainingInSeconds}s
-  - Actual time taken: ${actualMinutes} minutes (${actualTimeInSeconds}s)
-  - ${timeRemainingInSeconds < 0 ? 'OVERTIME' : 'COMPLETED EARLY'}`);
-
-const updatedTasks = session.tasks.map(task => 
-  task.id === taskId ? { ...task, completed: true } : task
-);
-
-const completedTask = session.tasks.find(task => task.id === taskId);
-const taskIndex = session.tasks.findIndex(task => task.id === taskId);
-
-const damagePerTask = completedTask ? completedTask.estimatedTime * 4 : 20;
-const newOpponentHP = Math.max(0, session.opponentHP - damagePerTask);
-
-console.log(`💥 Dealing ${damagePerTask} damage (${completedTask?.estimatedTime} min task). Opponent HP: ${session.opponentHP} → ${newOpponentHP}`);
-
-// Play damage sequence: player attacks opponent with animations
-if (session.opponent) {
-  audioManager.playDamageSequence(
-    session.selectedFighter.id,
-    session.opponent.id,
-    true, // player is attacker
-    newOpponentHP <= 0, // is killing blow
-    triggerPlayerPunch, // Player punch animation
-    triggerOpponentHit // Opponent hit animation
+setSession(prev => {
+  // Check if task can be completed (must be active)
+  const taskTimer = prev.taskTimers.find(timer => timer.taskId === taskId);
+  if (!taskTimer || taskTimer.status !== 'active') {
+    console.log(`❌ Cannot complete task ${taskId} - not active`);
+    return prev;
+  }
+  
+  // Calculate actual time taken for the task
+  const estimatedTimeInSeconds = taskTimer.estimatedTime * 60;
+  const timeRemainingInSeconds = taskTimer.timeRemaining;
+  
+  // If timeRemaining is positive, task was completed early
+  // If timeRemaining is negative, task went into overtime
+  const actualTimeInSeconds = estimatedTimeInSeconds - timeRemainingInSeconds;
+  const actualMinutes = Math.round(actualTimeInSeconds / 60); // Round to nearest whole number for integer
+  
+  console.log(`⏱️ Task completion time analysis:
+    - Estimated: ${taskTimer.estimatedTime} minutes (${estimatedTimeInSeconds}s)
+    - Time remaining: ${timeRemainingInSeconds}s
+    - Actual time taken: ${actualMinutes} minutes (${actualTimeInSeconds}s)
+    - ${timeRemainingInSeconds < 0 ? 'OVERTIME' : 'COMPLETED EARLY'}`);
+  
+  const updatedTasks = prev.tasks.map(task => 
+    task.id === taskId ? { ...task, completed: true } : task
   );
-}
-
-// Update task status in database with actual time taken
-if (gameSessionId && completedTask) {
-  updateTaskStatus(taskId, {
-    completed: true,
-    points_earned: damagePerTask,
-    actual_minutes: actualMinutes // Pass the calculated actual time as integer
-  }).catch(error => console.error('Error updating completed task:', error));
-}
-
-const updatedTaskTimers = session.taskTimers.map((timer, index) => {
-  if (timer.taskId === taskId) {
-    return { ...timer, status: 'completed' as const };
+  
+  const completedTask = prev.tasks.find(task => task.id === taskId);
+  const taskIndex = prev.tasks.findIndex(task => task.id === taskId);
+  
+  const damagePerTask = completedTask ? completedTask.estimatedTime * 4 : 20;
+  const newOpponentHP = Math.max(0, prev.opponentHP - damagePerTask);
+  
+  console.log(`💥 Dealing ${damagePerTask} damage (${completedTask?.estimatedTime} min task). Opponent HP: ${prev.opponentHP} → ${newOpponentHP}`);
+  
+  // Play damage sequence: player attacks opponent with animations
+  if (prev.opponent) {
+    audioManager.playDamageSequence(
+      prev.selectedFighter.id,
+      prev.opponent.id,
+      true, // player is attacker
+      newOpponentHP <= 0, // is killing blow
+      triggerPlayerPunch, // Player punch animation
+      triggerOpponentHit // Opponent hit animation
+    );
   }
-  // Activate next pending task
-  if (timer.status === 'pending' && index === taskIndex + 1) {
-    return { ...timer, status: 'active' as const };
+  
+  // Update task status in database with actual time taken
+  if (gameSessionId && completedTask) {
+    updateTaskStatus(taskId, {
+      completed: true,
+      points_earned: damagePerTask,
+      actual_minutes: actualMinutes // Pass the calculated actual time as integer
+    }).catch(error => console.error('Error updating completed task:', error));
   }
-  return timer;
-});
-
-// FIXED: Only declare victory if opponent HP reaches zero
-if (newOpponentHP <= 0) {
-  console.log('🏆 Victory condition met - opponent HP reached zero!');
-  audioManager.playEventSound('victory');
-  updateFightSession({
+  
+  const updatedTaskTimers = prev.taskTimers.map((timer, index) => {
+    if (timer.taskId === taskId) {
+      return { ...timer, status: 'completed' as const };
+    }
+    // Activate next pending task
+    if (timer.status === 'pending' && index === taskIndex + 1) {
+      return { ...timer, status: 'active' as const };
+    }
+    return timer;
+  });
+  
+  // FIXED: Only declare victory if opponent HP reaches zero
+  if (newOpponentHP <= 0) {
+    console.log('🏆 Victory condition met - opponent HP reached zero!');
+    audioManager.playEventSound('victory');
+    return {
+      ...prev,
+      tasks: updatedTasks,
+      opponentHP: newOpponentHP,
+      gameState: 'victory',
+      taskTimers: updatedTaskTimers,
+      currentTaskIndex: taskIndex + 1
+    };
+  }
+  
+  // Continue fighting if opponent still has HP
+  return {
+    ...prev,
     tasks: updatedTasks,
     opponentHP: newOpponentHP,
-    gameState: 'victory',
     taskTimers: updatedTaskTimers,
     currentTaskIndex: taskIndex + 1
-  });
-  return;
-}
-
-// Continue fighting if opponent still has HP
-updateFightSession({
-  tasks: updatedTasks,
-  opponentHP: newOpponentHP,
-  taskTimers: updatedTaskTimers,
-  currentTaskIndex: taskIndex + 1
+  };
 });
 
 };
 
 // FIXED: Pause/Resume game - simplified to just toggle game state
 const togglePause = () => {
-const newGameState = session.gameState === 'fighting' ? 'paused' : 'fighting';
+setSession(prev => {
+const newGameState = prev.gameState === 'fighting' ? 'paused' : 'fighting';
 
-console.log(newGameState === 'fighting' ? '▶️ Game resumed' : '⏸️ Game paused');
+  console.log(newGameState === 'fighting' ? '▶️ Game resumed' : '⏸️ Game paused');
+  
+  return {
+    ...prev,
+    gameState: newGameState
+  };
+});
 
-updateFightSession({ gameState: newGameState });
 };
 
 // Format time display - ensures integers only
@@ -1268,8 +1267,14 @@ console.log('❌ Background image failed to load:', session.stage);
         <div className="text-center p-8 bg-black bg-opacity-80 border-2 border-neonYel rounded-lg">
           <h2 className="text-neonYel font-mono text-4xl font-bold mb-4">GAME PAUSED</h2>
           <p className="text-white font-mono text-lg mb-6">
-            All timers are paused. Use the pause button in the top-right to resume.
+            All timers are paused. Click Resume to continue.
           </p>
+          <button 
+            onClick={togglePause}
+            className="bg-neonRed text-white font-mono px-6 py-3 border-2 border-neonRed/80 hover:bg-neonRed/80 transition-colors"
+          >
+            RESUME FIGHT
+          </button>
         </div>
       </div>
     )}
