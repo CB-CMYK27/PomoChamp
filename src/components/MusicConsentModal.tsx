@@ -8,8 +8,8 @@ interface MusicConsentModalProps {
 const MusicConsentModal: React.FC<MusicConsentModalProps> = ({ onYes, onNo }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 font-arcade">
-      {/* Modal Container - Changed from max-w-md to max-w-lg */}
-      <div className="bg-bezel border-4 border-neonYel rounded-lg p-8 max-w-lg mx-4 text-center">
+      {/* Modal Container - Changed from max-w-lg to max-w-xl */}
+      <div className="bg-bezel border-4 border-neonYel rounded-lg p-8 max-w-xl mx-4 text-center">
         {/* Title */}
         <h2 className="text-neonYel text-2xl font-bold mb-6">
           🎵 PUMP UP THE JAMS? 🎵
