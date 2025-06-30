@@ -3,6 +3,7 @@ import React from 'react';
 interface FighterProps {
   side: 'left' | 'right';
   name: string;
+  fighterImageUrl: string;
   isAttackingProp?: boolean;
   isHitProp?: boolean;
   redGlow?: boolean;
@@ -15,6 +16,7 @@ interface FighterProps {
 const Fighter: React.FC<FighterProps> = ({ 
   side, 
   name, 
+  fighterImageUrl,
   isAttackingProp = false,
   isHitProp = false,
   redGlow = false,
@@ -23,11 +25,6 @@ const Fighter: React.FC<FighterProps> = ({
   fighterHP = 100,
   opponentHP = 100
 }) => {
-  
-  // Fighter colors based on side
-  const fighterClass = side === 'left' 
-    ? 'bg-neonRed border-neonRed/80' 
-    : 'bg-crtBlue border-crtBlue/80';
   
   const getStateClass = () => {
     if (isHitProp) return 'animate-shake';
@@ -39,7 +36,7 @@ const Fighter: React.FC<FighterProps> = ({
       if (isPlayer && gameState === 'victory') return 'animate-bounce';
       if (!isPlayer && gameState === 'defeat') return 'animate-bounce';
     }
-    return 'animate-pulse';
+    return '';
   };
 
   const getRedGlowClass = () => {
@@ -48,43 +45,25 @@ const Fighter: React.FC<FighterProps> = ({
 
   return (
     <div className={`relative ${side === 'left' ? 'mr-auto' : 'ml-auto'}`}>
-      {/* Fighter sprite */}
+      {/* Fighter sprite container */}
       <div
         className={`
-          w-32 h-48 relative
+          w-80 h-[500px] relative
           transform ${getStateClass()} ${getRedGlowClass()} transition-all duration-150
           ${side === 'right' ? 'scale-x-[-1]' : ''}
         `}
       >
-        {/* Head */}
-        <div className={`w-16 h-16 rounded-full ${fighterClass} border-4 border-black absolute top-0 left-1/2 transform -translate-x-1/2`}>
-          {/* Eyes */}
-          <div className="absolute top-4 left-2 w-3 h-3 bg-white rounded-full"></div>
-          <div className="absolute top-4 right-2 w-3 h-3 bg-white rounded-full"></div>
-          
-          {/* Mouth - changes based on state */}
-          {gameState === 'victory' ? (
-            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-8 h-2 bg-white rounded-full"></div>
-          ) : isHitProp ? (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white rounded-full"></div>
-          ) : (
-            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-white rounded-full"></div>
-          )}
-        </div>
-        
-        {/* Body */}
-        <div className={`w-24 h-20 ${fighterClass} border-4 border-black absolute top-14 left-1/2 transform -translate-x-1/2`}>
-          {/* Belt */}
-          <div className="absolute bottom-0 w-full h-4 bg-neonYel border-t-2 border-black"></div>
-        </div>
-        
-        {/* Arms */}
-        <div className={`w-6 h-16 ${fighterClass} border-4 border-black absolute top-16 ${side === 'left' ? 'left-2' : 'right-2'} rounded-full transform ${isAttackingProp ? (side === 'left' ? 'rotate-45' : '-rotate-45') : ''}`}></div>
-        <div className={`w-6 h-16 ${fighterClass} border-4 border-black absolute top-16 ${side === 'left' ? 'right-2' : 'left-2'} rounded-full transform ${isAttackingProp ? (side === 'left' ? '-rotate-45' : 'rotate-45') : ''}`}></div>
-        
-        {/* Legs */}
-        <div className={`w-8 h-20 ${fighterClass} border-4 border-black absolute bottom-0 left-8 rounded-b-lg`}></div>
-        <div className={`w-8 h-20 ${fighterClass} border-4 border-black absolute bottom-0 right-8 rounded-b-lg`}></div>
+        {/* Actual fighter image */}
+        <img 
+          src={fighterImageUrl}
+          alt={name}
+          className="w-full h-full object-contain object-bottom"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            console.error(`Failed to load fighter image: ${fighterImageUrl}`);
+          }}
+        />
       </div>
       
       {/* Name tag */}

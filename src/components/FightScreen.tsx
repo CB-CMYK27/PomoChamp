@@ -1085,20 +1085,18 @@ console.log('❌ Background image failed to load:', session.stage);
       
       {/* Player fighter */}
       <div className="flex flex-col items-center justify-start h-full relative">
-        <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
-                       ${getFighterAnimation(true)}`}>
-          <Fighter
-            side="left"
-            name={session.selectedFighter.name}
-            isAttackingProp={playerAnimation.isPunching}
-            isHitProp={playerAnimation.isHit}
-            redGlow={playerAnimation.redGlow}
-            timeLeft={session.timeRemaining}
-            gameState={session.gameState}
-            fighterHP={session.fighterHP}
-            opponentHP={session.opponentHP}
-          />
-        </div>
+        <Fighter
+          side="left"
+          name={session.selectedFighter.name}
+          fighterImageUrl={session.selectedFighter.full}
+          isAttackingProp={playerAnimation.isPunching}
+          isHitProp={playerAnimation.isHit}
+          redGlow={playerAnimation.redGlow}
+          timeLeft={session.timeRemaining}
+          gameState={session.gameState}
+          fighterHP={session.fighterHP}
+          opponentHP={session.opponentHP}
+        />
         
         {/* Player HP bar */}
         <HealthBarThin percent={session.fighterHP} />
@@ -1211,20 +1209,18 @@ console.log('❌ Background image failed to load:', session.stage);
 
       {/* Opponent fighter */}
       <div className="flex flex-col items-center justify-start h-full relative">
-        <div className={`w-80 h-[500px] flex flex-col items-center justify-start relative mt-8
-                       ${getFighterAnimation(false)}`}>
-          <Fighter
-            side="right"
-            name={session.opponent?.name || 'No opponent'}
-            isAttackingProp={opponentAnimation.isPunching}
-            isHitProp={opponentAnimation.isHit}
-            redGlow={opponentAnimation.redGlow}
-            timeLeft={session.timeRemaining}
-            gameState={session.gameState}
-            fighterHP={session.opponentHP}
-            opponentHP={session.fighterHP}
-          />
-        </div>
+        <Fighter
+          side="right"
+          name={session.opponent?.name || 'No opponent'}
+          fighterImageUrl={session.opponent?.full || ''}
+          isAttackingProp={opponentAnimation.isPunching}
+          isHitProp={opponentAnimation.isHit}
+          redGlow={opponentAnimation.redGlow}
+          timeLeft={session.timeRemaining}
+          gameState={session.gameState}
+          fighterHP={session.opponentHP}
+          opponentHP={session.fighterHP}
+        />
         
         {/* Opponent HP bar */}
         <HealthBarThin percent={session.opponentHP} />
@@ -1238,6 +1234,15 @@ console.log('❌ Background image failed to load:', session.stage);
 
     {/* Countdown Overlay */}
     <CountdownOverlay number={countdownNumber} phase={introPhase} />
+
+    {/* Skip hint during intro */}
+    {canSkip && session.gameState === 'intro' && (
+      <div className="absolute top-4 right-4 z-50">
+        <div className="bg-black bg-opacity-80 text-neonYel font-mono text-sm px-3 py-2 rounded border border-neonYel animate-pulse">
+          Click to skip ⏭️
+        </div>
+      </div>
+    )}
 
     {/* Test Mode Indicator */}
     {TEST_MODE_SPEED_MULTIPLIER > 1 && (
