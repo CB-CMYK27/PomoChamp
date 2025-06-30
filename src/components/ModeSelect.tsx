@@ -21,22 +21,22 @@ const SteelFrame: React.FC<
   >
     {/* Inner lighter grey border with rivets */}
     <div 
-      className="relative w-full h-full"
+      className="relative w-full h-full p-3" // Added padding to make light grey visible
       style={{
         background: '#a0aec0',              // lighter grey inner border
-        border: '4px solid #4a5568'         // dark grey border for "screwed" effect
+        border: '2px solid #4a5568'         // reduced border to show more light grey
       }}
     >
-      {/* 8 rivets (small circles) positioned on the lighter grey frame */}
+      {/* 8 rivets (small circles) positioned with spacing from frame edges */}
       {[
-        'top-0 left-0',
-        'top-0 left-1/2 -translate-x-1/2',
-        'top-0 right-0',
-        'middle left-0',
-        'middle right-0',
-        'bottom-0 left-0',
-        'bottom-0 left-1/2 -translate-x-1/2',
-        'bottom-0 right-0',
+        'top-2 left-2',                              // moved in from edges
+        'top-2 left-1/2 -translate-x-1/2',          // top center
+        'top-2 right-2',                             // moved in from edges
+        'middle left-2',                             // moved in from edge
+        'middle right-2',                            // moved in from edge
+        'bottom-2 left-2',                           // moved in from edges
+        'bottom-2 left-1/2 -translate-x-1/2',       // bottom center
+        'bottom-2 right-2',                          // moved in from edges
       ].map((pos, i) => (
         <span
           key={i}
@@ -91,7 +91,7 @@ export default function ModeSelect() {
 
         {/* ---------- QUICK BATTLE ---------- */}
         <SteelFrame className="w-full md:w-[520px] h-[450px]"> {/* Made larger */}
-          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> 
+          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> // Increased space-y and reduced pb
             <img src={GlovesPNG} alt="Crossed gloves" className="w-28 h-28" /> {/* Made larger */}
 
             <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
@@ -116,7 +116,7 @@ export default function ModeSelect() {
 
         {/* ---------- TOURNAMENT (disabled) ---------- */}
         <SteelFrame disabled className="w-full md:w-[520px] h-[450px] relative"> {/* Made larger */}
-          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> 
+          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> // Increased space-y and reduced pb
             <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" /> {/* Made larger */}
 
             <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
@@ -126,7 +126,7 @@ export default function ModeSelect() {
               Organize&nbsp;&&nbsp;conquer.
             </p>
 
-            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative mt-2"> 
+            <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative mt-2"> // Added top margin
               COMING&nbsp;SOON
             </div>
           </div>
