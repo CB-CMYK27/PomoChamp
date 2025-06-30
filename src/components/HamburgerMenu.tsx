@@ -55,6 +55,12 @@ const HamburgerMenu: React.FC = () => {
   }, [location.pathname]);
   
   const handleNavigation = (path: string) => {
+    // Special handling for audio settings navigation from fight screen
+    if (path === '/settings/audio' && fightScreenGameState === 'fighting') {
+      console.log('🎵 Navigating to audio settings from fight screen - pausing game');
+      triggerTogglePause(); // Pause the game before navigating
+    }
+    
     setIsOpen(false);
     navigate(path);
   };

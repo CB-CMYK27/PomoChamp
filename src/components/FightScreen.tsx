@@ -369,18 +369,18 @@ console.log(`🏖️ Break duration set to: ${breakDuration} minutes`);
 }
 }, [breakDuration]);
 
-// Register toggle pause function with game store
+// Register toggle pause function with game store and cleanup on unmount
 useEffect(() => {
 registerTogglePause(togglePause);
 return () => {
 clearFightScreenData();
 };
-}, [registerTogglePause, clearFightScreenData]);
+}, []);
 
 // Update game store with current fight screen state
 useEffect(() => {
 setFightScreenGameState(session.gameState);
-}, [session.gameState, setFightScreenGameState]);
+}, [session.gameState]);
 
 // Break screen callback functions
 const handleBreakComplete = () => {
@@ -1267,14 +1267,8 @@ console.log('❌ Background image failed to load:', session.stage);
         <div className="text-center p-8 bg-black bg-opacity-80 border-2 border-neonYel rounded-lg">
           <h2 className="text-neonYel font-mono text-4xl font-bold mb-4">GAME PAUSED</h2>
           <p className="text-white font-mono text-lg mb-6">
-            All timers are paused. Click Resume to continue.
+            All timers are paused. Use the pause button in the top-right to resume.
           </p>
-          <button 
-            onClick={togglePause}
-            className="bg-neonRed text-white font-mono px-6 py-3 border-2 border-neonRed/80 hover:bg-neonRed/80 transition-colors"
-          >
-            RESUME FIGHT
-          </button>
         </div>
       </div>
     )}
