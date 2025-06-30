@@ -50,7 +50,8 @@ export default function FighterSelect() {
   const [hoverId,    setHover]  = useState<string | null>(null);
   const [selectedId, setSelect] = useState<string | null>(null);
 
-  const activeId        = hoverId || selectedId;
+  // FIXED: Changed order of precedence - selectedId takes priority over hoverId
+  const activeId        = selectedId || hoverId;
   const activeFighter   = fighters.find(f => f.id === activeId) || null;
   const selectedFighter = fighters.find(f => f.id === selectedId) || null;
 
