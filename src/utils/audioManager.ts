@@ -32,12 +32,19 @@ const SUPPORTED_AUDIO_EXTENSIONS = ['.flac', '.wav', '.ogg', '.mp3'];
 class AudioManager {
   private audioElements: Map<string, AudioElement> = new Map();
   private loadedSoundMap: Map<string, string> = new Map(); // Maps basePath to fullPath
-  private currentBGM: HTMLAudioElement | null = null;
   private soundTimings: Map<string, SoundTimingConfig> = new Map();
   private soundRuntimeState: Map<string, SoundRuntimeState> = new Map();
   private initialized = false;
   private sequenceQueue: SoundSequence[] = [];
   private isPlayingSequence = false;
+  
+  // Web Audio API properties for BGM
+  private audioContext: AudioContext | null = null;
+  private currentBGMSource: AudioBufferSourceNode | null = null;
+  private bgmGainNode: GainNode | null = null;
+  private bgmBuffer: AudioBuffer | null = null;
+  private currentBGMPath: string | null = null;
+  private bgmBufferCache: Map<string, AudioBuffer> = new Map();
   
   constructor() {
     this.setupSoundTimings();
@@ -52,6 +59,57 @@ class AudioManager {
     this.soundTimings.set('timer-warning', { minInterval: 1000, maxConcurrent: 1 });
     this.soundTimings.set('round-victory', { minInterval: 500, maxConcurrent: 1 });
     this.soundTimings.set('player-death', { minInterval: 500, maxConcurrent: 1 });
+  }
+  
+  private async initializeAudioContext(): Promise<void> {
+    if (this.audioContext) return;
+    
+    try {
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Resume context if it's suspended (required by some browsers)
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+      
+      console.log('🎵 [WEB_AUDIO] AudioContext initialized successfully');
+    } catch (error) {
+      console.error('❌ [WEB_AUDIO] Failed to initialize AudioContext:', error);
+      throw error;
+    }
+  }
+  
+  private async loadAudioBuffer(url: string): Promise<AudioBuffer> {
+    // Check cache first
+    if (this.bgmBufferCache.has(url)) {
+      console.log(`🗂️ [WEB_AUDIO] Using cached buffer for: ${url}`);
+      return this.bgmBufferCache.get(url)!;
+    }
+    
+    if (!this.audioContext) {
+      throw new Error('AudioContext not initialized');
+    }
+    
+    console.log(`📥 [WEB_AUDIO] Loading audio buffer: ${url}`);
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      
+      // Cache the buffer
+      this.bgmBufferCache.set(url, audioBuffer);
+      console.log(`✅ [WEB_AUDIO] Successfully loaded and cached buffer: ${url}`);
+      
+      return audioBuffer;
+    } catch (error) {
+      console.error(`❌ [WEB_AUDIO] Failed to load audio buffer: ${url}`, error);
+      throw error;
+    }
   }
   
   private async preloadSound(basePath: string): Promise<void> {
@@ -208,6 +266,9 @@ class AudioManager {
     if (this.initialized) return;
     
     try {
+      // Initialize Web Audio API context
+      await this.initializeAudioContext();
+      
       // Try to unlock audio context by playing and immediately pausing sounds
       const unlockPromises = Array.from(this.audioElements.values()).map(async (element) => {
         try {
@@ -368,39 +429,100 @@ class AudioManager {
     this.playDamageSequence(opponentFighterId, playerFighterId, false, playerDies);
   }
   
-  public playBGM(trackPath?: string): void {
+  public async playBGM(trackPath?: string): Promise<void> {
     const audioStore = useAudioStore.getState();
     const effectiveVolume = audioStore.getEffectiveVolume('music');
     
-    if (effectiveVolume === 0) return;
+    if (effectiveVolume === 0) {
+      console.log('🔇 [BGM] Music volume is 0, not playing BGM');
+      return;
+    }
     
     const track = trackPath || audioStore.currentBGM;
+    
+    // Don't restart if the same track is already playing
+    if (this.currentBGMPath === track && this.currentBGMSource) {
+      console.log(`🎵 [BGM] Track already playing: ${track}`);
+      return;
+    }
     
     // Stop current BGM if playing
     this.stopBGM();
     
     try {
-      this.currentBGM = new Audio(track);
-      this.currentBGM.loop = true;
-      this.currentBGM.volume = effectiveVolume;
+      // Initialize audio context if needed
+      if (!this.audioContext) {
+        await this.initializeAudioContext();
+      }
       
-      this.currentBGM.play().then(() => {
-        console.log(`🎵 Playing BGM: ${track}`);
-      }).catch((error) => {
-        console.warn(`Failed to play BGM: ${track}`, error);
+      if (!this.audioContext) {
+        throw new Error('Failed to initialize AudioContext');
+      }
+      
+      console.log(`🎵 [BGM] Loading and playing: ${track}`);
+      
+      // Load the audio buffer
+      const audioBuffer = await this.loadAudioBuffer(track);
+      
+      // Create gain node for volume control
+      this.bgmGainNode = this.audioContext.createGain();
+      this.bgmGainNode.gain.value = effectiveVolume;
+      this.bgmGainNode.connect(this.audioContext.destination);
+      
+      // Create and configure source node
+      this.currentBGMSource = this.audioContext.createBufferSource();
+      this.currentBGMSource.buffer = audioBuffer;
+      this.currentBGMSource.loop = true; // Enable seamless looping
+      this.currentBGMSource.connect(this.bgmGainNode);
+      
+      // Store current track path
+      this.currentBGMPath = track;
+      
+      // Start playback
+      this.currentBGMSource.start(0);
+      
+      console.log(`✅ [BGM] Successfully started playing: ${track} (gapless loop enabled)`);
+      
+      // Handle source ending (shouldn't happen with loop=true, but just in case)
+      this.currentBGMSource.addEventListener('ended', () => {
+        console.log('🔄 [BGM] Source ended unexpectedly, cleaning up');
+        this.currentBGMSource = null;
+        this.bgmGainNode = null;
+        this.currentBGMPath = null;
       });
+      
     } catch (error) {
-      console.warn(`Error creating BGM: ${track}`, error);
+      console.error(`❌ [BGM] Failed to play BGM: ${track}`, error);
+      this.currentBGMSource = null;
+      this.bgmGainNode = null;
+      this.currentBGMPath = null;
     }
   }
   
   public stopBGM(): void {
-    if (this.currentBGM) {
-      this.currentBGM.pause();
-      this.currentBGM.currentTime = 0;
-      this.currentBGM = null;
-      console.log('🔇 BGM stopped');
+    if (this.currentBGMSource) {
+      try {
+        this.currentBGMSource.stop();
+        this.currentBGMSource.disconnect();
+      } catch (error) {
+        // Source might already be stopped, ignore error
+        console.log('🔇 [BGM] Source already stopped or disconnected');
+      }
+      this.currentBGMSource = null;
     }
+    
+    if (this.bgmGainNode) {
+      try {
+        this.bgmGainNode.disconnect();
+      } catch (error) {
+        // Gain node might already be disconnected, ignore error
+        console.log('🔇 [BGM] Gain node already disconnected');
+      }
+      this.bgmGainNode = null;
+    }
+    
+    this.currentBGMPath = null;
+    console.log('🔇 [BGM] BGM stopped and cleaned up');
   }
   
   public playWarningSound(): void {
@@ -438,9 +560,11 @@ class AudioManager {
   public updateVolumes(): void {
     const audioStore = useAudioStore.getState();
     
-    // Update BGM volume
-    if (this.currentBGM) {
-      this.currentBGM.volume = audioStore.getEffectiveVolume('music');
+    // Update BGM volume using Web Audio API gain node
+    if (this.bgmGainNode) {
+      const newVolume = audioStore.getEffectiveVolume('music');
+      this.bgmGainNode.gain.value = newVolume;
+      console.log(`🔊 [BGM] Volume updated to: ${newVolume}`);
     }
     
     console.log('🔊 Audio volumes updated');
@@ -519,6 +643,20 @@ class AudioManager {
   public cleanup(): void {
     this.stopBGM();
     this.soundRuntimeState.clear();
+    
+    // Clean up Web Audio API resources
+    if (this.audioContext) {
+      this.audioContext.close().then(() => {
+        console.log('🧹 [CLEANUP] AudioContext closed');
+      }).catch((error) => {
+        console.warn('⚠️ [CLEANUP] Error closing AudioContext:', error);
+      });
+      this.audioContext = null;
+    }
+    
+    // Clear buffer cache
+    this.bgmBufferCache.clear();
+    
     console.log('🧹 Audio Manager cleaned up');
   }
 }
