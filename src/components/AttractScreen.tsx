@@ -1,28 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAudioStore } from '../store/audioStore';
 import MusicConsentModal from './MusicConsentModal';
 
 export default function AttractScreen() {
   const navigate = useNavigate();
-  const { enableMusic } = useAudioStore();
+  const { musicEnabled, enableMusic } = useAudioStore();
   
   // State for music consent modal
   const [showMusicConsent, setShowMusicConsent] = useState(false);
-  const [hasSeenMusicPrompt, setHasSeenMusicPrompt] = useState(false);
-
-  // Check localStorage on component mount
-  useEffect(() => {
-    const hasSeenPrompt = localStorage.getItem('hasSeenMusicPrompt') === 'true';
-    setHasSeenMusicPrompt(hasSeenPrompt);
-  }, []);
 
   const handleStart = () => {
-    if (hasSeenMusicPrompt) {
-      // User has already seen the prompt, go directly to mode select
+    if (musicEnabled) {
+      // Music is already enabled, go directly to mode select
       navigate('/mode');
     } else {
-      // First time user, show music consent modal
+      // Music is not enabled, show consent modal
       setShowMusicConsent(true);
     }
   };
@@ -31,10 +24,6 @@ export default function AttractScreen() {
     // Enable music
     enableMusic();
     
-    // Mark as seen in localStorage
-    localStorage.setItem('hasSeenMusicPrompt', 'true');
-    setHasSeenMusicPrompt(true);
-    
     // Hide modal and navigate
     setShowMusicConsent(false);
     navigate('/mode');
@@ -42,10 +31,6 @@ export default function AttractScreen() {
 
   const handleMusicConsentNo = () => {
     // Music remains disabled (default state)
-    
-    // Mark as seen in localStorage
-    localStorage.setItem('hasSeenMusicPrompt', 'true');
-    setHasSeenMusicPrompt(true);
     
     // Hide modal and navigate
     setShowMusicConsent(false);
