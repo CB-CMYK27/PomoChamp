@@ -171,8 +171,15 @@ const AudioSettings: React.FC = () => {
   };
 
   // Spinal Tap Easter Egg - Turn everything to 11!
-  const handleSpinalTapClick = () => {
+  const handleSpinalTapClick = async () => {
     console.log('🎸 SPINAL TAP EASTER EGG ACTIVATED - TURNING EVERYTHING TO 11!');
+    
+    // Initialize audio context first to ensure music can start
+    try {
+      await audioManager.initialize();
+    } catch (error) {
+      console.warn('Failed to initialize audio manager:', error);
+    }
     
     // Set all volumes to maximum (1.0 = 11 on our scale)
     setMasterVolume(1.0);

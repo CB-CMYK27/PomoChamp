@@ -7,15 +7,15 @@ interface SpinalTapModalProps {
 const SpinalTapModal: React.FC<SpinalTapModalProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 font-arcade">
-      {/* Modal Container */}
-      <div className="bg-bezel border-4 border-neonRed rounded-lg p-8 max-w-lg mx-4 text-center relative">
+      {/* Modal Container - Changed from max-w-lg to max-w-xl for wider modal */}
+      <div className="bg-bezel border-4 border-neonRed rounded-lg p-8 max-w-xl mx-4 text-center relative">
         {/* Glowing border effect */}
         <div className="absolute inset-0 bg-neonRed/20 rounded-lg animate-pulse"></div>
         
         {/* Content */}
         <div className="relative z-10">
-          {/* Title with rock styling */}
-          <h2 className="text-neonRed text-3xl font-bold mb-6 animate-pulse">
+          {/* Title with rock styling - Now fits on one line */}
+          <h2 className="text-neonRed text-3xl font-bold mb-6 animate-pulse whitespace-nowrap">
             🎸 SPINAL TAP MODE 🎸
           </h2>
           
