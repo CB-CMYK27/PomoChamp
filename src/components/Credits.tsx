@@ -5,6 +5,127 @@ import { ArrowLeft } from 'lucide-react';
 const Credits: React.FC = () => {
   const navigate = useNavigate();
 
+  // Media credits data
+  const mediaCredits = [
+    {
+      originalTitle: "Warning Noise",
+      author: "Jerimee",
+      license: "CC-BY 3.0",
+      url: "https://opengameart.org/content/warning-noise",
+      yourFileName: "public/sfx/timer-warning.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "Explosion",
+      author: "crazyduckgames",
+      license: "CC-BY 4.0, CC-BY 3.0",
+      url: "https://opengameart.org/content/5-soundsshort-melodies",
+      yourFileName: "public/sfx/explosion.ogg",
+      modifications: "None",
+      additionalAttribution: "Artist website: https://crazy-duck-games.itch.io/ or www.crazyduckgames.de"
+    },
+    {
+      originalTitle: "death_jack_01.wav",
+      author: "Jack Menhorn",
+      license: "CC-BY 3.0",
+      url: "https://opengameart.org/content/fps-placeholder-sounds",
+      yourFileName: "public/sfx/player-death.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "death_jack_02.wav",
+      author: "Jack Menhorn",
+      license: "CC-BY 3.0",
+      url: "https://opengameart.org/content/fps-placeholder-sounds",
+      yourFileName: "public/sfx/opponent-death.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "pain_jack_01.wav",
+      author: "Jack Menhorn",
+      license: "CC-BY 3.0",
+      url: "https://opengameart.org/content/fps-placeholder-sounds",
+      yourFileName: "public/sfx/player-grunt.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "pain_jack_02.wav",
+      author: "Jack Menhorn",
+      license: "CC-BY 3.0",
+      url: "https://opengameart.org/content/fps-placeholder-sounds",
+      yourFileName: "public/sfx/opponent-grunt.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "hit20.mp3.flac",
+      author: "Independent.nu",
+      license: "CC0",
+      url: "https://opengameart.org/content/37-hitspunches",
+      yourFileName: "public/sfx/player-punch.flac",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "hit30.mp3.flac",
+      author: "Independent.nu",
+      license: "CC0",
+      url: "https://opengameart.org/content/37-hitspunches",
+      yourFileName: "public/sfx/opponent-punch.flac",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "BossMain.wav",
+      author: "SketchyLogic",
+      license: "CC0",
+      url: "https://opengameart.org/content/nes-shooter-music-5-tracks-3-jingles",
+      yourFileName: "public/sfx/BossMain.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "Map.wav",
+      author: "SketchyLogic",
+      license: "CC0",
+      url: "https://opengameart.org/content/nes-shooter-music-5-tracks-3-jingles",
+      yourFileName: "public/sfx/Map.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "Mars.wav",
+      author: "SketchyLogic",
+      license: "CC0",
+      url: "https://opengameart.org/content/nes-shooter-music-5-tracks-3-jingles",
+      yourFileName: "public/sfx/Mars.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "Mercury.wav",
+      author: "SketchyLogic",
+      license: "CC0",
+      url: "https://opengameart.org/content/nes-shooter-music-5-tracks-3-jingles",
+      yourFileName: "public/sfx/Mercury.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    },
+    {
+      originalTitle: "Venus.wav",
+      author: "SketchyLogic",
+      license: "CC0",
+      url: "https://opengameart.org/content/nes-shooter-music-5-tracks-3-jingles",
+      yourFileName: "public/sfx/Venus.wav",
+      modifications: "None",
+      additionalAttribution: ""
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-crtBlue to-gray-900 p-4">
       <div className="max-w-4xl mx-auto">
@@ -42,10 +163,33 @@ const Credits: React.FC = () => {
             {/* Audio Assets */}
             <section>
               <h2 className="text-neonYel font-mono text-lg font-bold mb-4">AUDIO ASSETS</h2>
-              <div className="text-white font-mono text-sm space-y-2">
-                <div>• Background Music: [Music Credits TBD]</div>
-                <div>• Sound Effects: [SFX Credits TBD]</div>
-                <div>• Voice Acting: [Voice Credits TBD]</div>
+              <div className="text-white font-mono text-sm space-y-4">
+                {mediaCredits.map((credit, index) => (
+                  <div key={index} className="bg-black/30 rounded p-3 border border-gray-600">
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-start justify-between">
+                        <span className="text-neonYel font-bold">"{credit.originalTitle}"</span>
+                        <span className="text-gray-400 text-xs">{credit.license}</span>
+                      </div>
+                      <div className="text-gray-300">by {credit.author}</div>
+                      <div className="text-xs text-gray-400">
+                        <a 
+                          href={credit.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-crtBlue hover:text-neonYel underline"
+                        >
+                          {credit.url}
+                        </a>
+                      </div>
+                      {credit.additionalAttribution && (
+                        <div className="text-xs text-gray-400 italic">
+                          {credit.additionalAttribution}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
 
@@ -53,9 +197,9 @@ const Credits: React.FC = () => {
             <section>
               <h2 className="text-neonYel font-mono text-lg font-bold mb-4">VISUAL ASSETS</h2>
               <div className="text-white font-mono text-sm space-y-2">
-                <div>• Character Art: [Artist Credits TBD]</div>
-                <div>• Background Art: [Background Credits TBD]</div>
-                <div>• UI Elements: [UI Credits TBD]</div>
+                <div>• Character Art: Original PomoChamp Team Creations</div>
+                <div>• Background Art: Original PomoChamp Team Creations</div>
+                <div>• UI Elements: Original PomoChamp Team Creations</div>
                 <div>• Icons: Lucide React</div>
               </div>
             </section>
@@ -65,8 +209,10 @@ const Credits: React.FC = () => {
               <h2 className="text-neonYel font-mono text-lg font-bold mb-4">SPECIAL THANKS</h2>
               <div className="text-white font-mono text-sm space-y-2">
                 <div>• The Pomodoro Technique® by Francesco Cirillo</div>
+                <div>• OpenGameArt.org community for amazing audio assets</div>
                 <div>• Open Source Community</div>
                 <div>• Beta Testers and Early Supporters</div>
+                <div>• Spinal Tap for going to eleven</div>
               </div>
             </section>
 
@@ -75,6 +221,7 @@ const Credits: React.FC = () => {
               <h2 className="text-neonYel font-mono text-lg font-bold mb-4">LEGAL</h2>
               <div className="text-white font-mono text-xs space-y-2 text-gray-300">
                 <div>• This game is a productivity tool inspired by the Pomodoro Technique®</div>
+                <div>• All audio assets used under their respective Creative Commons licenses</div>
                 <div>• All trademarks and copyrights belong to their respective owners</div>
                 <div>• This is a non-commercial educational project</div>
               </div>
