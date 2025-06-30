@@ -176,7 +176,7 @@ const AudioSettings: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/mode')}
+              onClick={() => navigate(-1)}
               className="bg-crtBlue hover:bg-crtBlue/80 text-white p-2 rounded-lg border-2 border-crtBlue/80 transition-colors"
             >
               <ArrowLeft size={20} />
