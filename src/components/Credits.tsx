@@ -208,10 +208,11 @@ const Credits: React.FC = () => {
             <section>
               <h2 className="text-neonYel font-mono text-lg font-bold mb-4">VISUAL ASSETS</h2>
               <div className="text-white font-mono text-sm space-y-2">
-                <div>• Character Art: Original PomoChamp Team Creations</div>
-                <div>• Background Art: Original PomoChamp Team Creations</div>
-                <div>• UI Elements: Original PomoChamp Team Creations</div>
+                <div>• Character Art: AI-generated using ChatGPT prompts by Boyle the Builder</div>
+                <div>• Background Art: AI-generated using ChatGPT prompts by Boyle the Builder</div>
+                <div>• UI Elements: Created by Bolt.new (Claude-powered AI assistant)</div>
                 <div>• Icons: Lucide React</div>
+                <div>• All visual assets are original creations for PomoChamp</div>
               </div>
             </section>
 
@@ -235,6 +236,7 @@ const Credits: React.FC = () => {
               <div className="text-white font-mono text-xs space-y-2 text-gray-300">
                 <div>• This game is a productivity tool inspired by the Pomodoro Technique®</div>
                 <div>• All audio assets used under their respective Creative Commons licenses</div>
+                <div>• All visual assets are original AI-generated content for PomoChamp</div>
                 <div>• All trademarks and copyrights belong to their respective owners</div>
                 <div>• This is a non-commercial educational project</div>
               </div>
