@@ -153,10 +153,21 @@ const Credits: React.FC = () => {
             <section>
               <h2 className="text-neonYel font-mono text-lg font-bold mb-4">GAME DEVELOPMENT</h2>
               <div className="text-white font-mono text-sm space-y-2">
-                <div>• Game Design & Programming: PomoChamp Team</div>
+                <div>• Game Design & Programming: Boyle the Builder (Solo Developer)</div>
                 <div>• Built with React, TypeScript, and Tailwind CSS</div>
                 <div>• Audio System: Web Audio API</div>
                 <div>• Database: Supabase</div>
+              </div>
+            </section>
+
+            {/* Development Process */}
+            <section>
+              <h2 className="text-neonYel font-mono text-lg font-bold mb-4">DEVELOPMENT PROCESS</h2>
+              <div className="text-white font-mono text-sm space-y-2">
+                <div>• Created entirely through "vibe coding" with zero prior programming experience</div>
+                <div>• AI-Assisted Development using ChatGPT, Claude, and Bolt.new</div>
+                <div>• Proof that anyone can build amazing things with the right tools and determination</div>
+                <div>• From idea to production in record time through AI collaboration</div>
               </div>
             </section>
 
@@ -210,6 +221,8 @@ const Credits: React.FC = () => {
               <div className="text-white font-mono text-sm space-y-2">
                 <div>• The Pomodoro Technique® by Francesco Cirillo</div>
                 <div>• OpenGameArt.org community for amazing audio assets</div>
+                <div>• ChatGPT, Claude, and Bolt.new for making this possible</div>
+                <div>• The AI development community for pioneering new ways to create</div>
                 <div>• Open Source Community</div>
                 <div>• Beta Testers and Early Supporters</div>
                 <div>• Spinal Tap for going to eleven</div>
@@ -236,7 +249,7 @@ const Credits: React.FC = () => {
             Made with ❤️ for productivity warriors everywhere
           </div>
           <div className="text-gray-400 font-mono text-xs mt-2">
-            Version 1.0.0 • Built in 2025
+            Version 1.0.0 • Built in 2025 • Powered by AI & Human Creativity
           </div>
         </div>
       </div>
