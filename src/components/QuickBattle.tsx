@@ -168,7 +168,7 @@ setTimeout(() => inputRef.current?.focus(), 0);
             </header>
 
             <p className="text-sm text-accent/80">
-              Finish early? Your break gets longer!
+              How long will you rest before your next battle?
             </p>
 
             <div className="grid grid-cols-6 gap-2">
