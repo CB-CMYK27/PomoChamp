@@ -50,8 +50,9 @@ export default function FighterSelect() {
   const [hoverId,    setHover]  = useState<string | null>(null);
   const [selectedId, setSelect] = useState<string | null>(null);
 
-  const activeId      = hoverId || selectedId;
-  const activeFighter = fighters.find(f => f.id === activeId) || null;
+  const activeId        = hoverId || selectedId;
+  const activeFighter   = fighters.find(f => f.id === activeId) || null;
+  const selectedFighter = fighters.find(f => f.id === selectedId) || null;
 
   /* ------------------------------------------------------------------
      4. helpers
@@ -59,7 +60,7 @@ export default function FighterSelect() {
   function confirmChoice() {
     if (!selectedId) return;
     setFighter(selectedId);
-    navigate('/fight', { state: { selectedFighter: activeFighter, tasks } });
+    navigate('/fight', { state: { selectedFighter: selectedFighter, tasks } });
   }
 
   /* 144-px portrait button – no bounce */
@@ -148,8 +149,8 @@ export default function FighterSelect() {
                     ? 'hover:bg-neonYel/80 hover:scale-105'
                     : 'opacity-40 cursor-not-allowed'}`}
               >
-                {selectedId
-                  ? `FIGHT AS ${activeFighter.name.toUpperCase()}!`
+                {selectedId && selectedFighter
+                  ? `FIGHT AS ${selectedFighter.name.toUpperCase()}!`
                   : 'SELECT A FIGHTER!'}
               </button>
             </>
