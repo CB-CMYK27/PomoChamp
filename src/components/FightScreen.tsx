@@ -314,8 +314,8 @@ navigate('/quick-battle');
 };
 
 const handleSkipBreak = () => {
-// User wants to skip break and choose what to do next
-navigate('/');
+// FIXED: User wants to skip break and go back to quick battle
+navigate('/quick-battle');
 };
 
 // Watch for game state changes to trigger break screen
