@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------
-   PomoChamp :: QUICK-BATTLE  v2.4  (NaN fix + width tune)
+   PomoChamp :: QUICK-BATTLE  v2.5  (Auto-focus + Conditional Status)
    ------------------------------------------------------------------ */
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, GripVertical, Clock } from 'lucide-react';
 import MinuteMeter from './MinuteMeter';
@@ -23,17 +23,20 @@ const QuickBattle: React.FC = () => {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  /* -------------- Auto-focus on mount -------------- */
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
   /* -------------- derived -------------- */
   const total  = tasks.reduce((s,t)=>s+t.estimatedTime,0);
   const remain = 25 - total;
   const ready  = total === 25;
   const canAdd = title.trim() !== '' && remain > 0;
 
-
-
-  const status =
-    total === 0  ? 'ADD AT LEAST ONE TASK'
-    : total < 25 ? `NEED ${25-total} MORE MIN`
+  // Updated status logic - only show status when tasks exist
+  const status = 
+    total < 25 ? `NEED ${25-total} MORE MIN`
     : total > 25 ? 'TOO MANY MIN – TRIM'
     : 'PERFECT – LOCK & LOAD!';
 
@@ -151,7 +154,10 @@ setTimeout(() => inputRef.current?.focus(), 0);
               <Clock size={12}/> {total}/25 MIN
             </div>
            <MinuteMeter minutesFilled={total} />
-            <p className="text-center text-accent text-sm pt-2">{status}</p>
+           {/* Only show status when tasks exist */}
+           {tasks.length > 0 && (
+             <p className="text-center text-accent text-sm pt-2">{status}</p>
+           )}
 </div>
 
           {/* STEP 2 */}
