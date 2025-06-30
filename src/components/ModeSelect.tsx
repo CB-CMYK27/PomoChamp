@@ -91,7 +91,7 @@ export default function ModeSelect() {
 
         {/* ---------- QUICK BATTLE ---------- */}
         <SteelFrame className="w-full md:w-[520px] h-[450px]"> {/* Made larger */}
-          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> // Increased space-y and reduced pb
+          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> 
             <img src={GlovesPNG} alt="Crossed gloves" className="w-28 h-28" /> {/* Made larger */}
 
             <h2 className="text-3xl text-neonYel">QUICK BATTLE</h2>
@@ -116,7 +116,7 @@ export default function ModeSelect() {
 
         {/* ---------- TOURNAMENT (disabled) ---------- */}
         <SteelFrame disabled className="w-full md:w-[520px] h-[450px] relative"> {/* Made larger */}
-          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> // Increased space-y and reduced pb
+          <div className="flex flex-col items-center text-center space-y-8 h-full justify-center pb-4"> 
             <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" /> {/* Made larger */}
 
             <h2 className="text-3xl text-neonYel">TOURNAMENT&nbsp;MODE</h2>
