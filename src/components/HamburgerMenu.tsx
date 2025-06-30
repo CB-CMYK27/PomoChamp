@@ -104,11 +104,11 @@ const HamburgerMenu: React.FC = () => {
     <div className="fixed top-4 right-4 z-50" ref={menuRef}>
       {/* Fight Controls Container - Pause Button */}
       <div className="flex items-center gap-3 mb-3">
-        {/* Pause/Resume Button - only show during fight */}
+        {/* Pause/Resume Button - only show during fight - NOW RED */}
         {showFightControls && (
           <button
             onClick={handleTogglePause}
-            className="w-12 h-12 bg-crtBlue hover:bg-crtBlue/80 rounded-lg border-2 border-crtBlue/80 flex items-center justify-center transition-colors"
+            className="w-12 h-12 bg-neonRed hover:bg-neonRed/80 rounded-lg border-2 border-neonRed/80 flex items-center justify-center transition-colors"
           >
             {fightScreenGameState === 'paused' ? (
               <Play size={20} className="text-white" />
