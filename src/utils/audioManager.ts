@@ -450,8 +450,12 @@ class AudioManager {
     const audioStore = useAudioStore.getState();
     const effectiveVolume = audioStore.getEffectiveVolume('music');
     
-    if (effectiveVolume === 0) {
-      console.log('🔇 [BGM] Music volume is 0, not playing BGM');
+    console.log(`🎵 [BGM] playBGM called - effectiveVolume: ${effectiveVolume}, musicEnabled: ${audioStore.musicEnabled}`);
+    
+    // NEW: If music is disabled or volume is 0, stop BGM and return
+    if (effectiveVolume === 0 || !audioStore.musicEnabled) {
+      console.log('🔇 [BGM] Music disabled or volume is 0, stopping BGM');
+      this.stopBGM();
       return;
     }
     
@@ -466,12 +470,17 @@ class AudioManager {
     // Don't restart if the same track is already playing
     if (this.currentBGMPath === track && this.currentBGMSource) {
       console.log(`🎵 [BGM] Track already playing: ${track}`);
+      // Update volume if it changed
+      if (this.bgmGainNode) {
+        this.bgmGainNode.gain.value = effectiveVolume;
+        console.log(`🔊 [BGM] Updated volume to: ${effectiveVolume}`);
+      }
       return;
     }
     
-    // NEW: Set loading flag and current path immediately
+    // NEW: Set loading flag
     this.bgmLoading = true;
-    this.currentBGMPath = track;
+    console.log(`🔄 [BGM] Starting to load: ${track}`);
     
     try {
       // Stop current BGM if playing
@@ -505,6 +514,9 @@ class AudioManager {
       // Start playback
       this.currentBGMSource.start(0);
       
+      // NEW: Only set current path after successful start
+      this.currentBGMPath = track;
+      
       console.log(`✅ [BGM] Successfully started playing: ${track} (gapless loop enabled)`);
       
       // Handle source ending (shouldn't happen with loop=true, but just in case)
@@ -523,17 +535,21 @@ class AudioManager {
     } finally {
       // NEW: Always clear loading flag in finally block
       this.bgmLoading = false;
+      console.log(`🔄 [BGM] Loading flag cleared`);
     }
   }
   
   public stopBGM(): void {
+    console.log(`🔇 [BGM] stopBGM called - currentSource exists: ${!!this.currentBGMSource}, currentPath: ${this.currentBGMPath}`);
+    
     if (this.currentBGMSource) {
       try {
         this.currentBGMSource.stop();
         this.currentBGMSource.disconnect();
+        console.log(`🔇 [BGM] Successfully stopped and disconnected source`);
       } catch (error) {
         // Source might already be stopped, ignore error
-        console.log('🔇 [BGM] Source already stopped or disconnected');
+        console.log('🔇 [BGM] Source already stopped or disconnected:', error);
       }
       this.currentBGMSource = null;
     }
@@ -541,9 +557,10 @@ class AudioManager {
     if (this.bgmGainNode) {
       try {
         this.bgmGainNode.disconnect();
+        console.log(`🔇 [BGM] Successfully disconnected gain node`);
       } catch (error) {
         // Gain node might already be disconnected, ignore error
-        console.log('🔇 [BGM] Gain node already disconnected');
+        console.log('🔇 [BGM] Gain node already disconnected:', error);
       }
       this.bgmGainNode = null;
     }
@@ -577,9 +594,9 @@ class AudioManager {
     };
     
     this.playSfx(soundMap[eventType], undefined, true, () => {
-      // FIXED: Check if music is enabled before restarting BGM
+      // Check if music is enabled before restarting BGM
       const currentAudioStore = useAudioStore.getState();
-      if (currentAudioStore.musicEnabled) {
+      if (currentAudioStore.musicEnabled && currentAudioStore.getEffectiveVolume('music') > 0) {
         console.log('🎵 [EVENT] Music is enabled, restarting BGM after event sound');
         // Restart BGM after event sound (after 1 second)
         setTimeout(() => {
@@ -593,6 +610,8 @@ class AudioManager {
   
   public updateVolumes(): void {
     const audioStore = useAudioStore.getState();
+    
+    console.log(`🔊 [UPDATE] updateVolumes called - musicEnabled: ${audioStore.musicEnabled}, effectiveVolume: ${audioStore.getEffectiveVolume('music')}`);
     
     // Update BGM volume using Web Audio API gain node
     if (this.bgmGainNode) {
@@ -700,6 +719,8 @@ export const audioManager = new AudioManager();
 
 // Subscribe to audio store changes to update volumes
 useAudioStore.subscribe((state, prevState) => {
+  console.log(`🔄 [STORE] Audio store changed - musicEnabled: ${state.musicEnabled} (was: ${prevState.musicEnabled})`);
+  
   // Check if any volume or enabled setting changed
   const volumeChanged = 
     state.masterVolume !== prevState.masterVolume ||
@@ -713,19 +734,24 @@ useAudioStore.subscribe((state, prevState) => {
     state.eventEnabled !== prevState.eventEnabled;
   
   if (volumeChanged) {
+    console.log(`🔊 [STORE] Volume settings changed, updating audio manager`);
     audioManager.updateVolumes();
   }
   
   // Handle BGM changes
   if (state.currentBGM !== prevState.currentBGM) {
+    console.log(`🎵 [STORE] BGM track changed: ${prevState.currentBGM} -> ${state.currentBGM}`);
     audioManager.playBGM(state.currentBGM);
   }
   
   // Handle music enable/disable
   if (state.musicEnabled !== prevState.musicEnabled) {
+    console.log(`🎵 [STORE] Music enabled changed: ${prevState.musicEnabled} -> ${state.musicEnabled}`);
     if (state.musicEnabled) {
+      console.log(`🎵 [STORE] Music enabled, starting BGM`);
       audioManager.playBGM();
     } else {
+      console.log(`🔇 [STORE] Music disabled, stopping BGM`);
       audioManager.stopBGM();
     }
   }
