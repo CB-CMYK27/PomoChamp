@@ -11,7 +11,13 @@ const Frame: React.FC<{ side: 'hero' | 'villain'; children: React.ReactNode }> =
       className={`border-4 p-3 bg-bezel
         ${side === 'hero' ? 'border-crtBlue' : 'border-neonRed'}`}
     >
-      {children}
+      {/* FIXED: Add onMouseLeave to the grid container to reset hover state */}
+      <div 
+        className="w-full h-full p-6"
+        onMouseLeave={() => setHover(null)}
+      >
+        {children}
+      </div>
     </div>
   );
 
@@ -50,8 +56,8 @@ export default function FighterSelect() {
   const [hoverId,    setHover]  = useState<string | null>(null);
   const [selectedId, setSelect] = useState<string | null>(null);
 
-  // FIXED: Changed order of precedence - selectedId takes priority over hoverId
-  const activeId        = selectedId || hoverId;
+  // FIXED: Prioritize hoverId over selectedId for preview display
+  const activeId        = hoverId || selectedId;
   const activeFighter   = fighters.find(f => f.id === activeId) || null;
   const selectedFighter = fighters.find(f => f.id === selectedId) || null;
 
@@ -79,7 +85,7 @@ export default function FighterSelect() {
     return (
       <button
         onMouseEnter={() => setHover(f.id)}
-        onMouseLeave={() => setHover(null)}
+        // FIXED: Remove individual onMouseLeave - handled by Frame container
         onClick={() => setSelect(f.id)}
         className={`w-36 h-36 ring-offset-0 transition
           ${sel ? `${ring} ring-4`
