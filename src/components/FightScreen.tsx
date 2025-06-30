@@ -1178,7 +1178,7 @@ console.log('❌ Background image failed to load:', session.stage);
                                 </div>
                               </div>
                               <div className="text-cyan-400 text-xs font-mono">
-                                ACTIVE
+                                TASK TIMER ENGAGED
                               </div>
                               {/* Show paused indicator */}
                               {session.gameState === 'paused' && (
