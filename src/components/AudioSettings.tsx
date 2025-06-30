@@ -168,6 +168,24 @@ const AudioSettings: React.FC = () => {
     setEventVolume(value);
   };
 
+  // Spinal Tap Easter Egg - Turn everything to 11!
+  const handleSpinalTapClick = () => {
+    console.log('🎸 SPINAL TAP EASTER EGG ACTIVATED - TURNING EVERYTHING TO 11!');
+    
+    // Set all volumes to maximum (1.0 = 11 on our scale)
+    setMasterVolume(1.0);
+    setSfxVolume(1.0);
+    setMusicVolume(1.0);
+    setWarningVolume(1.0);
+    setEventVolume(1.0);
+    
+    // Also enable all audio categories if they're disabled
+    if (!sfxEnabled) toggleSfx();
+    if (!musicEnabled) toggleMusic();
+    if (!warningEnabled) toggleWarning();
+    if (!eventEnabled) toggleEvent();
+  };
+
   return (
     <div className="min-h-screen bg-bezel font-arcade text-white flex justify-center py-10 px-8 lg:px-14">
       <div className="w-full max-w-6xl space-y-10">
@@ -343,6 +361,17 @@ const AudioSettings: React.FC = () => {
             </div>
           </div>
         </SteelFrame>
+
+        {/* Spinal Tap Easter Egg */}
+        <div className="text-center">
+          <img 
+            src="/images/spinal-tap.png" 
+            alt="Spinal Tap Easter Egg"
+            onClick={handleSpinalTapClick}
+            className="mx-auto cursor-pointer hover:scale-105 transition-transform duration-200 max-w-xs opacity-80 hover:opacity-100"
+            title="These go to eleven..."
+          />
+        </div>
 
         {/* Test Sounds Section */}
         <div className="text-center">
