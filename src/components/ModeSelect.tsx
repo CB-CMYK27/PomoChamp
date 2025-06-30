@@ -144,7 +144,12 @@ export default function ModeSelect() {
 
             {/* Button container with fixed positioning from bottom */}
             <div className="h-[100px] flex items-start pt-2">
-              <div className="px-8 py-3 bg-gray-600 rounded font-bold text-white relative cursor-not-allowed">
+              <div 
+                className="px-10 py-3 text-lg rounded font-bold text-black relative cursor-not-allowed overflow-hidden tracking-wider shadow-[0_0_8px_rgba(255,255,255,.25)]"
+                style={{
+                  backgroundImage: 'repeating-linear-gradient(135deg, #FFC300 0 20px, #000000 20px 40px)',
+                }}
+              >
                 COMING&nbsp;SOON
               </div>
             </div>
