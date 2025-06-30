@@ -128,7 +128,6 @@ export default function ModeSelect() {
             {/* Image container - add top padding to align with larger gloves */}
             <div className="h-[200px] flex items-center justify-center pt-6">
               <img src={TrophyPNG} alt="Trophy" className="w-28 h-28" />
-            </div>-28" />
             </div>
 
             {/* Title */}
