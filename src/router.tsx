@@ -7,10 +7,15 @@ import QuickBattle from './components/QuickBattle';
 import FighterSelect from './components/FighterSelect';
 import FightScreen from './components/FightScreen';
 import AudioSettings from './components/AudioSettings';
+import Credits from './components/Credits';
+import HamburgerMenu from './components/HamburgerMenu';
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
+      {/* Hamburger menu appears on all screens */}
+      <HamburgerMenu />
+      
       <Routes>
         <Route
           path="/"
@@ -22,6 +27,7 @@ export default function AppRouter() {
         <Route path="/fighter-select" element={<FighterSelect />} />
         <Route path="/fight" element={<FightScreen />} />
         <Route path="/settings/audio" element={<AudioSettings />} />
+        <Route path="/credits" element={<Credits />} />
       </Routes>
     </BrowserRouter>
   );

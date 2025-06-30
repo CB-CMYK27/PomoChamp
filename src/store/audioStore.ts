@@ -28,6 +28,7 @@ interface AudioStore extends AudioSettings {
   toggleMusic: () => void;
   toggleWarning: () => void;
   toggleEvent: () => void;
+  toggleAlerts: () => void; // New: toggles both warning and event sounds
   
   // Music controls
   setBGM: (track: string) => void;
@@ -73,6 +74,13 @@ export const useAudioStore = create<AudioStore>()(
       toggleMusic: () => set((state) => ({ musicEnabled: !state.musicEnabled })),
       toggleWarning: () => set((state) => ({ warningEnabled: !state.warningEnabled })),
       toggleEvent: () => set((state) => ({ eventEnabled: !state.eventEnabled })),
+      toggleAlerts: () => set((state) => {
+        const newAlertsState = !(state.warningEnabled && state.eventEnabled);
+        return {
+          warningEnabled: newAlertsState,
+          eventEnabled: newAlertsState
+        };
+      }),
       
       // Music control
       setBGM: (track: string) => set({ currentBGM: track }),

@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings } from 'lucide-react';
 
 /* ───── Local PNGs for the icons (replace with yours) ──── */
 import GlovesPNG from '/images/boxing-gloves.png';   // 92×92 transparent
@@ -64,7 +63,7 @@ export default function ModeSelect() {
 
   return (
     <div className="min-h-screen bg-bezel font-arcade text-white flex flex-col">
-      {/* ─────────── Title & Settings ─────────── */}
+      {/* ─────────── Title ─────────── */}
       <header className="relative">
         <h1
           className="text-primary text-6xl sm:text-7xl text-center pt-12 pb-8"
@@ -75,14 +74,6 @@ export default function ModeSelect() {
         >
           CHOOSE&nbsp;YOUR&nbsp;BATTLE
         </h1>
-
-        <button
-          onClick={() => nav('/settings/audio')}
-          className="absolute top-8 right-8 w-10 h-10 flex items-center
-                     justify-center bg-crtBlue rounded-full hover:bg-crtBlue/80"
-        >
-          <Settings size={22} />
-        </button>
       </header>
 
       {/* ─────────── Cards ─────────── */}
