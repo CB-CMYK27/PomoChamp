@@ -87,9 +87,10 @@ export default function AttractScreen() {
         <div className="fixed bottom-8 right-8 z-50">
           <a href="https://boylethebuilder.com" target="_blank" rel="noopener noreferrer"
              className="block transition-all duration-300 hover:shadow-2xl">
-            <img src="/btb-logo.png"
+            <img src="/btb-logo.svg"
                  alt="Made by Boyle the Builder"
-                 className="w-20 h-20 md:w-28 md:h-28 rounded-full shadow-lg bolt-badge bolt-badge-intro"
+                 style={{ imageRendering: 'auto' }}
+                 className="w-28 h-28 md:w-36 md:h-36 rounded-full shadow-lg bolt-badge bolt-badge-intro"
                  onAnimationEnd={(e) => e.currentTarget.classList.add('animated')} />
           </a>
         </div>
