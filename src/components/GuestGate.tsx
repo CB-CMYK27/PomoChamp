@@ -9,25 +9,49 @@ import { signInAsGuest } from '../guestAuth';
  */
 export default function GuestGate({ children }: { children: JSX.Element }) {
   const [ready, setReady] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
 
   useEffect(() => {
     async function initializeUser() {
       try {
+        // Set a timeout to detect if Supabase is unreachable
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Connection timeout')), 5000);
+        });
+
         // Check if we already have a session stored in localStorage
-        const { data } = await supabase.auth.getSession();
-        
+        const sessionPromise = supabase.auth.getSession();
+
+        const { data } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+
         if (!data.session) {
           // No session yet – sign in anonymously
-          await signInAsGuest();
+          try {
+            await Promise.race([
+              signInAsGuest(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Sign-in timeout')), 5000))
+            ]);
+          } catch (signInError) {
+            console.warn('Could not sign in as guest, continuing in offline mode:', signInError);
+            setConnectionError(true);
+            setReady(true);
+            return;
+          }
         }
-        
+
         // Ensure user profile exists in the database
-        await createOrFetchUserProfile();
-        
+        try {
+          await createOrFetchUserProfile();
+        } catch (profileError) {
+          console.warn('Could not create/fetch user profile, continuing in offline mode:', profileError);
+          setConnectionError(true);
+        }
+
         setReady(true);
       } catch (error) {
-        console.error('Error initializing user:', error);
-        setReady(true); // Still set ready to avoid infinite loading
+        console.warn('Supabase connection failed, running in offline mode:', error);
+        setConnectionError(true);
+        setReady(true);
       }
     }
 
@@ -40,6 +64,11 @@ export default function GuestGate({ children }: { children: JSX.Element }) {
         CONNECTING …
       </div>
     );
+  }
+
+  // Show offline notification if there's a connection error
+  if (connectionError) {
+    console.log('⚠️ Running in offline mode - some features may be limited');
   }
 
   // Session is ready — render the real app

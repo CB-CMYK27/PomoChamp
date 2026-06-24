@@ -4,8 +4,33 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Create the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create the Supabase client with better error handling
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'pomochamp'
+    }
+  }
+});
+
+// Helper function to check if error is a connection/network error
+function isConnectionError(error: any): boolean {
+  if (!error) return false;
+  const errorMessage = error.message || error.toString();
+  return (
+    errorMessage.includes('Failed to fetch') ||
+    errorMessage.includes('NetworkError') ||
+    errorMessage.includes('Network request failed') ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('ENOTFOUND') ||
+    errorMessage.includes('ECONNREFUSED')
+  );
+}
 
 // Generate a random 3-character username
 function generateRandomUsername(): string {
@@ -19,71 +44,101 @@ function generateRandomUsername(): string {
 
 // Create or fetch user profile
 export async function createOrFetchUserProfile() {
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-  if (sessionError) {
-    console.error('Error getting session:', sessionError);
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      if (isConnectionError(sessionError)) {
+        console.warn('Network error getting session - running in offline mode');
+        return null;
+      }
+      console.error('Error getting session:', sessionError);
+      return null;
+    }
+
+    if (!session?.user) {
+      console.log('No authenticated user found');
+      return null;
+    }
+
+    // Check if user is anonymous (guest)
+    const isGuest = session.user.is_anonymous || false;
+    console.log('🔍 User type check:', {
+      userId: session.user.id,
+      isAnonymous: session.user.is_anonymous,
+      isGuest: isGuest
+    });
+
+    // Use upsert to handle both insert and update cases safely
+    const newUserData = {
+      auth0_id: session.user.id,
+      email: session.user.email || null,
+      username: isGuest ? 'GST' : generateRandomUsername(),
+      subscription_status: 'guest',
+      guest_session_id: isGuest ? session.user.id : null,
+      is_guest: isGuest,
+      total_score: 0,
+      tournaments_won: 0,
+      created_at: new Date().toISOString(),
+      last_active: new Date().toISOString()
+    };
+
+    const { data: userData, error: upsertError } = await supabase
+      .from('users')
+      .upsert(newUserData, {
+        onConflict: 'auth0_id',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
+
+    if (upsertError) {
+      if (isConnectionError(upsertError)) {
+        console.warn('Network error creating user profile - running in offline mode');
+        return null;
+      }
+      console.error('Error upserting user profile:', upsertError);
+      return null;
+    }
+
+    console.log('✅ User profile created/updated:', userData);
+    return userData;
+  } catch (error) {
+    if (isConnectionError(error)) {
+      console.warn('Network error in createOrFetchUserProfile - running in offline mode');
+    } else {
+      console.error('Unexpected error in createOrFetchUserProfile:', error);
+    }
     return null;
   }
-  
-  if (!session?.user) {
-    console.log('No authenticated user found');
-    return null;
-  }
-  
-  // Check if user is anonymous (guest)
-  const isGuest = session.user.is_anonymous || false;
-  console.log('🔍 User type check:', { 
-    userId: session.user.id, 
-    isAnonymous: session.user.is_anonymous,
-    isGuest: isGuest 
-  });
-  
-  // Use upsert to handle both insert and update cases safely
-  const newUserData = {
-    auth0_id: session.user.id,
-    email: session.user.email || null,
-    username: isGuest ? 'GST' : generateRandomUsername(),
-    subscription_status: 'guest',
-    guest_session_id: isGuest ? session.user.id : null,
-    is_guest: isGuest,
-    total_score: 0,
-    tournaments_won: 0,
-    created_at: new Date().toISOString(),
-    last_active: new Date().toISOString()
-  };
-  
-  const { data: userData, error: upsertError } = await supabase
-    .from('users')
-    .upsert(newUserData, { 
-      onConflict: 'auth0_id',
-      ignoreDuplicates: false 
-    })
-    .select()
-    .single();
-    
-  if (upsertError) {
-    console.error('Error upserting user profile:', upsertError);
-    return null;
-  }
-  
-  console.log('✅ User profile created/updated:', userData);
-  return userData;
 }
 
 // Task related functions
 export async function fetchTasks() {
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .order('created_at', { ascending: false });
-    
-  if (error) {
-    console.error('Error fetching tasks:', error);
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      if (isConnectionError(error)) {
+        console.warn('Network error fetching tasks - returning empty array');
+        return [];
+      }
+      console.error('Error fetching tasks:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    if (isConnectionError(error)) {
+      console.warn('Network error in fetchTasks - returning empty array');
+    } else {
+      console.error('Unexpected error in fetchTasks:', error);
+    }
     return [];
   }
-  
-  return data || [];
 }
 
 export async function addTask(task: { 
@@ -294,36 +349,53 @@ export async function updateTaskStatus(taskId: string, updates: {
 
 // User related functions
 export async function getCurrentUser() {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  
-  if (error) {
-    console.error('Error getting session:', error);
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error) {
+      if (isConnectionError(error)) {
+        console.warn('Network error getting session - running in offline mode');
+        return null;
+      }
+      console.error('Error getting session:', error);
+      return null;
+    }
+
+    if (!session?.user) {
+      console.log('No authenticated user found');
+      return null;
+    }
+
+    // Get user data from users table using maybeSingle to avoid errors
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth0_id', session.user.id)
+      .maybeSingle();
+
+    if (userError) {
+      if (isConnectionError(userError)) {
+        console.warn('Network error fetching user data - running in offline mode');
+        return null;
+      }
+      console.error('Error fetching user data:', userError);
+      return null;
+    }
+
+    // If no user data found, create profile
+    if (!userData) {
+      return await createOrFetchUserProfile();
+    }
+
+    return userData;
+  } catch (error) {
+    if (isConnectionError(error)) {
+      console.warn('Network error in getCurrentUser - running in offline mode');
+    } else {
+      console.error('Unexpected error in getCurrentUser:', error);
+    }
     return null;
   }
-  
-  if (!session?.user) {
-    console.log('No authenticated user found');
-    return null;
-  }
-  
-  // Get user data from users table using maybeSingle to avoid errors
-  const { data: userData, error: userError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('auth0_id', session.user.id)
-    .maybeSingle();
-    
-  if (userError) {
-    console.error('Error fetching user data:', userError);
-    return null;
-  }
-  
-  // If no user data found, create profile
-  if (!userData) {
-    return await createOrFetchUserProfile();
-  }
-  
-  return userData;
 }
 
 export async function updateUserStats(userId: string, updates: {
